@@ -4,6 +4,13 @@
 
 Make deterministic, observable and failure-tolerant placement decisions for the cluster.
 
+## MVP architecture baseline
+
+- Coordinator owns placement, instance reservations and group affinity; it does not own identity, character persistence or live simulation.
+- It coordinates idempotent transfers through `Requested -> Reserved -> Prepared -> SourceFrozen -> TargetAccepted -> Committed -> SourceReleased`. The source instance remains authoritative until the atomic MySQL lease commit.
+- Character authority uses MySQL leases with monotonic `lease_version` fencing. The Coordinator must never permit a stale instance to become authoritative again.
+- Redis is limited to transient distribution and presence. All coordination messages use versioned `Protocol` contracts and negotiated capabilities.
+
 ## Rules
 
 - Treat Agent heartbeats and instance leases as time-bounded facts.
