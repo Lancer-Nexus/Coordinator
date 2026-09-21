@@ -25,3 +25,8 @@ Make deterministic, observable and failure-tolerant placement decisions for the 
 ## Verification
 
 Test concurrent assignments, full capacity, stale heartbeats, Coordinator restart, Agent loss, group affinity and event reservation races.
+
+## Working-model escalation
+
+- If a task requires complex reasoning beyond the current model's reliable scope, ask the user whether switching to a stronger model is desired before continuing.
+- Do not switch models silently or broaden the task because a stronger model may be useful.
