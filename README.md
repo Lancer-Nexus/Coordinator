@@ -13,3 +13,13 @@ The Coordinator maintains cluster membership and makes placement decisions for L
 - Expose operator and health information
 
 The Coordinator is a control-plane service. It does not become the authoritative source for player inventory, credits or world state.
+
+## Shared Protocol
+
+The shared contracts are checked out in the `Protocol` submodule. Update it before local builds with:
+
+```bash
+git submodule update --init --remote --merge Protocol
+```
+
+CI performs the same update before restoring and building the Coordinator.

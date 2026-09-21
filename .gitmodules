@@ -1,0 +1,4 @@
+[submodule "Protocol"]
+	path = Protocol
+	url = https://github.com/Lancer-Nexus/Protocol.git
+	branch = main
