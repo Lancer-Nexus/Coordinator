@@ -8,6 +8,9 @@ builder.Services.AddHealthChecks();
 builder.Services.AddSingleton(PlacementPolicyOptions.Default);
 builder.Services.AddSingleton(CoordinatorRegistryOptions.Default);
 builder.Services.AddSingleton<PlacementPolicy>();
+var registryStateFile = builder.Configuration["Coordinator:StateFile"] ??
+                        Path.Combine(builder.Environment.ContentRootPath, "data", "coordinator-state.json");
+builder.Services.AddSingleton<ICoordinatorRegistryStore>(_ => new FileCoordinatorRegistryStore(registryStateFile));
 builder.Services.AddSingleton<CoordinatorRegistry>();
 builder.Services.AddSingleton(TimeProvider.System);
 

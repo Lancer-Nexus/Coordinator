@@ -45,15 +45,21 @@ public sealed class CoordinatorRegistry
     private readonly object sync = new();
     private readonly PlacementPolicy placementPolicy;
     private readonly CoordinatorRegistryOptions options;
+    private readonly ICoordinatorRegistryStore store;
     private readonly Dictionary<string, AgentEntry> agents = new(StringComparer.Ordinal);
     private readonly Dictionary<string, InstanceEntry> instances = new(StringComparer.Ordinal);
     private readonly Dictionary<string, ReservationEntry> reservations = new(StringComparer.Ordinal);
     private readonly Dictionary<string, GroupAffinityEntry> groupAffinities = new(StringComparer.Ordinal);
 
-    public CoordinatorRegistry(PlacementPolicy placementPolicy, CoordinatorRegistryOptions options)
+    public CoordinatorRegistry(
+        PlacementPolicy placementPolicy,
+        CoordinatorRegistryOptions options,
+        ICoordinatorRegistryStore? store = null)
     {
         this.placementPolicy = placementPolicy;
         this.options = options;
+        this.store = store ?? new InMemoryCoordinatorRegistryStore();
+        Restore(this.store.Load());
     }
 
     public RegistryOperationResult ApplyAgentHeartbeat(AgentHeartbeat heartbeat, DateTimeOffset receivedAtUtc)
@@ -78,6 +84,19 @@ public sealed class CoordinatorRegistry
             }
 
             agents[heartbeat.AgentId] = new AgentEntry(heartbeat, receivedAtUtc);
+            try
+            {
+                Persist();
+            }
+            catch
+            {
+                if (existing is null)
+                    agents.Remove(heartbeat.AgentId);
+                else
+                    agents[heartbeat.AgentId] = existing;
+                throw;
+            }
+
             return new(true, "accepted");
         }
     }
@@ -108,6 +127,19 @@ public sealed class CoordinatorRegistry
             }
 
             instances[heartbeat.InstanceId] = new InstanceEntry(heartbeat, receivedAtUtc);
+            try
+            {
+                Persist();
+            }
+            catch
+            {
+                if (existing is null)
+                    instances.Remove(heartbeat.InstanceId);
+                else
+                    instances[heartbeat.InstanceId] = existing;
+                throw;
+            }
+
             return new(true, "accepted");
         }
     }
@@ -117,7 +149,8 @@ public sealed class CoordinatorRegistry
         ArgumentNullException.ThrowIfNull(request);
         lock (sync)
         {
-            CleanupExpired(nowUtc);
+            if (CleanupExpired(nowUtc))
+                Persist();
             if (request.RequestId == Guid.Empty || request.SessionId == Guid.Empty ||
                 string.IsNullOrWhiteSpace(request.TargetSystem) || string.IsNullOrWhiteSpace(request.IdempotencyKey))
                 return new(Rejected(request.RequestId, "invalid_request", nowUtc));
@@ -169,12 +202,32 @@ public sealed class CoordinatorRegistry
                 decision,
                 expiresUtc);
 
+            GroupAffinityEntry? previousAffinity = null;
+            var hadPreviousAffinity = !string.IsNullOrWhiteSpace(request.GroupId) &&
+                                      groupAffinities.TryGetValue(request.GroupId, out previousAffinity);
             if (!string.IsNullOrWhiteSpace(request.GroupId))
             {
                 groupAffinities[request.GroupId] = new GroupAffinityEntry(
                     request.TargetSystem,
                     decision.InstanceId,
                     nowUtc.Add(options.GroupAffinityLifetime));
+            }
+
+            try
+            {
+                Persist();
+            }
+            catch
+            {
+                reservations.Remove(request.IdempotencyKey);
+                if (!string.IsNullOrWhiteSpace(request.GroupId))
+                {
+                    if (hadPreviousAffinity && previousAffinity is not null)
+                        groupAffinities[request.GroupId] = previousAffinity;
+                    else
+                        groupAffinities.Remove(request.GroupId);
+                }
+                throw;
             }
 
             return new(decision);
@@ -185,7 +238,8 @@ public sealed class CoordinatorRegistry
     {
         lock (sync)
         {
-            CleanupExpired(nowUtc);
+            if (CleanupExpired(nowUtc))
+                Persist();
             var agentViews = agents.Values
                 .OrderBy(entry => entry.Heartbeat.AgentId, StringComparer.Ordinal)
                 .Select(entry => new AgentRegistryView(
@@ -264,13 +318,54 @@ public sealed class CoordinatorRegistry
         .Distinct()
         .Count();
 
-    private void CleanupExpired(DateTimeOffset nowUtc)
+    private bool CleanupExpired(DateTimeOffset nowUtc)
     {
+        var removedAny = false;
         foreach (var key in reservations.Where(pair => pair.Value.ExpiresUtc <= nowUtc).Select(pair => pair.Key).ToArray())
-            reservations.Remove(key);
+            removedAny |= reservations.Remove(key);
         foreach (var key in groupAffinities.Where(pair => pair.Value.ExpiresUtc <= nowUtc).Select(pair => pair.Key).ToArray())
-            groupAffinities.Remove(key);
+            removedAny |= groupAffinities.Remove(key);
+        return removedAny;
     }
+
+    private void Restore(CoordinatorRegistryState state)
+    {
+        if (state.SchemaVersion != CoordinatorRegistryState.CurrentSchemaVersion ||
+            state.Agents is null || state.Instances is null || state.Reservations is null || state.GroupAffinities is null)
+            throw new InvalidDataException("Coordinator registry state has an unsupported or invalid schema.");
+
+        foreach (var entry in state.Agents)
+            if (!agents.TryAdd(entry.Heartbeat.AgentId, new AgentEntry(entry.Heartbeat, entry.LastHeartbeatUtc)))
+                throw new InvalidDataException($"Duplicate persisted Agent ID '{entry.Heartbeat.AgentId}'.");
+        foreach (var entry in state.Instances)
+            if (!instances.TryAdd(entry.Heartbeat.InstanceId, new InstanceEntry(entry.Heartbeat, entry.LastHeartbeatUtc)))
+                throw new InvalidDataException($"Duplicate persisted instance ID '{entry.Heartbeat.InstanceId}'.");
+        foreach (var entry in state.Reservations)
+            if (!reservations.TryAdd(entry.IdempotencyKey, new ReservationEntry(
+                    entry.SessionId, entry.TargetSystem, entry.GroupId, entry.InstanceId, entry.Decision, entry.ExpiresUtc)))
+                throw new InvalidDataException($"Duplicate persisted idempotency key '{entry.IdempotencyKey}'.");
+        foreach (var entry in state.GroupAffinities)
+            if (!groupAffinities.TryAdd(entry.GroupId, new GroupAffinityEntry(entry.SystemId, entry.InstanceId, entry.ExpiresUtc)))
+                throw new InvalidDataException($"Duplicate persisted group ID '{entry.GroupId}'.");
+    }
+
+    private void Persist() => store.Save(new CoordinatorRegistryState(
+        CoordinatorRegistryState.CurrentSchemaVersion,
+        agents.Values.Select(entry => new PersistedAgent(entry.Heartbeat, entry.LastHeartbeatUtc)).ToArray(),
+        instances.Values.Select(entry => new PersistedInstance(entry.Heartbeat, entry.LastHeartbeatUtc)).ToArray(),
+        reservations.Select(pair => new PersistedReservation(
+            pair.Value.SessionId,
+            pair.Value.TargetSystem,
+            pair.Value.GroupId,
+            pair.Value.InstanceId,
+            pair.Value.Decision,
+            pair.Value.ExpiresUtc,
+            pair.Key)).ToArray(),
+        groupAffinities.Select(pair => new PersistedGroupAffinity(
+            pair.Value.SystemId,
+            pair.Value.InstanceId,
+            pair.Value.ExpiresUtc,
+            pair.Key)).ToArray()));
 
     private static bool IsFresh(DateTimeOffset lastSeenUtc, DateTimeOffset nowUtc, TimeSpan timeout)
     {

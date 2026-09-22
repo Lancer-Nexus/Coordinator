@@ -92,6 +92,39 @@ public sealed class CoordinatorRegistryTests
         Assert.Equal("group_instance_unavailable", result.Decision.ReasonCode);
     }
 
+    [Fact]
+    public void FileStore_RestoresHeartbeatsReservationsAndIdempotencyAfterRestart()
+    {
+        var tempDirectory = Path.Combine(Path.GetTempPath(), $"lancer-nexus-registry-{Guid.NewGuid():N}");
+        var statePath = Path.Combine(tempDirectory, "state.json");
+        try
+        {
+            var firstProcess = new CoordinatorRegistry(new PlacementPolicy(), CoordinatorRegistryOptions.Default,
+                new FileCoordinatorRegistryStore(statePath));
+            Register(firstProcess, maxPlayers: 1);
+            var request = Request("restart-safe-key");
+            var accepted = firstProcess.Place(request, Now);
+
+            var restartedProcess = new CoordinatorRegistry(new PlacementPolicy(), CoordinatorRegistryOptions.Default,
+                new FileCoordinatorRegistryStore(statePath));
+            var retry = restartedProcess.Place(request, Now.AddSeconds(1));
+            var anotherSession = restartedProcess.Place(Request("another-session"), Now.AddSeconds(1));
+            var snapshot = restartedProcess.Snapshot(Now.AddSeconds(1));
+
+            Assert.True(accepted.Decision.Accepted);
+            Assert.True(retry.Duplicate);
+            Assert.Equal(accepted.Decision.InstanceId, retry.Decision.InstanceId);
+            Assert.False(anotherSession.Decision.Accepted);
+            Assert.True(Assert.Single(snapshot.Agents).IsAlive);
+            Assert.Equal(1, Assert.Single(snapshot.Instances).ReservedPlayers);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDirectory))
+                Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
     private static CoordinatorRegistry CreateRegistry() => new(new PlacementPolicy(), CoordinatorRegistryOptions.Default);
 
     private static void Register(CoordinatorRegistry registry, int maxPlayers = 20)
