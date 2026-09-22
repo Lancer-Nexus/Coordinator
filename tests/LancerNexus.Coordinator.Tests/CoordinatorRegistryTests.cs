@@ -26,6 +26,20 @@ public sealed class CoordinatorRegistryTests
     }
 
     [Fact]
+    public void InstanceHeartbeat_RequiresCertificateIdentityToMatchRegisteredAgent()
+    {
+        var registry = CreateRegistry();
+        Assert.True(registry.ApplyAgentHeartbeat(Agent(nodeId: "node-1"), Now).Accepted);
+
+        var mismatch = registry.ApplyInstanceHeartbeat(Instance(), Now, authenticatedNodeId: "node-2");
+        var accepted = registry.ApplyInstanceHeartbeat(Instance(), Now, authenticatedNodeId: "node-1");
+
+        Assert.False(mismatch.Accepted);
+        Assert.Equal("agent_certificate_mismatch", mismatch.ReasonCode);
+        Assert.True(accepted.Accepted);
+    }
+
+    [Fact]
     public void Place_IsIdempotentAndHonorsCapacityReservations()
     {
         var registry = CreateRegistry();

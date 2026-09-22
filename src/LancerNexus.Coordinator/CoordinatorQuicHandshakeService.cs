@@ -215,32 +215,62 @@ public sealed class CoordinatorQuicHandshakeService : BackgroundService
     {
         var request = await ReadEnvelopeAsync(stream, cancellationToken);
         ClusterEnvelopeValidator.Validate(request);
-        if (request.MessageType != (ushort)ClusterMessageType.AgentHeartbeat || request.Flags != ClusterFrameFlags.Request)
-            throw new ProtocolViolationException("Only AgentHeartbeat requests are currently supported on the QUIC control channel.");
+        if (request.Flags != ClusterFrameFlags.Request)
+            throw new ProtocolViolationException("Coordinator control messages must have Request flags.");
 
-        var heartbeat = MessagePackSerializer.Deserialize<AgentHeartbeat>(request.Payload, UntrustedMessagePack);
-        var result = string.Equals(certificateNodeId, heartbeat.NodeId, StringComparison.OrdinalIgnoreCase)
-            ? registry.ApplyAgentHeartbeat(heartbeat, timeProvider.GetUtcNow())
-            : new RegistryOperationResult(false, "certificate_identity_mismatch");
-        var responsePayload = MessagePackSerializer.Serialize(new AgentHeartbeatResponse
+        ClusterEnvelope response;
+        if (request.MessageType == (ushort)ClusterMessageType.AgentHeartbeat)
         {
-            Accepted = result.Accepted,
-            ReasonCode = result.ReasonCode,
-            Sequence = heartbeat.Sequence
-        });
-        var response = new ClusterEnvelope
+            var heartbeat = MessagePackSerializer.Deserialize<AgentHeartbeat>(request.Payload, UntrustedMessagePack);
+            var result = string.Equals(certificateNodeId, heartbeat.NodeId, StringComparison.OrdinalIgnoreCase)
+                ? registry.ApplyAgentHeartbeat(heartbeat, timeProvider.GetUtcNow())
+                : new RegistryOperationResult(false, "certificate_identity_mismatch");
+            response = CreateControlResponse(
+                request,
+                ClusterMessageType.AgentHeartbeatResponse,
+                new AgentHeartbeatResponse { Accepted = result.Accepted, ReasonCode = result.ReasonCode, Sequence = heartbeat.Sequence },
+                result.Accepted);
+            if (!result.Accepted)
+                logger.LogWarning("Coordinator rejected Agent heartbeat from {NodeId}: {ReasonCode}", certificateNodeId, result.ReasonCode);
+        }
+        else if (request.MessageType == (ushort)ClusterMessageType.InstanceHeartbeat)
         {
-            MessageType = (ushort)ClusterMessageType.AgentHeartbeatResponse,
-            Flags = result.Accepted ? ClusterFrameFlags.Response : ClusterFrameFlags.Response | ClusterFrameFlags.Error,
-            CorrelationId = request.CorrelationId,
-            Sequence = request.Sequence,
-            PayloadLength = checked((uint)responsePayload.Length),
-            Payload = responsePayload
-        };
+            var heartbeat = MessagePackSerializer.Deserialize<InstanceHeartbeat>(request.Payload, UntrustedMessagePack);
+            var result = registry.ApplyInstanceHeartbeat(heartbeat, timeProvider.GetUtcNow(), certificateNodeId);
+            response = CreateControlResponse(
+                request,
+                ClusterMessageType.InstanceHeartbeatResponse,
+                new InstanceHeartbeatResponse { Accepted = result.Accepted, ReasonCode = result.ReasonCode, Sequence = heartbeat.Sequence },
+                result.Accepted);
+            if (!result.Accepted)
+                logger.LogWarning("Coordinator rejected instance heartbeat {InstanceId} from Agent {AgentId}: {ReasonCode}",
+                    heartbeat.InstanceId, heartbeat.AgentId, result.ReasonCode);
+        }
+        else
+        {
+            throw new ProtocolViolationException($"Unsupported QUIC control message type {request.MessageType}.");
+        }
+
         await stream.WriteAsync(MessagePackSerializer.Serialize(response), cancellationToken);
         stream.CompleteWrites();
-        if (!result.Accepted)
-            logger.LogWarning("Coordinator rejected Agent heartbeat from {NodeId}: {ReasonCode}", certificateNodeId, result.ReasonCode);
+    }
+
+    private static ClusterEnvelope CreateControlResponse<TResponse>(
+        ClusterEnvelope request,
+        ClusterMessageType responseType,
+        TResponse responsePayload,
+        bool accepted)
+    {
+        var payload = MessagePackSerializer.Serialize(responsePayload);
+        return new ClusterEnvelope
+        {
+            MessageType = (ushort)responseType,
+            Flags = accepted ? ClusterFrameFlags.Response : ClusterFrameFlags.Response | ClusterFrameFlags.Error,
+            CorrelationId = request.CorrelationId,
+            Sequence = request.Sequence,
+            PayloadLength = checked((uint)payload.Length),
+            Payload = payload
+        };
     }
 
     private static async Task<ClusterEnvelope> ReadEnvelopeAsync(QuicStream stream, CancellationToken cancellationToken)

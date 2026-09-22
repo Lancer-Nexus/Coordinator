@@ -17,6 +17,7 @@ Make deterministic, observable and failure-tolerant placement decisions for the 
 ## Rules
 
 - Treat Agent heartbeats and instance leases as time-bounded facts.
+- On QUIC, bind every instance heartbeat to the Agent identity in the peer certificate; do not accept a heartbeat solely because it names an AgentId.
 - Never assign a player to an instance that is not ready and registered.
 - Keep group assignment atomic where possible; do not silently split a formation.
 - Use stable instance IDs and idempotent assignment IDs.

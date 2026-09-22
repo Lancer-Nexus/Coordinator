@@ -102,6 +102,12 @@ public sealed class CoordinatorRegistry
     }
 
     public RegistryOperationResult ApplyInstanceHeartbeat(InstanceHeartbeat heartbeat, DateTimeOffset receivedAtUtc)
+        => ApplyInstanceHeartbeat(heartbeat, receivedAtUtc, authenticatedNodeId: null);
+
+    public RegistryOperationResult ApplyInstanceHeartbeat(
+        InstanceHeartbeat heartbeat,
+        DateTimeOffset receivedAtUtc,
+        string? authenticatedNodeId)
     {
         ArgumentNullException.ThrowIfNull(heartbeat);
         lock (sync)
@@ -113,6 +119,9 @@ public sealed class CoordinatorRegistry
                 return new(false, "invalid_heartbeat");
             if (!agents.TryGetValue(heartbeat.AgentId, out var agent) || !IsFresh(agent.LastHeartbeatUtc, receivedAtUtc, options.AgentHeartbeatTimeout))
                 return new(false, "agent_not_registered_or_stale");
+            if (authenticatedNodeId is not null &&
+                !string.Equals(agent.Heartbeat.NodeId, authenticatedNodeId, StringComparison.OrdinalIgnoreCase))
+                return new(false, "agent_certificate_mismatch");
 
             if (instances.TryGetValue(heartbeat.InstanceId, out var existing))
             {
