@@ -26,6 +26,16 @@ Make deterministic, observable and failure-tolerant placement decisions for the 
 
 Test concurrent assignments, full capacity, stale heartbeats, Coordinator restart, Agent loss, group affinity and event reservation races.
 
+For this repository's current implementation, update `Protocol` first and verify with:
+
+```bash
+git submodule update --init --remote --merge Protocol
+dotnet restore tests/LancerNexus.Coordinator.Tests/LancerNexus.Coordinator.Tests.csproj
+dotnet format tests/LancerNexus.Coordinator.Tests/LancerNexus.Coordinator.Tests.csproj --verify-no-changes --no-restore
+dotnet build tests/LancerNexus.Coordinator.Tests/LancerNexus.Coordinator.Tests.csproj --configuration Release --no-restore --warnaserror
+dotnet test tests/LancerNexus.Coordinator.Tests/LancerNexus.Coordinator.Tests.csproj --configuration Release --no-build
+```
+
 ## Working-model escalation
 
 - If a task requires complex reasoning beyond the current model's reliable scope, ask the user whether switching to a stronger model is desired before continuing.
