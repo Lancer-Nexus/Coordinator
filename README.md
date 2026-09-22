@@ -24,6 +24,14 @@ git submodule update --init --remote --merge Protocol
 
 CI performs the same update before restoring and building the Coordinator.
 
+## Heartbeat registry and placement API
+
+Agents register through `POST /internal/v1/agents/heartbeat`; instances report readiness and capacity through `POST /internal/v1/instances/heartbeat`. `GET /internal/v1/registry` returns the current operator snapshot. `POST /api/v1/placement` selects a fresh, ready instance and reserves one player slot for 15 seconds. Agent and instance heartbeats expire after 15 seconds. Heartbeats require increasing sequence numbers; exact replays are accepted as duplicates without extending freshness.
+
+All `/internal/*` and `/api/v1/placement` routes require `Authorization: Bearer <key>`. Configure `Coordinator__InternalApiKey` with a random secret of at least 32 UTF-8 bytes. If it is absent or too short, protected routes fail closed with HTTP 503. Terminate TLS and restrict network access at the deployment boundary; the Coordinator does not provide TLS itself.
+
+The registry, reservations and group affinity are currently in-memory only. They are atomic within one Coordinator process but are lost on restart and are not shared across replicas. Run a single Coordinator for this MVP; durable, multi-replica state and restart recovery remain follow-up work.
+
 ## Development
 
 ```bash
@@ -33,4 +41,4 @@ dotnet build tests/LancerNexus.Coordinator.Tests/LancerNexus.Coordinator.Tests.c
 dotnet test tests/LancerNexus.Coordinator.Tests/LancerNexus.Coordinator.Tests.csproj --configuration Release --no-build
 ```
 
-The initial implementation provides deterministic placement policy for registered, ready, fresh and non-draining instances. It prefers group affinity, then lower utilization, and rejects requests when there is no eligible capacity. Registry persistence and authenticated Agent registration are deliberately separate follow-up work.
+The implementation provides deterministic placement for registered, ready, fresh and non-draining instances. It prefers group affinity, then lower utilization, and rejects requests when there is no eligible capacity. The heartbeat/placement endpoints above are protected by the configured internal key.

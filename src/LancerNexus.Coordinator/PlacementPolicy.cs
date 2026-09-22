@@ -12,7 +12,8 @@ public sealed record InstanceCandidate(
     int MaxPlayers,
     DateTimeOffset LastHeartbeatUtc,
     string? Endpoint,
-    bool HasGroupAffinity = false);
+    bool HasGroupAffinity = false,
+    int ReservedPlayers = 0);
 
 public sealed record PlacementPolicyOptions(TimeSpan MaximumHeartbeatAge)
 {
@@ -40,8 +41,8 @@ public sealed class PlacementPolicy(PlacementPolicyOptions? options = null)
         var viable = candidates
             .Where(candidate => IsViable(candidate, request.TargetSystem, nowUtc))
             .OrderByDescending(candidate => candidate.HasGroupAffinity)
-            .ThenBy(candidate => (double)candidate.CurrentPlayers / candidate.MaxPlayers)
-            .ThenBy(candidate => candidate.CurrentPlayers)
+            .ThenBy(candidate => (double)(candidate.CurrentPlayers + candidate.ReservedPlayers) / candidate.MaxPlayers)
+            .ThenBy(candidate => candidate.CurrentPlayers + candidate.ReservedPlayers)
             .ThenBy(candidate => candidate.InstanceId, StringComparer.Ordinal)
             .ToArray();
 
@@ -66,8 +67,8 @@ public sealed class PlacementPolicy(PlacementPolicyOptions? options = null)
         var age = nowUtc - candidate.LastHeartbeatUtc;
         return candidate.IsRegistered && candidate.IsReady && !candidate.IsDraining &&
                string.Equals(candidate.SystemId, systemId, StringComparison.Ordinal) &&
-               candidate.CurrentPlayers >= 0 && candidate.MaxPlayers > 0 &&
-               candidate.CurrentPlayers < candidate.MaxPlayers &&
+               candidate.CurrentPlayers >= 0 && candidate.ReservedPlayers >= 0 && candidate.MaxPlayers > 0 &&
+               candidate.CurrentPlayers + candidate.ReservedPlayers < candidate.MaxPlayers &&
                age >= TimeSpan.Zero && age <= policyOptions.MaximumHeartbeatAge &&
                !string.IsNullOrWhiteSpace(candidate.InstanceId) &&
                !string.IsNullOrWhiteSpace(candidate.Endpoint);
