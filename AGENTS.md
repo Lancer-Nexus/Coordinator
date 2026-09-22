@@ -9,6 +9,7 @@ Make deterministic, observable and failure-tolerant placement decisions for the 
 - Coordinator owns placement, instance reservations and group affinity; it does not own identity, character persistence or live simulation.
 - Registry freshness is determined by sequenced Agent/instance heartbeats; protected internal and placement HTTP routes require a configured bearer key.
 - Registry snapshots persist to the configured filesystem path and recover on restart. The file provider is single-writer and single-process; do not claim multi-replica consistency until a transactional shared store with fencing is implemented.
+- The optional QUIC listener is disabled by default, requires TLS 1.3 mTLS and a configured CA, and binds certificate DNS SAN identity to `ClusterHello.NodeId`.
 - It coordinates idempotent transfers through `Requested -> Reserved -> Prepared -> SourceFrozen -> TargetAccepted -> Committed -> SourceReleased`. The source instance remains authoritative until the atomic MySQL lease commit.
 - Character authority uses MySQL leases with monotonic `lease_version` fencing. The Coordinator must never permit a stale instance to become authoritative again.
 - Redis is limited to transient distribution and presence. All coordination messages use versioned `Protocol` contracts and negotiated capabilities.
@@ -26,7 +27,7 @@ Make deterministic, observable and failure-tolerant placement decisions for the 
 
 ## Verification
 
-Test concurrent assignments, full capacity, stale/replayed heartbeats, Agent loss, group affinity, reservation idempotency and filesystem restart recovery. Multi-replica races require a transactional shared store and remain unimplemented.
+Test concurrent assignments, full capacity, stale/replayed heartbeats, Agent loss, group affinity, reservation idempotency, filesystem restart recovery and client-certificate trust/identity. Multi-replica races require a transactional shared store and remain unimplemented.
 
 For this repository's current implementation, update `Protocol` first and verify with:
 

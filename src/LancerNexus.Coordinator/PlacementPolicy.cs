@@ -15,9 +15,9 @@ public sealed record InstanceCandidate(
     bool HasGroupAffinity = false,
     int ReservedPlayers = 0);
 
-public sealed record PlacementPolicyOptions(TimeSpan MaximumHeartbeatAge)
+public sealed record PlacementPolicyOptions(TimeSpan MaximumHeartbeatAge, TimeSpan ReservationLifetime)
 {
-    public static PlacementPolicyOptions Default { get; } = new(TimeSpan.FromSeconds(15));
+    public static PlacementPolicyOptions Default { get; } = new(TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(15));
 }
 
 public sealed class PlacementPolicy(PlacementPolicyOptions? options = null)
@@ -58,7 +58,7 @@ public sealed class PlacementPolicy(PlacementPolicyOptions? options = null)
             SystemId = selected.SystemId,
             Endpoint = selected.Endpoint,
             ReasonCode = selected.HasGroupAffinity ? "group_affinity" : "least_loaded",
-            ExpiresUtc = nowUtc.AddSeconds(15).UtcDateTime
+            ExpiresUtc = nowUtc.Add(policyOptions.ReservationLifetime).UtcDateTime
         };
     }
 
