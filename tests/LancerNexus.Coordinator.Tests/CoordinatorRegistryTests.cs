@@ -64,6 +64,19 @@ public sealed class CoordinatorRegistryTests
     }
 
     [Fact]
+    public void Place_RejectsInstanceWhenAgentReportsNotReady()
+    {
+        var registry = CreateRegistry();
+        Assert.True(registry.ApplyAgentHeartbeat(Agent(sequence: 1), Now).Accepted);
+        Assert.True(registry.ApplyInstanceHeartbeat(Instance(isReady: false), Now).Accepted);
+
+        var outcome = registry.Place(Request("not-ready-instance"), Now);
+
+        Assert.False(outcome.Decision.Accepted);
+        Assert.Equal("no_ready_capacity", outcome.Decision.ReasonCode);
+    }
+
+    [Fact]
     public void Place_ConflictingIdempotencyKeyIsRejected()
     {
         var registry = CreateRegistry();
@@ -155,13 +168,13 @@ public sealed class CoordinatorRegistryTests
         Sequence = sequence
     };
 
-    private static InstanceHeartbeat Instance(string id = "instance-1", ulong sequence = 1, int maxPlayers = 20) => new()
+    private static InstanceHeartbeat Instance(string id = "instance-1", ulong sequence = 1, int maxPlayers = 20, bool isReady = true) => new()
     {
         AgentId = "agent-1",
         InstanceId = id,
         SystemId = "li01",
         Sequence = sequence,
-        IsReady = true,
+        IsReady = isReady,
         CurrentPlayers = 0,
         MaxPlayers = maxPlayers,
         Endpoint = $"quic://{id}:7443"
