@@ -22,6 +22,8 @@ public sealed class CoordinatorQuicHandshakeService : BackgroundService
 
     private readonly CoordinatorQuicSettings settings;
     private readonly ILogger<CoordinatorQuicHandshakeService> logger;
+    private readonly CoordinatorRegistry registry;
+    private readonly TimeProvider timeProvider;
     private readonly X509Certificate2 serverCertificate;
     private readonly X509Certificate2 clientCaCertificate;
     private readonly MtlsPeerCertificateValidator peerCertificateValidator;
@@ -29,10 +31,14 @@ public sealed class CoordinatorQuicHandshakeService : BackgroundService
 
     public CoordinatorQuicHandshakeService(
         CoordinatorQuicSettings settings,
-        ILogger<CoordinatorQuicHandshakeService> logger)
+        ILogger<CoordinatorQuicHandshakeService> logger,
+        CoordinatorRegistry registry,
+        TimeProvider timeProvider)
     {
         this.settings = settings;
         this.logger = logger;
+        this.registry = registry;
+        this.timeProvider = timeProvider;
 
         serverCertificate = X509CertificateLoader.LoadPkcs12FromFile(
             settings.ServerCertificatePath,
@@ -68,7 +74,7 @@ public sealed class CoordinatorQuicHandshakeService : BackgroundService
             {
                 DefaultStreamErrorCode = ProtocolStreamErrorCode,
                 DefaultCloseErrorCode = ProtocolConnectionErrorCode,
-                MaxInboundBidirectionalStreams = 1,
+                MaxInboundBidirectionalStreams = 16,
                 ServerAuthenticationOptions = authenticationOptions
             })
         };
@@ -117,8 +123,6 @@ public sealed class CoordinatorQuicHandshakeService : BackgroundService
         {
             try
             {
-                using var handshakeTimeout = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
-                handshakeTimeout.CancelAfter(TimeSpan.FromSeconds(10));
                 var certificate = connection.RemoteCertificate;
                 var certificateNodeId = MtlsPeerCertificateValidator.GetNodeId(certificate);
                 if (certificateNodeId is null)
@@ -127,52 +131,24 @@ public sealed class CoordinatorQuicHandshakeService : BackgroundService
                     return;
                 }
 
-                await using var stream = await connection.AcceptInboundStreamAsync(handshakeTimeout.Token);
-                if (stream.Type != QuicStreamType.Bidirectional)
-                    throw new ProtocolViolationException("The handshake requires a bidirectional stream.");
-
-                var request = await ReadEnvelopeAsync(stream, handshakeTimeout.Token);
-                ClusterEnvelopeValidator.Validate(request);
-                if (request.MessageType != (ushort)ClusterMessageType.Hello || request.Flags != ClusterFrameFlags.Request)
-                    throw new ProtocolViolationException("The first QUIC stream must contain a Hello request.");
-
-                var peerHello = MessagePackSerializer.Deserialize<ClusterHello>(request.Payload, UntrustedMessagePack);
-                ClusterHandshakeResult result;
-                if (!string.Equals(certificateNodeId, peerHello.NodeId, StringComparison.OrdinalIgnoreCase))
-                {
-                    result = new ClusterHandshakeResult(false, "certificate_identity_mismatch", [], []);
-                }
-                else
-                {
-                    result = ClusterHandshakeNegotiator.Negotiate(
-                        settings.LocalHello,
-                        peerHello,
-                        settings.RequiredCapabilities);
-                }
-
-                var responsePayload = MessagePackSerializer.Serialize(new ClusterHandshakeResponse
-                {
-                    Accepted = result.Accepted,
-                    ReasonCode = result.ReasonCode,
-                    NegotiatedCapabilities = result.NegotiatedCapabilities
-                });
-                var response = new ClusterEnvelope
-                {
-                    MessageType = (ushort)ClusterMessageType.Hello,
-                    Flags = result.Accepted ? ClusterFrameFlags.Response : ClusterFrameFlags.Response | ClusterFrameFlags.Error,
-                    CorrelationId = request.CorrelationId,
-                    Sequence = request.Sequence,
-                    PayloadLength = checked((uint)responsePayload.Length),
-                    Payload = responsePayload
-                };
-                await stream.WriteAsync(MessagePackSerializer.Serialize(response), stoppingToken);
-                stream.CompleteWrites();
+                if (!await NegotiatePeerAsync(connection, certificateNodeId, stoppingToken))
+                    return;
 
                 logger.LogInformation(
-                    "Coordinator QUIC handshake {Result} for peer {NodeId} from {RemoteEndPoint}",
-                    result.ReasonCode,
-                    certificateNodeId ?? "<missing-san>",
+                    "Coordinator QUIC control session established for peer {NodeId} from {RemoteEndPoint}",
+                    certificateNodeId,
                     connection.RemoteEndPoint);
+
+                while (!stoppingToken.IsCancellationRequested)
+                {
+                    using var streamTimeout = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
+                    streamTimeout.CancelAfter(TimeSpan.FromSeconds(15));
+                    await using var stream = await connection.AcceptInboundStreamAsync(streamTimeout.Token);
+                    if (stream.Type != QuicStreamType.Bidirectional)
+                        throw new ProtocolViolationException("Agent control messages require bidirectional streams.");
+
+                    await HandleAgentMessageAsync(stream, certificateNodeId, stoppingToken);
+                }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -188,6 +164,83 @@ public sealed class CoordinatorQuicHandshakeService : BackgroundService
                 activeConnectionLimit.Release();
             }
         }
+    }
+
+    private async Task<bool> NegotiatePeerAsync(
+        QuicConnection connection,
+        string certificateNodeId,
+        CancellationToken stoppingToken)
+    {
+        using var handshakeTimeout = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
+        handshakeTimeout.CancelAfter(TimeSpan.FromSeconds(10));
+        await using var stream = await connection.AcceptInboundStreamAsync(handshakeTimeout.Token);
+        if (stream.Type != QuicStreamType.Bidirectional)
+            throw new ProtocolViolationException("The handshake requires a bidirectional stream.");
+
+        var request = await ReadEnvelopeAsync(stream, handshakeTimeout.Token);
+        ClusterEnvelopeValidator.Validate(request);
+        if (request.MessageType != (ushort)ClusterMessageType.Hello || request.Flags != ClusterFrameFlags.Request)
+            throw new ProtocolViolationException("The first QUIC stream must contain a Hello request.");
+
+        var peerHello = MessagePackSerializer.Deserialize<ClusterHello>(request.Payload, UntrustedMessagePack);
+        var result = !string.Equals(certificateNodeId, peerHello.NodeId, StringComparison.OrdinalIgnoreCase)
+            ? new ClusterHandshakeResult(false, "certificate_identity_mismatch", [], [])
+            : ClusterHandshakeNegotiator.Negotiate(settings.LocalHello, peerHello, settings.RequiredCapabilities);
+
+        var responsePayload = MessagePackSerializer.Serialize(new ClusterHandshakeResponse
+        {
+            Accepted = result.Accepted,
+            ReasonCode = result.ReasonCode,
+            NegotiatedCapabilities = result.NegotiatedCapabilities
+        });
+        var response = new ClusterEnvelope
+        {
+            MessageType = (ushort)ClusterMessageType.Hello,
+            Flags = result.Accepted ? ClusterFrameFlags.Response : ClusterFrameFlags.Response | ClusterFrameFlags.Error,
+            CorrelationId = request.CorrelationId,
+            Sequence = request.Sequence,
+            PayloadLength = checked((uint)responsePayload.Length),
+            Payload = responsePayload
+        };
+        await stream.WriteAsync(MessagePackSerializer.Serialize(response), stoppingToken);
+        stream.CompleteWrites();
+        logger.LogInformation("Coordinator QUIC handshake {Result} for peer {NodeId}", result.ReasonCode, certificateNodeId);
+        return result.Accepted;
+    }
+
+    private async Task HandleAgentMessageAsync(
+        QuicStream stream,
+        string certificateNodeId,
+        CancellationToken cancellationToken)
+    {
+        var request = await ReadEnvelopeAsync(stream, cancellationToken);
+        ClusterEnvelopeValidator.Validate(request);
+        if (request.MessageType != (ushort)ClusterMessageType.AgentHeartbeat || request.Flags != ClusterFrameFlags.Request)
+            throw new ProtocolViolationException("Only AgentHeartbeat requests are currently supported on the QUIC control channel.");
+
+        var heartbeat = MessagePackSerializer.Deserialize<AgentHeartbeat>(request.Payload, UntrustedMessagePack);
+        var result = string.Equals(certificateNodeId, heartbeat.NodeId, StringComparison.OrdinalIgnoreCase)
+            ? registry.ApplyAgentHeartbeat(heartbeat, timeProvider.GetUtcNow())
+            : new RegistryOperationResult(false, "certificate_identity_mismatch");
+        var responsePayload = MessagePackSerializer.Serialize(new AgentHeartbeatResponse
+        {
+            Accepted = result.Accepted,
+            ReasonCode = result.ReasonCode,
+            Sequence = heartbeat.Sequence
+        });
+        var response = new ClusterEnvelope
+        {
+            MessageType = (ushort)ClusterMessageType.AgentHeartbeatResponse,
+            Flags = result.Accepted ? ClusterFrameFlags.Response : ClusterFrameFlags.Response | ClusterFrameFlags.Error,
+            CorrelationId = request.CorrelationId,
+            Sequence = request.Sequence,
+            PayloadLength = checked((uint)responsePayload.Length),
+            Payload = responsePayload
+        };
+        await stream.WriteAsync(MessagePackSerializer.Serialize(response), cancellationToken);
+        stream.CompleteWrites();
+        if (!result.Accepted)
+            logger.LogWarning("Coordinator rejected Agent heartbeat from {NodeId}: {ReasonCode}", certificateNodeId, result.ReasonCode);
     }
 
     private static async Task<ClusterEnvelope> ReadEnvelopeAsync(QuicStream stream, CancellationToken cancellationToken)

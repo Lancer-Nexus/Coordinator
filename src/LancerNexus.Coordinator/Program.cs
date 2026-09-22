@@ -78,7 +78,7 @@ app.MapGet("/api/v1/capabilities", () => Results.Ok(new
     service = "coordinator",
     protocolVersion = ProtocolConstants.ProtocolVersion,
     capabilities = new[] { "health_v1", "registry_v1", "placement_policy_v1", "placement_reservations_v1" }
-        .Concat(quicSettings is null ? [] : ["quic_mtls_handshake_v1"])
+        .Concat(quicSettings is null ? [] : ["quic_mtls_handshake_v1", "quic_agent_heartbeat_v1"])
 }));
 
 app.MapPost("/internal/v1/agents/heartbeat", (

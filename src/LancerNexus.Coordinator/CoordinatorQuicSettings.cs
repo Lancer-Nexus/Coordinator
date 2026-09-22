@@ -50,7 +50,7 @@ public sealed record CoordinatorQuicSettings(
                 InstanceId = configuration["Coordinator:Quic:InstanceId"] ?? nodeId,
                 BuildVersion = configuration["Coordinator:Quic:BuildVersion"] ??
                                typeof(CoordinatorQuicSettings).Assembly.GetName().Version?.ToString() ?? "unknown",
-                Capabilities = ["cluster_handshake_v1"]
+                Capabilities = ["cluster_handshake_v1", "agent_heartbeat_v1"]
             },
             requiredCapabilities);
     }
