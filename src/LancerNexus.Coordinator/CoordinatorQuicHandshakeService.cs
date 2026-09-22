@@ -142,7 +142,7 @@ public sealed class CoordinatorQuicHandshakeService : BackgroundService
                 while (!stoppingToken.IsCancellationRequested)
                 {
                     using var streamTimeout = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
-                    streamTimeout.CancelAfter(TimeSpan.FromSeconds(15));
+                    streamTimeout.CancelAfter(TimeSpan.FromSeconds(30));
                     await using var stream = await connection.AcceptInboundStreamAsync(streamTimeout.Token);
                     if (stream.Type != QuicStreamType.Bidirectional)
                         throw new ProtocolViolationException("Agent control messages require bidirectional streams.");
