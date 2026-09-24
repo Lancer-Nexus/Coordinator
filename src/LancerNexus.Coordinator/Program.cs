@@ -31,6 +31,20 @@ if (quicSettings is not null)
 
 var app = builder.Build();
 var internalApiKey = app.Configuration["Coordinator:InternalApiKey"];
+var startupLogger = app.Logger;
+var startupRegistry = app.Services.GetRequiredService<CoordinatorRegistry>();
+var initialRegistry = startupRegistry.Snapshot(DateTimeOffset.UtcNow);
+var liveAgents = initialRegistry.Agents.Count(agent => agent.IsAlive);
+var readyInstances = initialRegistry.Instances.Count(instance =>
+    instance.IsAlive && instance.AgentIsAlive && instance.IsReady && !instance.IsDraining);
+startupLogger.LogInformation(
+    "Coordinator registry loaded: {RegisteredAgents} agents ({LiveAgents} heartbeat-live), {RegisteredInstances} instances ({ReadyInstances} ready)",
+    initialRegistry.Agents.Count,
+    liveAgents,
+    initialRegistry.Instances.Count,
+    readyInstances);
+startupLogger.LogInformation("Coordinator HTTP service is starting; QUIC mTLS control listener {QuicListenerStatus}.",
+    quicSettings is null ? "disabled" : "enabled");
 
 app.Use(async (context, next) =>
 {
@@ -86,7 +100,14 @@ app.MapPost("/internal/v1/agents/heartbeat", (
     CoordinatorRegistry registry,
     TimeProvider timeProvider) =>
 {
-    var result = registry.ApplyAgentHeartbeat(heartbeat, timeProvider.GetUtcNow());
+    var now = timeProvider.GetUtcNow();
+    var wasAlive = registry.Snapshot(now).Agents.Any(agent =>
+        string.Equals(agent.AgentId, heartbeat.AgentId, StringComparison.Ordinal) && agent.IsAlive);
+    var result = registry.ApplyAgentHeartbeat(heartbeat, now);
+    if (!result.Accepted)
+        startupLogger.LogWarning("Agent heartbeat rejected for {AgentId}: {ReasonCode}.", heartbeat.AgentId, result.ReasonCode);
+    else if (!wasAlive)
+        startupLogger.LogInformation("Agent {AgentId} registered and heartbeat is live.", heartbeat.AgentId);
     return result.Accepted ? Results.Ok(result) : Results.Conflict(result);
 });
 
@@ -95,7 +116,22 @@ app.MapPost("/internal/v1/instances/heartbeat", (
     CoordinatorRegistry registry,
     TimeProvider timeProvider) =>
 {
-    var result = registry.ApplyInstanceHeartbeat(heartbeat, timeProvider.GetUtcNow());
+    var now = timeProvider.GetUtcNow();
+    var previous = registry.Snapshot(now).Instances.FirstOrDefault(instance =>
+        string.Equals(instance.InstanceId, heartbeat.InstanceId, StringComparison.Ordinal));
+    var result = registry.ApplyInstanceHeartbeat(heartbeat, now);
+    if (!result.Accepted)
+        startupLogger.LogWarning("Instance heartbeat rejected for {InstanceId} from Agent {AgentId}: {ReasonCode}.",
+            heartbeat.InstanceId, heartbeat.AgentId, result.ReasonCode);
+    else if (previous is null || !previous.IsAlive || !previous.AgentIsAlive)
+        startupLogger.LogInformation("Instance {InstanceId} registered on system {SystemId}; ready {IsReady}, draining {IsDraining}, players {CurrentPlayers}/{MaxPlayers}.",
+            heartbeat.InstanceId, heartbeat.SystemId, heartbeat.IsReady, heartbeat.IsDraining, heartbeat.CurrentPlayers, heartbeat.MaxPlayers);
+    else if (!previous.IsReady && heartbeat.IsReady)
+        startupLogger.LogInformation("Instance {InstanceId} is now ready on system {SystemId}.", heartbeat.InstanceId, heartbeat.SystemId);
+    else if (previous.IsReady && !heartbeat.IsReady)
+        startupLogger.LogWarning("Instance {InstanceId} is no longer ready.", heartbeat.InstanceId);
+    else if (previous.IsDraining != heartbeat.IsDraining)
+        startupLogger.LogInformation("Instance {InstanceId} draining state changed to {IsDraining}.", heartbeat.InstanceId, heartbeat.IsDraining);
     return result.Accepted ? Results.Ok(result) : Results.Conflict(result);
 });
 

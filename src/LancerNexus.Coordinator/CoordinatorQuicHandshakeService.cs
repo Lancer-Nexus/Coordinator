@@ -222,8 +222,11 @@ public sealed class CoordinatorQuicHandshakeService : BackgroundService
         if (request.MessageType == (ushort)ClusterMessageType.AgentHeartbeat)
         {
             var heartbeat = MessagePackSerializer.Deserialize<AgentHeartbeat>(request.Payload, UntrustedMessagePack);
+            var now = timeProvider.GetUtcNow();
+            var wasAlive = registry.Snapshot(now).Agents.Any(agent =>
+                string.Equals(agent.AgentId, heartbeat.AgentId, StringComparison.Ordinal) && agent.IsAlive);
             var result = string.Equals(certificateNodeId, heartbeat.NodeId, StringComparison.OrdinalIgnoreCase)
-                ? registry.ApplyAgentHeartbeat(heartbeat, timeProvider.GetUtcNow())
+                ? registry.ApplyAgentHeartbeat(heartbeat, now)
                 : new RegistryOperationResult(false, "certificate_identity_mismatch");
             response = CreateControlResponse(
                 request,
@@ -232,11 +235,16 @@ public sealed class CoordinatorQuicHandshakeService : BackgroundService
                 result.Accepted);
             if (!result.Accepted)
                 logger.LogWarning("Coordinator rejected Agent heartbeat from {NodeId}: {ReasonCode}", certificateNodeId, result.ReasonCode);
+            else if (!wasAlive)
+                logger.LogInformation("Agent {AgentId} registered and heartbeat is live for node {NodeId}.", heartbeat.AgentId, certificateNodeId);
         }
         else if (request.MessageType == (ushort)ClusterMessageType.InstanceHeartbeat)
         {
             var heartbeat = MessagePackSerializer.Deserialize<InstanceHeartbeat>(request.Payload, UntrustedMessagePack);
-            var result = registry.ApplyInstanceHeartbeat(heartbeat, timeProvider.GetUtcNow(), certificateNodeId);
+            var now = timeProvider.GetUtcNow();
+            var previous = registry.Snapshot(now).Instances.FirstOrDefault(instance =>
+                string.Equals(instance.InstanceId, heartbeat.InstanceId, StringComparison.Ordinal));
+            var result = registry.ApplyInstanceHeartbeat(heartbeat, now, certificateNodeId);
             response = CreateControlResponse(
                 request,
                 ClusterMessageType.InstanceHeartbeatResponse,
@@ -245,6 +253,17 @@ public sealed class CoordinatorQuicHandshakeService : BackgroundService
             if (!result.Accepted)
                 logger.LogWarning("Coordinator rejected instance heartbeat {InstanceId} from Agent {AgentId}: {ReasonCode}",
                     heartbeat.InstanceId, heartbeat.AgentId, result.ReasonCode);
+            else if (previous is null || !previous.IsAlive || !previous.AgentIsAlive)
+                logger.LogInformation(
+                    "Instance {InstanceId} registered on system {SystemId}; ready {IsReady}, draining {IsDraining}, players {CurrentPlayers}/{MaxPlayers}.",
+                    heartbeat.InstanceId, heartbeat.SystemId, heartbeat.IsReady, heartbeat.IsDraining,
+                    heartbeat.CurrentPlayers, heartbeat.MaxPlayers);
+            else if (!previous.IsReady && heartbeat.IsReady)
+                logger.LogInformation("Instance {InstanceId} is now ready on system {SystemId}.", heartbeat.InstanceId, heartbeat.SystemId);
+            else if (previous.IsReady && !heartbeat.IsReady)
+                logger.LogWarning("Instance {InstanceId} is no longer ready.", heartbeat.InstanceId);
+            else if (previous.IsDraining != heartbeat.IsDraining)
+                logger.LogInformation("Instance {InstanceId} draining state changed to {IsDraining}.", heartbeat.InstanceId, heartbeat.IsDraining);
         }
         else
         {
