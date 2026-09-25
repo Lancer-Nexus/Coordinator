@@ -254,6 +254,47 @@ public sealed class CoordinatorRegistryTests
     }
 
     [Fact]
+    public void FileStore_RestoresFrozenTransferAfterCoordinatorRestart()
+    {
+        var tempDirectory = Path.Combine(Path.GetTempPath(), $"lancer-nexus-transfer-{Guid.NewGuid():N}");
+        var statePath = Path.Combine(tempDirectory, "state.json");
+        try
+        {
+            var firstProcess = new CoordinatorRegistry(new PlacementPolicy(), CoordinatorRegistryOptions.Default,
+                new FileCoordinatorRegistryStore(statePath));
+            Assert.True(firstProcess.ApplyAgentHeartbeat(Agent(sequence: 1), Now).Accepted);
+            Assert.True(firstProcess.ApplyInstanceHeartbeat(Instance("source", "li01", 1), Now).Accepted);
+            Assert.True(firstProcess.ApplyInstanceHeartbeat(Instance("target", "li02", 2), Now).Accepted);
+            var request = TransferRequest(expiresUtc: Now.AddSeconds(10).UtcDateTime);
+            Assert.True(firstProcess.PrepareTransfer(request, Now).Decision.Accepted);
+            Assert.True(firstProcess.AdvanceTransfer(request.TransferId, TransferState.SourceFrozen,
+                Now.AddSeconds(1)).Accepted);
+
+            var restartedProcess = new CoordinatorRegistry(new PlacementPolicy(), CoordinatorRegistryOptions.Default,
+                new FileCoordinatorRegistryStore(statePath));
+            var recovered = Assert.Single(restartedProcess.TransferSnapshot(Now.AddSeconds(15)));
+            var target = restartedProcess.Snapshot(Now.AddSeconds(15)).Instances.Single(x => x.InstanceId == "target");
+
+            Assert.Equal(TransferState.SourceFrozen, recovered.State);
+            Assert.Equal(request.TransferId, recovered.TransferId);
+            Assert.Equal(1, target.ReservedPlayers);
+            Assert.True(restartedProcess.AdvanceTransfer(request.TransferId, TransferState.TargetAccepted,
+                Now.AddSeconds(15)).Accepted);
+            Assert.True(restartedProcess.CommitTransfer(request.TransferId, request.CharacterId, 7,
+                Now.AddSeconds(16)).Accepted);
+            Assert.True(restartedProcess.AdvanceTransfer(request.TransferId, TransferState.SourceReleased,
+                Now.AddSeconds(17)).Accepted);
+            Assert.Equal(0, restartedProcess.Snapshot(Now.AddSeconds(17)).Instances
+                .Single(x => x.InstanceId == "target").ReservedPlayers);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDirectory))
+                Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
     public void FileStore_RestoresPreparedTransfersAndTheirCapacityReservation()
     {
         var tempDirectory = Path.Combine(Path.GetTempPath(), $"lancer-nexus-transfer-{Guid.NewGuid():N}");
