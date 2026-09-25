@@ -11,6 +11,7 @@ Make deterministic, observable and failure-tolerant placement decisions for the 
 - Registry snapshots persist to the configured filesystem path and recover on restart. The file provider is single-writer and single-process; do not claim multi-replica consistency until a transactional shared store with fencing is implemented.
 - The optional QUIC listener is disabled by default, requires TLS 1.3 mTLS and a configured CA, and binds certificate DNS SAN identity to `ClusterHello.NodeId`.
 - It coordinates idempotent transfers through `Requested -> Reserved -> Prepared -> SourceFrozen -> TargetAccepted -> Committed -> SourceReleased`. The source instance remains authoritative until the atomic MySQL lease commit.
+- Never expire `SourceFrozen`, `TargetAccepted` or `Committed` transfers automatically; they may represent frozen source state or a completed MySQL lease switch and require recovery. Hold target capacity until `SourceReleased`; retain released/aborted records long enough for idempotent retries.
 - Character authority uses MySQL leases with monotonic `lease_version` fencing. The Coordinator must never permit a stale instance to become authoritative again.
 - Redis is limited to transient distribution and presence. All coordination messages use versioned `Protocol` contracts and negotiated capabilities.
 

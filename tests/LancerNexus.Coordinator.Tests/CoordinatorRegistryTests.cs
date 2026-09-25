@@ -228,6 +228,32 @@ public sealed class CoordinatorRegistryTests
     }
 
     [Fact]
+    public void FrozenTransferCanRecoverPastTicketExpiryAndReleaseAfterCommit()
+    {
+        var registry = CreateRegistry();
+        Assert.True(registry.ApplyAgentHeartbeat(Agent(sequence: 1), Now).Accepted);
+        Assert.True(registry.ApplyInstanceHeartbeat(Instance("source", "li01", 1), Now).Accepted);
+        Assert.True(registry.ApplyInstanceHeartbeat(Instance("target", "li02", 2), Now).Accepted);
+        var request = TransferRequest(expiresUtc: Now.AddSeconds(10).UtcDateTime);
+        Assert.True(registry.PrepareTransfer(request, Now).Decision.Accepted);
+
+        Assert.True(registry.AdvanceTransfer(request.TransferId, TransferState.SourceFrozen, Now.AddSeconds(1)).Accepted);
+        var recovered = Assert.Single(registry.TransferSnapshot(Now.AddSeconds(15)));
+        Assert.Equal(TransferState.SourceFrozen, recovered.State);
+        Assert.Equal(1, registry.Snapshot(Now.AddSeconds(15)).Instances.Single(x => x.InstanceId == "target").ReservedPlayers);
+
+        Assert.True(registry.AdvanceTransfer(request.TransferId, TransferState.TargetAccepted, Now.AddSeconds(15)).Accepted);
+        Assert.True(registry.CommitTransfer(request.TransferId, request.CharacterId, 7, Now.AddSeconds(16)).Accepted);
+        Assert.True(registry.AdvanceTransfer(request.TransferId, TransferState.SourceReleased, Now.AddSeconds(30)).Accepted);
+        Assert.Equal(0, registry.Snapshot(Now.AddSeconds(30)).Instances.Single(x => x.InstanceId == "target").ReservedPlayers);
+        var released = registry.GetTransfer(request.TransferId, Now.AddSeconds(30));
+        Assert.NotNull(released);
+        Assert.Equal(TransferState.SourceReleased, released.State);
+        Assert.True(registry.AdvanceTransfer(request.TransferId, TransferState.SourceReleased,
+            Now.AddSeconds(31)).Duplicate);
+    }
+
+    [Fact]
     public void FileStore_RestoresPreparedTransfersAndTheirCapacityReservation()
     {
         var tempDirectory = Path.Combine(Path.GetTempPath(), $"lancer-nexus-transfer-{Guid.NewGuid():N}");
@@ -338,17 +364,18 @@ public sealed class CoordinatorRegistryTests
         Endpoint = $"quic://{id}:7443"
     };
 
-    private static TransferPrepareRequest TransferRequest(string targetSystem = "li02", string? idempotencyKey = null) => new()
-    {
-        TransferId = Guid.NewGuid(),
-        SessionId = Guid.NewGuid(),
-        CharacterId = 42,
-        SourceInstanceId = "source",
-        TargetInstanceId = "target",
-        TargetSystemId = targetSystem,
-        ExpiresUtc = Now.AddMinutes(1).UtcDateTime,
-        IdempotencyKey = idempotencyKey ?? Guid.NewGuid().ToString("N")
-    };
+    private static TransferPrepareRequest TransferRequest(string targetSystem = "li02", string? idempotencyKey = null,
+        DateTime? expiresUtc = null) => new()
+        {
+            TransferId = Guid.NewGuid(),
+            SessionId = Guid.NewGuid(),
+            CharacterId = 42,
+            SourceInstanceId = "source",
+            TargetInstanceId = "target",
+            TargetSystemId = targetSystem,
+            ExpiresUtc = expiresUtc ?? Now.AddMinutes(1).UtcDateTime,
+            IdempotencyKey = idempotencyKey ?? Guid.NewGuid().ToString("N")
+        };
 
     private static PlacementRequest Request(string key, string targetSystem = "li01", string? groupId = null) => new()
     {

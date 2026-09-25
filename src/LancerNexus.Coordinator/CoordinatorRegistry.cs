@@ -52,6 +52,7 @@ public sealed record TransferOperationResult(
 
 public sealed class CoordinatorRegistry
 {
+    private static readonly TimeSpan TerminalTransferRetention = TimeSpan.FromHours(24);
     private readonly object sync = new();
     private readonly PlacementPolicy placementPolicy;
     private readonly CoordinatorRegistryOptions options;
@@ -359,10 +360,14 @@ public sealed class CoordinatorRegistry
                 Persist();
             if (!transfers.TryGetValue(transferId, out var entry))
                 return new(false, "transfer_not_found", TransferState.Expired);
-            if (entry.ExpiresUtc <= nowUtc)
-                return new(false, "transfer_expired", entry.State);
+            var recoveryTransition = (entry.State, nextState) is
+                (TransferState.SourceFrozen, TransferState.TargetAccepted) or
+                (TransferState.TargetAccepted, TransferState.Committed) or
+                (TransferState.Committed, TransferState.SourceReleased);
             if (entry.State == nextState)
                 return new(true, "duplicate", entry.State, Duplicate: true);
+            if (entry.ExpiresUtc <= nowUtc && !recoveryTransition)
+                return new(false, "transfer_expired", entry.State);
             if (!CanTransition(entry.State, nextState))
                 return new(false, "invalid_transfer_transition", entry.State);
             if (nextState == TransferState.Committed && leaseVersion <= 0)
@@ -371,9 +376,21 @@ public sealed class CoordinatorRegistry
             var updated = entry with
             {
                 State = nextState,
-                LeaseVersion = nextState == TransferState.Committed ? leaseVersion : entry.LeaseVersion
+                LeaseVersion = nextState == TransferState.Committed ? leaseVersion : entry.LeaseVersion,
+                ExpiresUtc = nextState == TransferState.SourceReleased
+                    ? nowUtc.Add(TerminalTransferRetention)
+                    : entry.ExpiresUtc
             };
             transfers[transferId] = updated;
+            if ((nextState is TransferState.SourceFrozen or TransferState.TargetAccepted or TransferState.Committed) &&
+                reservations.TryGetValue(entry.ReservationKey, out var reservation))
+            {
+                reservations[entry.ReservationKey] = reservation with
+                {
+                    ExpiresUtc = DateTimeOffset.MaxValue,
+                    Decision = WithExpiry(reservation.Decision, DateTime.MaxValue)
+                };
+            }
             if (nextState == TransferState.SourceReleased)
                 reservations.Remove(entry.ReservationKey);
             try
@@ -384,6 +401,8 @@ public sealed class CoordinatorRegistry
             {
                 transfers[transferId] = entry;
                 if (nextState == TransferState.SourceReleased)
+                    RestoreReservation(entry);
+                else if (nextState is TransferState.SourceFrozen or TransferState.TargetAccepted or TransferState.Committed)
                     RestoreReservation(entry);
                 throw;
             }
@@ -407,7 +426,11 @@ public sealed class CoordinatorRegistry
             if (entry.State == TransferState.Aborted)
                 return new(true, "duplicate", entry.State, Duplicate: true);
 
-            transfers[abort.TransferId] = entry with { State = TransferState.Aborted };
+            transfers[abort.TransferId] = entry with
+            {
+                State = TransferState.Aborted,
+                ExpiresUtc = nowUtc.Add(TerminalTransferRetention)
+            };
             reservations.Remove(entry.ReservationKey);
             try
             {
@@ -431,8 +454,6 @@ public sealed class CoordinatorRegistry
                 Persist();
             if (!transfers.TryGetValue(transferId, out var entry))
                 return new(false, "transfer_not_found", TransferState.Expired);
-            if (entry.ExpiresUtc <= nowUtc)
-                return new(false, "transfer_expired", entry.State);
             if (entry.Request.CharacterId != characterId || characterId <= 0)
                 return new(false, "character_mismatch", entry.State);
             if (leaseVersion <= 0)
@@ -561,8 +582,25 @@ public sealed class CoordinatorRegistry
     private bool CleanupExpired(DateTimeOffset nowUtc)
     {
         var removedAny = false;
-        foreach (var key in reservations.Where(pair => pair.Value.ExpiresUtc <= nowUtc).Select(pair => pair.Key).ToArray())
-            removedAny |= reservations.Remove(key);
+        foreach (var pair in reservations.Where(pair => pair.Value.ExpiresUtc <= nowUtc).ToArray())
+        {
+            var transfer = transfers.Values.FirstOrDefault(entry =>
+                string.Equals(entry.ReservationKey, pair.Key, StringComparison.Ordinal));
+            if (transfer is not null && (transfer.State is
+                TransferState.SourceFrozen or TransferState.TargetAccepted or TransferState.Committed))
+            {
+                reservations[pair.Key] = pair.Value with
+                {
+                    ExpiresUtc = DateTimeOffset.MaxValue,
+                    Decision = WithExpiry(pair.Value.Decision, DateTime.MaxValue)
+                };
+                removedAny = true;
+            }
+            else
+            {
+                removedAny |= reservations.Remove(pair.Key);
+            }
+        }
         foreach (var key in groupAffinities.Where(pair => pair.Value.ExpiresUtc <= nowUtc).Select(pair => pair.Key).ToArray())
             removedAny |= groupAffinities.Remove(key);
         foreach (var pair in transfers.Where(pair => pair.Value.ExpiresUtc <= nowUtc).ToArray())
@@ -571,6 +609,19 @@ public sealed class CoordinatorRegistry
                 TransferState.Rejected or TransferState.TimedOut)
             {
                 removedAny |= transfers.Remove(pair.Key);
+            }
+            else if (pair.Value.State is TransferState.SourceFrozen or TransferState.TargetAccepted or TransferState.Committed)
+            {
+                if (reservations.TryGetValue(pair.Value.ReservationKey, out var reservation) &&
+                    reservation.ExpiresUtc != DateTimeOffset.MaxValue)
+                {
+                    reservations[pair.Value.ReservationKey] = reservation with
+                    {
+                        ExpiresUtc = DateTimeOffset.MaxValue,
+                        Decision = WithExpiry(reservation.Decision, DateTime.MaxValue)
+                    };
+                    removedAny = true;
+                }
             }
             else
             {
@@ -697,6 +748,9 @@ public sealed class CoordinatorRegistry
     {
         if (!instances.TryGetValue(transfer.Request.TargetInstanceId, out var instance))
             return;
+        var heldUntilRelease = transfer.State is TransferState.SourceFrozen or TransferState.TargetAccepted or
+            TransferState.Committed;
+        var reservationExpiry = heldUntilRelease ? DateTimeOffset.MaxValue : transfer.ExpiresUtc;
         var decision = new PlacementDecision
         {
             RequestId = transfer.Request.TransferId,
@@ -705,12 +759,23 @@ public sealed class CoordinatorRegistry
             SystemId = instance.Heartbeat.SystemId,
             Endpoint = instance.Heartbeat.Endpoint,
             ReasonCode = "transfer_reserved",
-            ExpiresUtc = transfer.ExpiresUtc.UtcDateTime
+            ExpiresUtc = reservationExpiry.UtcDateTime
         };
         reservations[transfer.ReservationKey] = new ReservationEntry(
             transfer.Request.SessionId, transfer.Request.TargetSystemId, transfer.Request.GroupId,
-            transfer.Request.TargetInstanceId, decision, transfer.ExpiresUtc);
+            transfer.Request.TargetInstanceId, decision, reservationExpiry);
     }
+
+    private static PlacementDecision WithExpiry(PlacementDecision decision, DateTime expiresUtc) => new()
+    {
+        RequestId = decision.RequestId,
+        Accepted = decision.Accepted,
+        InstanceId = decision.InstanceId,
+        SystemId = decision.SystemId,
+        Endpoint = decision.Endpoint,
+        ReasonCode = decision.ReasonCode,
+        ExpiresUtc = expiresUtc
+    };
 
     private static bool IsFresh(DateTimeOffset lastSeenUtc, DateTimeOffset nowUtc, TimeSpan timeout)
     {
