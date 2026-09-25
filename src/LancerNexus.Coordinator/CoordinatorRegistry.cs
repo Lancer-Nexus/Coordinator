@@ -39,6 +39,16 @@ public sealed record InstanceRegistryView(
     bool IsAlive);
 
 public sealed record PlacementOutcome(PlacementDecision Decision, bool Duplicate = false);
+public sealed record TransferOperationOutcome(
+    TransferPrepared Decision,
+    TransferState State,
+    string? TargetEndpoint,
+    bool Duplicate = false);
+public sealed record TransferOperationResult(
+    bool Accepted,
+    string ReasonCode,
+    TransferState State,
+    bool Duplicate = false);
 
 public sealed class CoordinatorRegistry
 {
@@ -50,6 +60,7 @@ public sealed class CoordinatorRegistry
     private readonly Dictionary<string, InstanceEntry> instances = new(StringComparer.Ordinal);
     private readonly Dictionary<string, ReservationEntry> reservations = new(StringComparer.Ordinal);
     private readonly Dictionary<string, GroupAffinityEntry> groupAffinities = new(StringComparer.Ordinal);
+    private readonly Dictionary<Guid, TransferEntry> transfers = [];
 
     public CoordinatorRegistry(
         PlacementPolicy placementPolicy,
@@ -243,6 +254,226 @@ public sealed class CoordinatorRegistry
         }
     }
 
+    public TransferOperationOutcome PrepareTransfer(TransferPrepareRequest request, DateTimeOffset nowUtc)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        lock (sync)
+        {
+            if (CleanupExpired(nowUtc))
+                Persist();
+
+            var invalid = ValidateTransferRequest(request, nowUtc);
+            if (invalid is not null)
+                return RejectedTransfer(request.TransferId, invalid, nowUtc);
+
+            if (transfers.TryGetValue(request.TransferId, out var sameTransfer))
+            {
+                if (!Matches(sameTransfer.Request, request))
+                    return RejectedTransfer(request.TransferId, "transfer_id_conflict", nowUtc);
+                return TransferOutcome(sameTransfer, duplicate: true);
+            }
+
+            if (transfers.Values.Any(entry =>
+                    string.Equals(entry.Request.IdempotencyKey, request.IdempotencyKey, StringComparison.Ordinal)))
+                return RejectedTransfer(request.TransferId, "idempotency_conflict", nowUtc);
+
+            var now = nowUtc.ToUniversalTime();
+            if (!instances.TryGetValue(request.SourceInstanceId, out var source) ||
+                !IsFresh(source.LastHeartbeatUtc, now, options.InstanceHeartbeatTimeout) ||
+                !agents.TryGetValue(source.Heartbeat.AgentId, out var sourceAgent) ||
+                !IsFresh(sourceAgent.LastHeartbeatUtc, now, options.AgentHeartbeatTimeout))
+                return RejectedTransfer(request.TransferId, "source_instance_unavailable", nowUtc);
+
+            if (string.Equals(request.SourceInstanceId, request.TargetInstanceId, StringComparison.Ordinal))
+                return RejectedTransfer(request.TransferId, "same_instance", nowUtc);
+
+            var target = BuildCandidates(now, affinity: null)
+                .FirstOrDefault(candidate => string.Equals(candidate.InstanceId, request.TargetInstanceId, StringComparison.Ordinal));
+            if (target is null)
+                return RejectedTransfer(request.TransferId, "target_instance_unavailable", nowUtc);
+
+            var placementRequest = new PlacementRequest
+            {
+                RequestId = request.TransferId,
+                SessionId = request.SessionId,
+                CharacterId = request.CharacterId,
+                TargetSystem = request.TargetSystemId,
+                GroupId = request.GroupId,
+                IdempotencyKey = "transfer:" + request.IdempotencyKey
+            };
+            var placement = placementPolicy.Decide(placementRequest, [target], now);
+            if (!placement.Accepted)
+                return RejectedTransfer(request.TransferId,
+                    target.SystemId == request.TargetSystemId ? "target_instance_unavailable" : "target_system_mismatch",
+                    nowUtc);
+
+            var reservationKey = placementRequest.IdempotencyKey;
+            var expiresUtc = new DateTimeOffset(DateTime.SpecifyKind(request.ExpiresUtc, DateTimeKind.Utc));
+            var reservedDecision = new PlacementDecision
+            {
+                RequestId = request.TransferId,
+                Accepted = true,
+                InstanceId = target.InstanceId,
+                SystemId = target.SystemId,
+                Endpoint = target.Endpoint,
+                ReasonCode = "transfer_reserved",
+                ExpiresUtc = expiresUtc.UtcDateTime
+            };
+            var transfer = new TransferEntry(request, reservationKey, TransferState.Prepared, expiresUtc, 0);
+            reservations[reservationKey] = new ReservationEntry(
+                request.SessionId, request.TargetSystemId, request.GroupId, target.InstanceId, reservedDecision, expiresUtc);
+            transfers[request.TransferId] = transfer;
+            try
+            {
+                Persist();
+            }
+            catch
+            {
+                transfers.Remove(request.TransferId);
+                reservations.Remove(reservationKey);
+                throw;
+            }
+
+            return new TransferOperationOutcome(
+                new TransferPrepared
+                {
+                    TransferId = request.TransferId,
+                    Accepted = true,
+                    ExpiresUtc = expiresUtc.UtcDateTime,
+                    ReasonCode = "prepared"
+                },
+                TransferState.Prepared,
+                target.Endpoint);
+        }
+    }
+
+    public TransferOperationResult AdvanceTransfer(
+        Guid transferId,
+        TransferState nextState,
+        DateTimeOffset nowUtc,
+        long leaseVersion = 0)
+    {
+        lock (sync)
+        {
+            if (CleanupExpired(nowUtc))
+                Persist();
+            if (!transfers.TryGetValue(transferId, out var entry))
+                return new(false, "transfer_not_found", TransferState.Expired);
+            if (entry.ExpiresUtc <= nowUtc)
+                return new(false, "transfer_expired", entry.State);
+            if (entry.State == nextState)
+                return new(true, "duplicate", entry.State, Duplicate: true);
+            if (!CanTransition(entry.State, nextState))
+                return new(false, "invalid_transfer_transition", entry.State);
+            if (nextState == TransferState.Committed && leaseVersion <= 0)
+                return new(false, "invalid_lease_version", entry.State);
+
+            var updated = entry with
+            {
+                State = nextState,
+                LeaseVersion = nextState == TransferState.Committed ? leaseVersion : entry.LeaseVersion
+            };
+            transfers[transferId] = updated;
+            if (nextState == TransferState.SourceReleased)
+                reservations.Remove(entry.ReservationKey);
+            try
+            {
+                Persist();
+            }
+            catch
+            {
+                transfers[transferId] = entry;
+                if (nextState == TransferState.SourceReleased)
+                    RestoreReservation(entry);
+                throw;
+            }
+            return new(true, "accepted", nextState);
+        }
+    }
+
+    public TransferOperationResult AbortTransfer(TransferAbort abort, DateTimeOffset nowUtc)
+    {
+        ArgumentNullException.ThrowIfNull(abort);
+        lock (sync)
+        {
+            if (CleanupExpired(nowUtc))
+                Persist();
+            if (abort.TransferId == Guid.Empty || string.IsNullOrWhiteSpace(abort.ReasonCode))
+                return new(false, "invalid_request", TransferState.Aborted);
+            if (!transfers.TryGetValue(abort.TransferId, out var entry))
+                return new(false, "transfer_not_found", TransferState.Expired);
+            if (entry.State >= TransferState.Committed && entry.State <= TransferState.SourceReleased)
+                return new(false, "transfer_already_committed", entry.State);
+            if (entry.State == TransferState.Aborted)
+                return new(true, "duplicate", entry.State, Duplicate: true);
+
+            transfers[abort.TransferId] = entry with { State = TransferState.Aborted };
+            reservations.Remove(entry.ReservationKey);
+            try
+            {
+                Persist();
+            }
+            catch
+            {
+                transfers[abort.TransferId] = entry;
+                RestoreReservation(entry);
+                throw;
+            }
+            return new(true, "accepted", TransferState.Aborted);
+        }
+    }
+
+    public TransferOperationResult CommitTransfer(Guid transferId, long characterId, long leaseVersion, DateTimeOffset nowUtc)
+    {
+        lock (sync)
+        {
+            if (CleanupExpired(nowUtc))
+                Persist();
+            if (!transfers.TryGetValue(transferId, out var entry))
+                return new(false, "transfer_not_found", TransferState.Expired);
+            if (entry.ExpiresUtc <= nowUtc)
+                return new(false, "transfer_expired", entry.State);
+            if (entry.Request.CharacterId != characterId || characterId <= 0)
+                return new(false, "character_mismatch", entry.State);
+            if (leaseVersion <= 0)
+                return new(false, "invalid_lease_version", entry.State);
+            if (entry.State == TransferState.Committed)
+                return entry.LeaseVersion == leaseVersion
+                    ? new(true, "duplicate", TransferState.Committed, Duplicate: true)
+                    : new(false, "lease_version_conflict", entry.State);
+            if (entry.State != TransferState.TargetAccepted)
+                return new(false, "invalid_transfer_transition", entry.State);
+            return AdvanceTransfer(transferId, TransferState.Committed, nowUtc, leaseVersion);
+        }
+    }
+
+    public IReadOnlyList<PersistedTransfer> TransferSnapshot(DateTimeOffset nowUtc)
+    {
+        lock (sync)
+        {
+            if (CleanupExpired(nowUtc))
+                Persist();
+            return transfers.Select(pair => new PersistedTransfer(
+                    pair.Key, pair.Value.Request, pair.Value.ReservationKey, pair.Value.State,
+                    pair.Value.ExpiresUtc, pair.Value.LeaseVersion))
+                .OrderBy(entry => entry.TransferId)
+                .ToArray();
+        }
+    }
+
+    public PersistedTransfer? GetTransfer(Guid transferId, DateTimeOffset nowUtc)
+    {
+        lock (sync)
+        {
+            if (CleanupExpired(nowUtc))
+                Persist();
+            return transfers.TryGetValue(transferId, out var entry)
+                ? new PersistedTransfer(transferId, entry.Request, entry.ReservationKey, entry.State,
+                    entry.ExpiresUtc, entry.LeaseVersion)
+                : null;
+        }
+    }
+
     public (IReadOnlyList<AgentRegistryView> Agents, IReadOnlyList<InstanceRegistryView> Instances) Snapshot(DateTimeOffset nowUtc)
     {
         lock (sync)
@@ -334,13 +565,27 @@ public sealed class CoordinatorRegistry
             removedAny |= reservations.Remove(key);
         foreach (var key in groupAffinities.Where(pair => pair.Value.ExpiresUtc <= nowUtc).Select(pair => pair.Key).ToArray())
             removedAny |= groupAffinities.Remove(key);
+        foreach (var pair in transfers.Where(pair => pair.Value.ExpiresUtc <= nowUtc).ToArray())
+        {
+            if (pair.Value.State is TransferState.SourceReleased or TransferState.Aborted or TransferState.Expired or
+                TransferState.Rejected or TransferState.TimedOut)
+            {
+                removedAny |= transfers.Remove(pair.Key);
+            }
+            else
+            {
+                transfers[pair.Key] = pair.Value with { State = TransferState.Expired };
+                removedAny = true;
+            }
+        }
         return removedAny;
     }
 
     private void Restore(CoordinatorRegistryState state)
     {
         if (state.SchemaVersion != CoordinatorRegistryState.CurrentSchemaVersion ||
-            state.Agents is null || state.Instances is null || state.Reservations is null || state.GroupAffinities is null)
+            state.Agents is null || state.Instances is null || state.Reservations is null ||
+            state.GroupAffinities is null || state.Transfers is null)
             throw new InvalidDataException("Coordinator registry state has an unsupported or invalid schema.");
 
         foreach (var entry in state.Agents)
@@ -356,6 +601,10 @@ public sealed class CoordinatorRegistry
         foreach (var entry in state.GroupAffinities)
             if (!groupAffinities.TryAdd(entry.GroupId, new GroupAffinityEntry(entry.SystemId, entry.InstanceId, entry.ExpiresUtc)))
                 throw new InvalidDataException($"Duplicate persisted group ID '{entry.GroupId}'.");
+        foreach (var entry in state.Transfers)
+            if (!transfers.TryAdd(entry.TransferId, new TransferEntry(
+                    entry.Request, entry.ReservationKey, entry.State, entry.ExpiresUtc, entry.LeaseVersion)))
+                throw new InvalidDataException($"Duplicate persisted transfer ID '{entry.TransferId}'.");
     }
 
     private void Persist() => store.Save(new CoordinatorRegistryState(
@@ -374,7 +623,94 @@ public sealed class CoordinatorRegistry
             pair.Value.SystemId,
             pair.Value.InstanceId,
             pair.Value.ExpiresUtc,
-            pair.Key)).ToArray()));
+            pair.Key)).ToArray())
+    {
+        Transfers = transfers.Select(pair => new PersistedTransfer(
+            pair.Key,
+            pair.Value.Request,
+            pair.Value.ReservationKey,
+            pair.Value.State,
+            pair.Value.ExpiresUtc,
+            pair.Value.LeaseVersion)).ToArray()
+    });
+
+    private static string? ValidateTransferRequest(TransferPrepareRequest request, DateTimeOffset nowUtc)
+    {
+        if (request.TransferId == Guid.Empty || request.SessionId == Guid.Empty || request.CharacterId <= 0 ||
+            string.IsNullOrWhiteSpace(request.SourceInstanceId) ||
+            string.IsNullOrWhiteSpace(request.TargetInstanceId) ||
+            string.IsNullOrWhiteSpace(request.TargetSystemId) ||
+            string.IsNullOrWhiteSpace(request.IdempotencyKey) || request.IdempotencyKey.Length > 128)
+            return "invalid_request";
+        if (request.ExpiresUtc.Kind != DateTimeKind.Utc)
+            return "invalid_expiry";
+        var expiry = new DateTimeOffset(request.ExpiresUtc);
+        if (expiry <= nowUtc || expiry > nowUtc.AddMinutes(2))
+            return "invalid_expiry";
+        return null;
+    }
+
+    private static bool Matches(TransferPrepareRequest left, TransferPrepareRequest right) =>
+        left.TransferId == right.TransferId && left.SessionId == right.SessionId &&
+        left.CharacterId == right.CharacterId &&
+        string.Equals(left.SourceInstanceId, right.SourceInstanceId, StringComparison.Ordinal) &&
+        string.Equals(left.TargetInstanceId, right.TargetInstanceId, StringComparison.Ordinal) &&
+        string.Equals(left.TargetSystemId, right.TargetSystemId, StringComparison.Ordinal) &&
+        string.Equals(left.GroupId, right.GroupId, StringComparison.Ordinal) &&
+        left.ExpiresUtc == right.ExpiresUtc &&
+        string.Equals(left.IdempotencyKey, right.IdempotencyKey, StringComparison.Ordinal);
+
+    private static bool CanTransition(TransferState current, TransferState next) => (current, next) switch
+    {
+        (TransferState.Prepared, TransferState.SourceFrozen) => true,
+        (TransferState.SourceFrozen, TransferState.TargetAccepted) => true,
+        (TransferState.TargetAccepted, TransferState.Committed) => true,
+        (TransferState.Committed, TransferState.SourceReleased) => true,
+        _ => false
+    };
+
+    private TransferOperationOutcome TransferOutcome(TransferEntry entry, bool duplicate)
+    {
+        var decision = new TransferPrepared
+        {
+            TransferId = entry.Request.TransferId,
+            Accepted = entry.State is not (TransferState.Aborted or TransferState.Expired or TransferState.Rejected or TransferState.TimedOut),
+            ExpiresUtc = entry.ExpiresUtc.UtcDateTime,
+            ReasonCode = entry.State.ToString().ToLowerInvariant()
+        };
+        var endpoint = instances.TryGetValue(entry.Request.TargetInstanceId, out var target)
+            ? target.Heartbeat.Endpoint
+            : null;
+        return new TransferOperationOutcome(decision, entry.State, endpoint, duplicate);
+    }
+
+    private static TransferOperationOutcome RejectedTransfer(Guid transferId, string reasonCode, DateTimeOffset nowUtc) =>
+        new(new TransferPrepared
+        {
+            TransferId = transferId,
+            Accepted = false,
+            ExpiresUtc = nowUtc.UtcDateTime,
+            ReasonCode = reasonCode
+        }, TransferState.Rejected, null);
+
+    private void RestoreReservation(TransferEntry transfer)
+    {
+        if (!instances.TryGetValue(transfer.Request.TargetInstanceId, out var instance))
+            return;
+        var decision = new PlacementDecision
+        {
+            RequestId = transfer.Request.TransferId,
+            Accepted = true,
+            InstanceId = instance.Heartbeat.InstanceId,
+            SystemId = instance.Heartbeat.SystemId,
+            Endpoint = instance.Heartbeat.Endpoint,
+            ReasonCode = "transfer_reserved",
+            ExpiresUtc = transfer.ExpiresUtc.UtcDateTime
+        };
+        reservations[transfer.ReservationKey] = new ReservationEntry(
+            transfer.Request.SessionId, transfer.Request.TargetSystemId, transfer.Request.GroupId,
+            transfer.Request.TargetInstanceId, decision, transfer.ExpiresUtc);
+    }
 
     private static bool IsFresh(DateTimeOffset lastSeenUtc, DateTimeOffset nowUtc, TimeSpan timeout)
     {
@@ -416,4 +752,10 @@ public sealed class CoordinatorRegistry
         PlacementDecision Decision,
         DateTimeOffset ExpiresUtc);
     private sealed record GroupAffinityEntry(string SystemId, string InstanceId, DateTimeOffset ExpiresUtc);
+    private sealed record TransferEntry(
+        TransferPrepareRequest Request,
+        string ReservationKey,
+        TransferState State,
+        DateTimeOffset ExpiresUtc,
+        long LeaseVersion);
 }

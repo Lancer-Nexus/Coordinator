@@ -34,6 +34,14 @@ Registry heartbeats, reservations, idempotency records and group affinity are sa
 
 The storage boundary is `ICoordinatorRegistryStore`, so a transactional database-backed implementation can replace the filesystem provider later. The current file provider is single-writer and only coordinates within one process; do not run multiple Coordinator replicas against the same file or assume multi-replica placement safety. For replicas, the replacement store must offer cross-process atomic transactions/locking, fencing and shared durable storage.
 
+## Transfer reservation lifecycle
+
+`POST /internal/v1/transfers/prepare` accepts the shared `TransferPrepareRequest`. It requires a fresh source instance and the exact requested target instance to be fresh, ready, non-draining, on the requested system and below capacity. It reserves one target slot until the request expires (maximum two minutes). Repeated requests with the same transfer ID and matching payload return the original prepared result; reusing an ID or idempotency key with different transfer data is rejected.
+
+The source and target progress a transfer with `POST /internal/v1/transfers/{id}/source-frozen` and `/target-accepted`. Gateway confirms the lease switch using `/commit/{leaseVersion}` only after the MySQL lease transaction succeeds. `/source-released` is valid only after commit and releases the target reservation. `POST /internal/v1/transfers/abort` releases reservations before commit; committed transfers cannot be rolled back through abort. `GET /internal/v1/transfers` exposes transfer state for internal diagnostics; `GET /internal/v1/transfers/{id}` retrieves one transfer for Gateway's target-ticket admission check. All endpoints require the internal bearer key.
+
+Transfer reservations and lifecycle state are included in the registry snapshot. The file schema upgrades version 1 snapshots in memory and writes schema version 2 on the next state change. This is a Coordinator state-machine foundation; it does not implement the Gateway's MySQL lease transaction, game-state snapshot transport, jump-gate hook, target attach ticket validation or client reconnect yet. Those steps are required for a complete in-game instance switch.
+
 ## QUIC mTLS handshake
 
 The Coordinator can expose a QUIC/TLS 1.3 handshake listener. It is disabled by default. To enable it, configure `Coordinator__Quic__Enabled=true`, a stable `Coordinator__Quic__NodeId`, `Coordinator__Quic__ServerCertificatePath` (PFX with private key and Server Authentication EKU), and `Coordinator__Quic__ClientCaCertificatePath` (trusted CA certificate). The PFX password is supplied via `Coordinator__Quic__ServerCertificatePassword`; never commit certificate files or passwords. `Coordinator__Quic__ListenAddress` defaults to loopback and `Coordinator__Quic__Port` to UDP 7443. Keep the listener on a private interface.

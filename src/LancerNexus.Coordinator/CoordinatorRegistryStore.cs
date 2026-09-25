@@ -14,6 +14,13 @@ public sealed record PersistedReservation(
     DateTimeOffset ExpiresUtc,
     string IdempotencyKey);
 public sealed record PersistedGroupAffinity(string SystemId, string InstanceId, DateTimeOffset ExpiresUtc, string GroupId);
+public sealed record PersistedTransfer(
+    Guid TransferId,
+    TransferPrepareRequest Request,
+    string ReservationKey,
+    TransferState State,
+    DateTimeOffset ExpiresUtc,
+    long LeaseVersion);
 
 public sealed record CoordinatorRegistryState(
     int SchemaVersion,
@@ -22,10 +29,12 @@ public sealed record CoordinatorRegistryState(
     PersistedReservation[] Reservations,
     PersistedGroupAffinity[] GroupAffinities)
 {
-    public const int CurrentSchemaVersion = 1;
+    public const int CurrentSchemaVersion = 2;
+
+    public PersistedTransfer[] Transfers { get; init; } = [];
 
     public static CoordinatorRegistryState Empty { get; } = new(
-        CurrentSchemaVersion, [], [], [], []);
+        CurrentSchemaVersion, [], [], [], []) { Transfers = [] };
 }
 
 /// <summary>
@@ -73,6 +82,8 @@ public sealed class FileCoordinatorRegistryStore : ICoordinatorRegistryStore
             using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
             var state = JsonSerializer.Deserialize<CoordinatorRegistryState>(stream, JsonOptions)
                 ?? throw new InvalidDataException("Coordinator registry state file is empty or invalid.");
+            if (state.SchemaVersion == 1)
+                return state with { SchemaVersion = CoordinatorRegistryState.CurrentSchemaVersion, Transfers = [] };
             if (state.SchemaVersion != CoordinatorRegistryState.CurrentSchemaVersion)
                 throw new InvalidDataException($"Unsupported Coordinator registry schema version {state.SchemaVersion}.");
             return state;

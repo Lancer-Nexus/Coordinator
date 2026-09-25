@@ -107,8 +107,8 @@ public sealed class CoordinatorRegistryTests
     {
         var registry = CreateRegistry();
         Assert.True(registry.ApplyAgentHeartbeat(Agent(sequence: 1), Now).Accepted);
-        Assert.True(registry.ApplyInstanceHeartbeat(Instance("one", 1, 1), Now).Accepted);
-        Assert.True(registry.ApplyInstanceHeartbeat(Instance("two", 1, 10), Now).Accepted);
+        Assert.True(registry.ApplyInstanceHeartbeat(Instance("one", sequence: 1, maxPlayers: 1), Now).Accepted);
+        Assert.True(registry.ApplyInstanceHeartbeat(Instance("two", sequence: 1, maxPlayers: 10), Now).Accepted);
         var first = Request("member-1", groupId: "group");
         Assert.Equal("one", registry.Place(first, Now).Decision.InstanceId);
 
@@ -152,6 +152,164 @@ public sealed class CoordinatorRegistryTests
         }
     }
 
+    [Fact]
+    public void PrepareTransfer_ReservesTheRequestedReadyTargetAndIsIdempotent()
+    {
+        var registry = CreateRegistry();
+        Assert.True(registry.ApplyAgentHeartbeat(Agent(sequence: 1), Now).Accepted);
+        Assert.True(registry.ApplyInstanceHeartbeat(Instance("source", "li01", 1), Now).Accepted);
+        Assert.True(registry.ApplyInstanceHeartbeat(Instance("target", "li02", 2), Now).Accepted);
+        var request = TransferRequest();
+
+        var prepared = registry.PrepareTransfer(request, Now);
+        var retry = registry.PrepareTransfer(request, Now.AddSeconds(1));
+        var target = registry.Snapshot(Now.AddSeconds(1)).Instances.Single(x => x.InstanceId == "target");
+
+        Assert.True(prepared.Decision.Accepted);
+        Assert.Equal(TransferState.Prepared, prepared.State);
+        Assert.Equal("quic://target:7443", prepared.TargetEndpoint);
+        Assert.True(retry.Duplicate);
+        Assert.Equal(request.TransferId, retry.Decision.TransferId);
+        Assert.Equal(1, target.ReservedPlayers);
+    }
+
+    [Fact]
+    public void TransferLifecycle_RejectsInvalidOrderAndRequiresLeaseVersionBeforeSourceRelease()
+    {
+        var registry = CreateRegistry();
+        Assert.True(registry.ApplyAgentHeartbeat(Agent(sequence: 1), Now).Accepted);
+        Assert.True(registry.ApplyInstanceHeartbeat(Instance("source", "li01", 1), Now).Accepted);
+        Assert.True(registry.ApplyInstanceHeartbeat(Instance("target", "li02", 2), Now).Accepted);
+        var request = TransferRequest();
+        Assert.True(registry.PrepareTransfer(request, Now).Decision.Accepted);
+
+        Assert.Equal("invalid_transfer_transition",
+            registry.AdvanceTransfer(request.TransferId, TransferState.TargetAccepted, Now).ReasonCode);
+        Assert.True(registry.AdvanceTransfer(request.TransferId, TransferState.SourceFrozen, Now).Accepted);
+        var sourceFrozen = registry.GetTransfer(request.TransferId, Now);
+        Assert.NotNull(sourceFrozen);
+        Assert.Equal(TransferState.SourceFrozen, sourceFrozen.State);
+        Assert.True(registry.AdvanceTransfer(request.TransferId, TransferState.TargetAccepted, Now).Accepted);
+        Assert.Equal("invalid_lease_version",
+            registry.AdvanceTransfer(request.TransferId, TransferState.Committed, Now).ReasonCode);
+        Assert.True(registry.AdvanceTransfer(request.TransferId, TransferState.Committed, Now, leaseVersion: 7).Accepted);
+        Assert.Equal("transfer_already_committed",
+            registry.AbortTransfer(new TransferAbort { TransferId = request.TransferId, ReasonCode = "late_abort" }, Now).ReasonCode);
+        Assert.True(registry.AdvanceTransfer(request.TransferId, TransferState.SourceReleased, Now).Accepted);
+        Assert.Equal(0, registry.Snapshot(Now).Instances.Single(x => x.InstanceId == "target").ReservedPlayers);
+        Assert.Equal(7, Assert.Single(registry.TransferSnapshot(Now)).LeaseVersion);
+    }
+
+    [Fact]
+    public void PrepareTransfer_RejectsWrongSystemFullOrStaleTargets()
+    {
+        var wrongSystem = CreateRegistry();
+        Assert.True(wrongSystem.ApplyAgentHeartbeat(Agent(sequence: 1), Now).Accepted);
+        Assert.True(wrongSystem.ApplyInstanceHeartbeat(Instance("source", "li01", 1), Now).Accepted);
+        Assert.True(wrongSystem.ApplyInstanceHeartbeat(Instance("target", "li01", 2), Now).Accepted);
+        Assert.Equal("target_system_mismatch",
+            wrongSystem.PrepareTransfer(TransferRequest(targetSystem: "li02"), Now).Decision.ReasonCode);
+
+        var full = CreateRegistry();
+        Assert.True(full.ApplyAgentHeartbeat(Agent(sequence: 1), Now).Accepted);
+        Assert.True(full.ApplyInstanceHeartbeat(Instance("source", "li01", 1), Now).Accepted);
+        Assert.True(full.ApplyInstanceHeartbeat(Instance("target", "li02", 2, maxPlayers: 1, currentPlayers: 1), Now).Accepted);
+        Assert.Equal("target_instance_unavailable",
+            full.PrepareTransfer(TransferRequest(), Now).Decision.ReasonCode);
+
+        var stale = CreateRegistry();
+        Assert.True(stale.ApplyAgentHeartbeat(Agent(sequence: 1), Now).Accepted);
+        Assert.True(stale.ApplyInstanceHeartbeat(Instance("source", "li01", 1), Now).Accepted);
+        Assert.True(stale.ApplyInstanceHeartbeat(Instance("target", "li02", 2), Now).Accepted);
+        Assert.True(stale.ApplyAgentHeartbeat(Agent(sequence: 2), Now.AddSeconds(16)).Accepted);
+        Assert.True(stale.ApplyInstanceHeartbeat(Instance("source", "li01", 2), Now.AddSeconds(16)).Accepted);
+        Assert.Equal("target_instance_unavailable",
+            stale.PrepareTransfer(TransferRequest(), Now.AddSeconds(16)).Decision.ReasonCode);
+    }
+
+    [Fact]
+    public void FileStore_RestoresPreparedTransfersAndTheirCapacityReservation()
+    {
+        var tempDirectory = Path.Combine(Path.GetTempPath(), $"lancer-nexus-transfer-{Guid.NewGuid():N}");
+        var statePath = Path.Combine(tempDirectory, "state.json");
+        try
+        {
+            var first = new CoordinatorRegistry(new PlacementPolicy(), CoordinatorRegistryOptions.Default,
+                new FileCoordinatorRegistryStore(statePath));
+            Assert.True(first.ApplyAgentHeartbeat(Agent(sequence: 1), Now).Accepted);
+            Assert.True(first.ApplyInstanceHeartbeat(Instance("source", "li01", 1), Now).Accepted);
+            Assert.True(first.ApplyInstanceHeartbeat(Instance("target", "li02", 2), Now).Accepted);
+            var request = TransferRequest();
+            Assert.True(first.PrepareTransfer(request, Now).Decision.Accepted);
+            Assert.True(first.AdvanceTransfer(request.TransferId, TransferState.SourceFrozen, Now).Accepted);
+
+            var restarted = new CoordinatorRegistry(new PlacementPolicy(), CoordinatorRegistryOptions.Default,
+                new FileCoordinatorRegistryStore(statePath));
+            var transfer = Assert.Single(restarted.TransferSnapshot(Now.AddSeconds(1)));
+            var target = restarted.Snapshot(Now.AddSeconds(1)).Instances.Single(x => x.InstanceId == "target");
+
+            Assert.Equal(TransferState.SourceFrozen, transfer.State);
+            Assert.Equal(1, target.ReservedPlayers);
+            Assert.True(restarted.PrepareTransfer(request, Now.AddSeconds(1)).Duplicate);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDirectory))
+                Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void TransferAbortExpiryAndCommitReplayPreserveReservationRules()
+    {
+        var registry = CreateRegistry();
+        Assert.True(registry.ApplyAgentHeartbeat(Agent(sequence: 1), Now).Accepted);
+        Assert.True(registry.ApplyInstanceHeartbeat(Instance("source", "li01", 1), Now).Accepted);
+        Assert.True(registry.ApplyInstanceHeartbeat(Instance("target", "li02", 2), Now).Accepted);
+
+        var aborted = TransferRequest();
+        Assert.True(registry.PrepareTransfer(aborted, Now).Decision.Accepted);
+        var keyConflict = TransferRequest(idempotencyKey: aborted.IdempotencyKey);
+        Assert.Equal("idempotency_conflict", registry.PrepareTransfer(keyConflict, Now).Decision.ReasonCode);
+        Assert.True(registry.AbortTransfer(new TransferAbort
+        {
+            TransferId = aborted.TransferId,
+            ReasonCode = "source_rejected",
+            Retryable = true
+        }, Now).Accepted);
+
+        var expiring = TransferRequest();
+        Assert.True(registry.PrepareTransfer(expiring, Now).Decision.Accepted);
+        var expired = registry.TransferSnapshot(Now.AddSeconds(61)).Single(x => x.TransferId == expiring.TransferId);
+
+        Assert.Equal(TransferState.Expired, expired.State);
+        Assert.Equal(0, registry.Snapshot(Now.AddSeconds(61)).Instances.Single(x => x.InstanceId == "target").ReservedPlayers);
+    }
+
+    [Fact]
+    public void FileStore_MigratesVersionOneStateWithoutLosingRegistryData()
+    {
+        var tempDirectory = Path.Combine(Path.GetTempPath(), $"lancer-nexus-registry-v1-{Guid.NewGuid():N}");
+        var statePath = Path.Combine(tempDirectory, "state.json");
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            File.WriteAllText(statePath, """
+                {"schemaVersion":1,"agents":[],"instances":[],"reservations":[],"groupAffinities":[]}
+                """);
+
+            var state = new FileCoordinatorRegistryStore(statePath).Load();
+
+            Assert.Equal(CoordinatorRegistryState.CurrentSchemaVersion, state.SchemaVersion);
+            Assert.Empty(state.Transfers);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDirectory))
+                Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
     private static CoordinatorRegistry CreateRegistry() => new(new PlacementPolicy(), CoordinatorRegistryOptions.Default);
 
     private static void Register(CoordinatorRegistry registry, int maxPlayers = 20)
@@ -168,16 +326,28 @@ public sealed class CoordinatorRegistryTests
         Sequence = sequence
     };
 
-    private static InstanceHeartbeat Instance(string id = "instance-1", ulong sequence = 1, int maxPlayers = 20, bool isReady = true) => new()
+    private static InstanceHeartbeat Instance(string id = "instance-1", string system = "li01", ulong sequence = 1, int maxPlayers = 20, bool isReady = true, int currentPlayers = 0) => new()
     {
         AgentId = "agent-1",
         InstanceId = id,
-        SystemId = "li01",
+        SystemId = system,
         Sequence = sequence,
         IsReady = isReady,
-        CurrentPlayers = 0,
+        CurrentPlayers = currentPlayers,
         MaxPlayers = maxPlayers,
         Endpoint = $"quic://{id}:7443"
+    };
+
+    private static TransferPrepareRequest TransferRequest(string targetSystem = "li02", string? idempotencyKey = null) => new()
+    {
+        TransferId = Guid.NewGuid(),
+        SessionId = Guid.NewGuid(),
+        CharacterId = 42,
+        SourceInstanceId = "source",
+        TargetInstanceId = "target",
+        TargetSystemId = targetSystem,
+        ExpiresUtc = Now.AddMinutes(1).UtcDateTime,
+        IdempotencyKey = idempotencyKey ?? Guid.NewGuid().ToString("N")
     };
 
     private static PlacementRequest Request(string key, string targetSystem = "li01", string? groupId = null) => new()

@@ -141,6 +141,74 @@ app.MapGet("/internal/v1/registry", (CoordinatorRegistry registry, TimeProvider 
     return Results.Ok(new { agents = snapshot.Agents, instances = snapshot.Instances });
 });
 
+app.MapGet("/internal/v1/transfers", (CoordinatorRegistry registry, TimeProvider timeProvider) =>
+    Results.Ok(registry.TransferSnapshot(timeProvider.GetUtcNow())));
+
+app.MapGet("/internal/v1/transfers/{transferId:guid}", (Guid transferId, CoordinatorRegistry registry, TimeProvider timeProvider) =>
+{
+    var transfer = registry.GetTransfer(transferId, timeProvider.GetUtcNow());
+    return transfer is null ? Results.NotFound() : Results.Ok(transfer);
+});
+
+app.MapPost("/internal/v1/transfers/prepare", (
+    TransferPrepareRequest request,
+    CoordinatorRegistry registry,
+    TimeProvider timeProvider) =>
+{
+    var outcome = registry.PrepareTransfer(request, timeProvider.GetUtcNow());
+    return outcome.Decision.Accepted ? Results.Ok(outcome) : Results.Conflict(outcome);
+});
+
+app.MapPost("/internal/v1/transfers/{transferId:guid}/source-frozen", (
+    Guid transferId,
+    CoordinatorRegistry registry,
+    TimeProvider timeProvider) =>
+{
+    var outcome = registry.AdvanceTransfer(transferId, TransferState.SourceFrozen, timeProvider.GetUtcNow());
+    return outcome.Accepted ? Results.Ok(outcome) : Results.Conflict(outcome);
+});
+
+app.MapPost("/internal/v1/transfers/{transferId:guid}/target-accepted", (
+    Guid transferId,
+    CoordinatorRegistry registry,
+    TimeProvider timeProvider) =>
+{
+    var outcome = registry.AdvanceTransfer(transferId, TransferState.TargetAccepted, timeProvider.GetUtcNow());
+    return outcome.Accepted ? Results.Ok(outcome) : Results.Conflict(outcome);
+});
+
+app.MapPost("/internal/v1/transfers/{transferId:guid}/commit/{leaseVersion:long}", (
+    Guid transferId,
+    long leaseVersion,
+    CoordinatorRegistry registry,
+    TimeProvider timeProvider) =>
+{
+    var transfer = registry.TransferSnapshot(timeProvider.GetUtcNow())
+        .FirstOrDefault(entry => entry.TransferId == transferId);
+    if (transfer is null)
+        return Results.NotFound(new TransferOperationResult(false, "transfer_not_found", TransferState.Expired));
+    var outcome = registry.CommitTransfer(transferId, transfer.Request.CharacterId, leaseVersion, timeProvider.GetUtcNow());
+    return outcome.Accepted ? Results.Ok(outcome) : Results.Conflict(outcome);
+});
+
+app.MapPost("/internal/v1/transfers/{transferId:guid}/source-released", (
+    Guid transferId,
+    CoordinatorRegistry registry,
+    TimeProvider timeProvider) =>
+{
+    var outcome = registry.AdvanceTransfer(transferId, TransferState.SourceReleased, timeProvider.GetUtcNow());
+    return outcome.Accepted ? Results.Ok(outcome) : Results.Conflict(outcome);
+});
+
+app.MapPost("/internal/v1/transfers/abort", (
+    TransferAbort request,
+    CoordinatorRegistry registry,
+    TimeProvider timeProvider) =>
+{
+    var outcome = registry.AbortTransfer(request, timeProvider.GetUtcNow());
+    return outcome.Accepted ? Results.Ok(outcome) : Results.Conflict(outcome);
+});
+
 app.MapPost("/api/v1/placement", (
     PlacementRequest request,
     CoordinatorRegistry registry,
