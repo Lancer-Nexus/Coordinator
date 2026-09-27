@@ -174,6 +174,25 @@ public sealed class CoordinatorRegistryTests
     }
 
     [Fact]
+    public void PrepareTransfer_ResolvesTargetWhenInstanceIsUnspecified()
+    {
+        var registry = CreateRegistry();
+        Assert.True(registry.ApplyAgentHeartbeat(Agent(sequence: 1), Now).Accepted);
+        Assert.True(registry.ApplyInstanceHeartbeat(Instance("source", "li01", 1), Now).Accepted);
+        Assert.True(registry.ApplyInstanceHeartbeat(Instance("target", "li02", 2), Now).Accepted);
+        var request = TransferRequest(targetInstanceId: "");
+
+        var prepared = registry.PrepareTransfer(request, Now);
+        var retry = registry.PrepareTransfer(request, Now.AddSeconds(1));
+
+        Assert.True(prepared.Decision.Accepted);
+        Assert.Equal("target", prepared.TargetInstanceId);
+        Assert.Equal("quic://target:7443", prepared.TargetEndpoint);
+        Assert.True(retry.Duplicate);
+        Assert.Equal("target", retry.TargetInstanceId);
+    }
+
+    [Fact]
     public void TransferLifecycle_RejectsInvalidOrderAndRequiresLeaseVersionBeforeSourceRelease()
     {
         var registry = CreateRegistry();
@@ -350,6 +369,7 @@ public sealed class CoordinatorRegistryTests
         var expired = registry.TransferSnapshot(Now.AddSeconds(61)).Single(x => x.TransferId == expiring.TransferId);
 
         Assert.Equal(TransferState.Expired, expired.State);
+        Assert.Contains(registry.TransferSnapshot(Now.AddSeconds(62)), x => x.TransferId == expiring.TransferId);
         Assert.Equal(0, registry.Snapshot(Now.AddSeconds(61)).Instances.Single(x => x.InstanceId == "target").ReservedPlayers);
     }
 
@@ -406,13 +426,13 @@ public sealed class CoordinatorRegistryTests
     };
 
     private static TransferPrepareRequest TransferRequest(string targetSystem = "li02", string? idempotencyKey = null,
-        DateTime? expiresUtc = null) => new()
+        DateTime? expiresUtc = null, string targetInstanceId = "target") => new()
         {
             TransferId = Guid.NewGuid(),
             SessionId = Guid.NewGuid(),
             CharacterId = 42,
             SourceInstanceId = "source",
-            TargetInstanceId = "target",
+            TargetInstanceId = targetInstanceId,
             TargetSystemId = targetSystem,
             ExpiresUtc = expiresUtc ?? Now.AddMinutes(1).UtcDateTime,
             IdempotencyKey = idempotencyKey ?? Guid.NewGuid().ToString("N")

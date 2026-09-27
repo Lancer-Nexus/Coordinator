@@ -27,6 +27,16 @@ public sealed class PlacementPolicyTests
     }
 
     [Fact]
+    public void Decide_MatchesSystemIdsCaseInsensitively()
+    {
+        var result = policy.Decide(Request("LI03"),
+            [Ready("li02", 0, 8) with { SystemId = "li03" }], Now);
+
+        Assert.True(result.Accepted);
+        Assert.Equal("li02", result.InstanceId);
+    }
+
+    [Fact]
     public void Decide_PrefersGroupAffinityOverLoad()
     {
         var candidates = new[]
@@ -67,11 +77,11 @@ public sealed class PlacementPolicyTests
         Assert.Equal("invalid_request", result.ReasonCode);
     }
 
-    private static PlacementRequest Request(string idempotencyKey = "assignment-1") => new()
+    private static PlacementRequest Request(string targetSystem = "li01", string idempotencyKey = "assignment-1") => new()
     {
         RequestId = Guid.NewGuid(),
         SessionId = Guid.NewGuid(),
-        TargetSystem = "li01",
+        TargetSystem = targetSystem,
         IdempotencyKey = idempotencyKey
     };
 

@@ -43,7 +43,8 @@ public sealed record TransferOperationOutcome(
     TransferPrepared Decision,
     TransferState State,
     string? TargetEndpoint,
-    bool Duplicate = false);
+    bool Duplicate = false,
+    string? TargetInstanceId = null);
 public sealed record TransferOperationResult(
     bool Accepted,
     string ReasonCode,
@@ -139,7 +140,7 @@ public sealed class CoordinatorRegistry
             {
                 if (!string.Equals(existing.Heartbeat.AgentId, heartbeat.AgentId, StringComparison.Ordinal))
                     return new(false, "instance_owner_changed");
-                if (!string.Equals(existing.Heartbeat.SystemId, heartbeat.SystemId, StringComparison.Ordinal))
+                if (!string.Equals(existing.Heartbeat.SystemId, heartbeat.SystemId, StringComparison.OrdinalIgnoreCase))
                     return new(false, "instance_system_changed");
                 if (heartbeat.Sequence < existing.Heartbeat.Sequence)
                     return new(false, "stale_sequence");
@@ -196,7 +197,7 @@ public sealed class CoordinatorRegistry
             if (!string.IsNullOrWhiteSpace(request.GroupId) &&
                 groupAffinities.TryGetValue(request.GroupId, out var storedAffinity) &&
                 storedAffinity.ExpiresUtc > nowUtc &&
-                string.Equals(storedAffinity.SystemId, request.TargetSystem, StringComparison.Ordinal))
+                string.Equals(storedAffinity.SystemId, request.TargetSystem, StringComparison.OrdinalIgnoreCase))
             {
                 affinity = storedAffinity;
             }
@@ -285,14 +286,6 @@ public sealed class CoordinatorRegistry
                 !IsFresh(sourceAgent.LastHeartbeatUtc, now, options.AgentHeartbeatTimeout))
                 return RejectedTransfer(request.TransferId, "source_instance_unavailable", nowUtc);
 
-            if (string.Equals(request.SourceInstanceId, request.TargetInstanceId, StringComparison.Ordinal))
-                return RejectedTransfer(request.TransferId, "same_instance", nowUtc);
-
-            var target = BuildCandidates(now, affinity: null)
-                .FirstOrDefault(candidate => string.Equals(candidate.InstanceId, request.TargetInstanceId, StringComparison.Ordinal));
-            if (target is null)
-                return RejectedTransfer(request.TransferId, "target_instance_unavailable", nowUtc);
-
             var placementRequest = new PlacementRequest
             {
                 RequestId = request.TransferId,
@@ -302,11 +295,49 @@ public sealed class CoordinatorRegistry
                 GroupId = request.GroupId,
                 IdempotencyKey = "transfer:" + request.IdempotencyKey
             };
-            var placement = placementPolicy.Decide(placementRequest, [target], now);
+            var candidates = BuildCandidates(now, affinity: null).ToArray();
+            InstanceCandidate? target;
+            PlacementDecision placement;
+            if (string.IsNullOrWhiteSpace(request.TargetInstanceId))
+            {
+                placement = placementPolicy.Decide(placementRequest, candidates, now);
+                target = placement.Accepted
+                    ? candidates.FirstOrDefault(candidate => candidate.InstanceId == placement.InstanceId)
+                    : null;
+            }
+            else
+            {
+                if (string.Equals(request.SourceInstanceId, request.TargetInstanceId, StringComparison.Ordinal))
+                    return RejectedTransfer(request.TransferId, "same_instance", nowUtc);
+                target = candidates.FirstOrDefault(candidate =>
+                    string.Equals(candidate.InstanceId, request.TargetInstanceId, StringComparison.Ordinal));
+                placement = target is null
+                    ? new PlacementDecision { Accepted = false, ReasonCode = "target_instance_unavailable" }
+                    : placementPolicy.Decide(placementRequest, [target], now);
+            }
             if (!placement.Accepted)
                 return RejectedTransfer(request.TransferId,
-                    target.SystemId == request.TargetSystemId ? "target_instance_unavailable" : "target_system_mismatch",
+                    string.IsNullOrWhiteSpace(request.TargetInstanceId)
+                        ? placement.ReasonCode
+                        : string.Equals(target?.SystemId, request.TargetSystemId, StringComparison.OrdinalIgnoreCase)
+                            ? "target_instance_unavailable"
+                            : "target_system_mismatch",
                     nowUtc);
+            if (target is null || string.Equals(request.SourceInstanceId, target.InstanceId, StringComparison.Ordinal))
+                return RejectedTransfer(request.TransferId, "same_instance", nowUtc);
+
+            var resolvedRequest = new TransferPrepareRequest
+            {
+                TransferId = request.TransferId,
+                SessionId = request.SessionId,
+                CharacterId = request.CharacterId,
+                SourceInstanceId = request.SourceInstanceId,
+                TargetInstanceId = target.InstanceId,
+                TargetSystemId = request.TargetSystemId,
+                GroupId = request.GroupId,
+                ExpiresUtc = request.ExpiresUtc,
+                IdempotencyKey = request.IdempotencyKey
+            };
 
             var reservationKey = placementRequest.IdempotencyKey;
             var expiresUtc = new DateTimeOffset(DateTime.SpecifyKind(request.ExpiresUtc, DateTimeKind.Utc));
@@ -320,7 +351,7 @@ public sealed class CoordinatorRegistry
                 ReasonCode = "transfer_reserved",
                 ExpiresUtc = expiresUtc.UtcDateTime
             };
-            var transfer = new TransferEntry(request, reservationKey, TransferState.Prepared, expiresUtc, 0);
+            var transfer = new TransferEntry(resolvedRequest, reservationKey, TransferState.Prepared, expiresUtc, 0);
             reservations[reservationKey] = new ReservationEntry(
                 request.SessionId, request.TargetSystemId, request.GroupId, target.InstanceId, reservedDecision, expiresUtc);
             transfers[request.TransferId] = transfer;
@@ -344,7 +375,8 @@ public sealed class CoordinatorRegistry
                     ReasonCode = "prepared"
                 },
                 TransferState.Prepared,
-                target.Endpoint);
+                target.Endpoint,
+                TargetInstanceId: target.InstanceId);
         }
     }
 
@@ -625,7 +657,11 @@ public sealed class CoordinatorRegistry
             }
             else
             {
-                transfers[pair.Key] = pair.Value with { State = TransferState.Expired };
+                transfers[pair.Key] = pair.Value with
+                {
+                    State = TransferState.Expired,
+                    ExpiresUtc = nowUtc.Add(TerminalTransferRetention)
+                };
                 removedAny = true;
             }
         }
@@ -689,7 +725,7 @@ public sealed class CoordinatorRegistry
     {
         if (request.TransferId == Guid.Empty || request.SessionId == Guid.Empty || request.CharacterId <= 0 ||
             string.IsNullOrWhiteSpace(request.SourceInstanceId) ||
-            string.IsNullOrWhiteSpace(request.TargetInstanceId) ||
+            request.TargetInstanceId is { Length: > 96 } ||
             string.IsNullOrWhiteSpace(request.TargetSystemId) ||
             string.IsNullOrWhiteSpace(request.IdempotencyKey) || request.IdempotencyKey.Length > 128)
             return "invalid_request";
@@ -705,8 +741,9 @@ public sealed class CoordinatorRegistry
         left.TransferId == right.TransferId && left.SessionId == right.SessionId &&
         left.CharacterId == right.CharacterId &&
         string.Equals(left.SourceInstanceId, right.SourceInstanceId, StringComparison.Ordinal) &&
-        string.Equals(left.TargetInstanceId, right.TargetInstanceId, StringComparison.Ordinal) &&
-        string.Equals(left.TargetSystemId, right.TargetSystemId, StringComparison.Ordinal) &&
+        (string.IsNullOrWhiteSpace(right.TargetInstanceId) ||
+         string.Equals(left.TargetInstanceId, right.TargetInstanceId, StringComparison.Ordinal)) &&
+        string.Equals(left.TargetSystemId, right.TargetSystemId, StringComparison.OrdinalIgnoreCase) &&
         string.Equals(left.GroupId, right.GroupId, StringComparison.Ordinal) &&
         left.ExpiresUtc == right.ExpiresUtc &&
         string.Equals(left.IdempotencyKey, right.IdempotencyKey, StringComparison.Ordinal);
@@ -732,7 +769,8 @@ public sealed class CoordinatorRegistry
         var endpoint = instances.TryGetValue(entry.Request.TargetInstanceId, out var target)
             ? target.Heartbeat.Endpoint
             : null;
-        return new TransferOperationOutcome(decision, entry.State, endpoint, duplicate);
+        return new TransferOperationOutcome(decision, entry.State, endpoint, duplicate,
+            entry.Request.TargetInstanceId);
     }
 
     private static TransferOperationOutcome RejectedTransfer(Guid transferId, string reasonCode, DateTimeOffset nowUtc) =>
@@ -785,7 +823,7 @@ public sealed class CoordinatorRegistry
 
     private static bool Matches(ReservationEntry entry, PlacementRequest request) =>
         entry.SessionId == request.SessionId &&
-        string.Equals(entry.TargetSystem, request.TargetSystem, StringComparison.Ordinal) &&
+        string.Equals(entry.TargetSystem, request.TargetSystem, StringComparison.OrdinalIgnoreCase) &&
         string.Equals(entry.GroupId, request.GroupId, StringComparison.Ordinal);
 
     private static PlacementDecision WithRequestId(PlacementDecision source, Guid requestId) => new()

@@ -66,7 +66,7 @@ public sealed class PlacementPolicy(PlacementPolicyOptions? options = null)
     {
         var age = nowUtc - candidate.LastHeartbeatUtc;
         return candidate.IsRegistered && candidate.IsReady && !candidate.IsDraining &&
-               string.Equals(candidate.SystemId, systemId, StringComparison.Ordinal) &&
+               string.Equals(candidate.SystemId, systemId, StringComparison.OrdinalIgnoreCase) &&
                candidate.CurrentPlayers >= 0 && candidate.ReservedPlayers >= 0 && candidate.MaxPlayers > 0 &&
                candidate.CurrentPlayers + candidate.ReservedPlayers < candidate.MaxPlayers &&
                age >= TimeSpan.Zero && age <= policyOptions.MaximumHeartbeatAge &&
