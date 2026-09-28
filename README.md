@@ -60,3 +60,5 @@ dotnet test tests/LancerNexus.Coordinator.Tests/LancerNexus.Coordinator.Tests.cs
 ```
 
 The implementation provides deterministic placement for registered, ready, fresh and non-draining instances. It prefers group affinity, then lower utilization, and rejects requests when there is no eligible capacity. The heartbeat/placement endpoints above are protected by the configured internal key.
+
+Nexus group instances advertise multiple `InstanceHeartbeat.SystemIds`. Placement matches any owned system and returns the requested world; shared instance capacity and reservations are counted once. The canonical eight-group inventory is maintained in the Scripts repository.

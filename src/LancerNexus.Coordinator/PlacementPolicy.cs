@@ -13,7 +13,8 @@ public sealed record InstanceCandidate(
     DateTimeOffset LastHeartbeatUtc,
     string? Endpoint,
     bool HasGroupAffinity = false,
-    int ReservedPlayers = 0);
+    int ReservedPlayers = 0,
+    string[]? SystemIds = null);
 
 public sealed record PlacementPolicyOptions(TimeSpan MaximumHeartbeatAge, TimeSpan ReservationLifetime)
 {
@@ -55,7 +56,7 @@ public sealed class PlacementPolicy(PlacementPolicyOptions? options = null)
             RequestId = request.RequestId,
             Accepted = true,
             InstanceId = selected.InstanceId,
-            SystemId = selected.SystemId,
+            SystemId = request.TargetSystem.ToLowerInvariant(),
             Endpoint = selected.Endpoint,
             ReasonCode = selected.HasGroupAffinity ? "group_affinity" : "least_loaded",
             ExpiresUtc = nowUtc.Add(policyOptions.ReservationLifetime).UtcDateTime
@@ -66,13 +67,17 @@ public sealed class PlacementPolicy(PlacementPolicyOptions? options = null)
     {
         var age = nowUtc - candidate.LastHeartbeatUtc;
         return candidate.IsRegistered && candidate.IsReady && !candidate.IsDraining &&
-               string.Equals(candidate.SystemId, systemId, StringComparison.OrdinalIgnoreCase) &&
+               SupportsSystem(candidate, systemId) &&
                candidate.CurrentPlayers >= 0 && candidate.ReservedPlayers >= 0 && candidate.MaxPlayers > 0 &&
                candidate.CurrentPlayers + candidate.ReservedPlayers < candidate.MaxPlayers &&
                age >= TimeSpan.Zero && age <= policyOptions.MaximumHeartbeatAge &&
                !string.IsNullOrWhiteSpace(candidate.InstanceId) &&
                !string.IsNullOrWhiteSpace(candidate.Endpoint);
     }
+
+    public static bool SupportsSystem(InstanceCandidate candidate, string systemId) =>
+        (candidate.SystemIds is { Length: > 0 } ? candidate.SystemIds : [candidate.SystemId])
+        .Contains(systemId, StringComparer.OrdinalIgnoreCase);
 
     private static PlacementDecision Rejected(Guid requestId, string reasonCode, DateTimeOffset nowUtc) => new()
     {

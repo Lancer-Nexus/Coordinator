@@ -397,6 +397,27 @@ public sealed class CoordinatorRegistryTests
         }
     }
 
+    [Fact]
+    public void MultiSystemInstanceReservesSharedCapacityAndRejectsOwnershipChanges()
+    {
+        var registry = CreateRegistry();
+        Assert.True(registry.ApplyAgentHeartbeat(Agent(), Now).Accepted);
+        Assert.True(registry.ApplyInstanceHeartbeat(Instance("source", "br01", 1), Now).Accepted);
+        Assert.True(registry.ApplyInstanceHeartbeat(Instance("target", "li01", 1, maxPlayers: 1,
+            systemIds: ["li01", "li02"]), Now).Accepted);
+        var result = registry.PrepareTransfer(TransferRequest("li02", targetInstanceId: ""), Now);
+        Assert.True(result.Decision.Accepted);
+        Assert.Equal("target", result.TargetInstanceId);
+        Assert.Equal(1, registry.Snapshot(Now).Instances.Single(x => x.InstanceId == "target").ReservedPlayers);
+        Assert.Equal(new[] { "li01", "li02" }, registry.Snapshot(Now).Instances.Single(x => x.InstanceId == "target").SystemIds);
+        var full = registry.PrepareTransfer(TransferRequest("li01", targetInstanceId: ""), Now);
+        Assert.False(full.Decision.Accepted);
+        Assert.Equal("instance_systems_changed", registry.ApplyInstanceHeartbeat(
+            Instance("target", "li01", 2, systemIds: ["li01", "li03"]), Now).ReasonCode);
+        Assert.False(registry.ApplyInstanceHeartbeat(Instance("bad", "li01", 1,
+            systemIds: ["li01", "LI01"]), Now).Accepted);
+    }
+
     private static CoordinatorRegistry CreateRegistry() => new(new PlacementPolicy(), CoordinatorRegistryOptions.Default);
 
     private static void Register(CoordinatorRegistry registry, int maxPlayers = 20)
@@ -413,11 +434,12 @@ public sealed class CoordinatorRegistryTests
         Sequence = sequence
     };
 
-    private static InstanceHeartbeat Instance(string id = "instance-1", string system = "li01", ulong sequence = 1, int maxPlayers = 20, bool isReady = true, int currentPlayers = 0) => new()
+    private static InstanceHeartbeat Instance(string id = "instance-1", string system = "li01", ulong sequence = 1, int maxPlayers = 20, bool isReady = true, int currentPlayers = 0, string[]? systemIds = null) => new()
     {
         AgentId = "agent-1",
         InstanceId = id,
         SystemId = system,
+        SystemIds = systemIds ?? [],
         Sequence = sequence,
         IsReady = isReady,
         CurrentPlayers = currentPlayers,

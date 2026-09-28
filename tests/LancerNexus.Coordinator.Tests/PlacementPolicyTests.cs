@@ -10,6 +10,21 @@ public sealed class PlacementPolicyTests
     private readonly PlacementPolicy policy = new();
 
     [Fact]
+    public void Decide_RoutesEveryOwnedSystemToOneInstanceWithoutMultiplyingCapacity()
+    {
+        var group = Ready("li-01", 7, 8) with { SystemIds = ["li01", "li02", "li03"] };
+        foreach (var system in group.SystemIds!)
+        {
+            var result = policy.Decide(Request(system.ToUpperInvariant()), [group], Now);
+            Assert.True(result.Accepted);
+            Assert.Equal("li-01", result.InstanceId);
+            Assert.Equal(system, result.SystemId);
+        }
+        Assert.False(policy.Decide(Request("li04"), [group], Now).Accepted);
+        Assert.False(policy.Decide(Request("li03"), [group with { ReservedPlayers = 1 }], Now).Accepted);
+    }
+
+    [Fact]
     public void Decide_SelectsLeastLoadedCandidateDeterministically()
     {
         var candidates = new[]

@@ -36,7 +36,8 @@ public sealed record InstanceRegistryView(
     ulong Sequence,
     DateTimeOffset LastHeartbeatUtc,
     bool AgentIsAlive,
-    bool IsAlive);
+    bool IsAlive,
+    string[]? SystemIds = null);
 
 public sealed record PlacementOutcome(PlacementDecision Decision, bool Duplicate = false);
 public sealed record TransferOperationOutcome(
@@ -128,7 +129,10 @@ public sealed class CoordinatorRegistry
             if (string.IsNullOrWhiteSpace(heartbeat.AgentId) || string.IsNullOrWhiteSpace(heartbeat.InstanceId) ||
                 string.IsNullOrWhiteSpace(heartbeat.SystemId) || string.IsNullOrWhiteSpace(heartbeat.Endpoint) ||
                 heartbeat.Sequence == 0 || heartbeat.CurrentPlayers < 0 || heartbeat.MaxPlayers <= 0 ||
-                heartbeat.CurrentPlayers > heartbeat.MaxPlayers)
+                heartbeat.CurrentPlayers > heartbeat.MaxPlayers || heartbeat.SystemIds is null ||
+                heartbeat.SystemIds.Length > 128 || heartbeat.SystemIds.Any(string.IsNullOrWhiteSpace) ||
+                heartbeat.SystemIds.Distinct(StringComparer.OrdinalIgnoreCase).Count() != heartbeat.SystemIds.Length ||
+                (heartbeat.SystemIds.Length > 0 && !heartbeat.SystemIds.Contains(heartbeat.SystemId, StringComparer.OrdinalIgnoreCase)))
                 return new(false, "invalid_heartbeat");
             if (!agents.TryGetValue(heartbeat.AgentId, out var agent) || !IsFresh(agent.LastHeartbeatUtc, receivedAtUtc, options.AgentHeartbeatTimeout))
                 return new(false, "agent_not_registered_or_stale");
@@ -142,6 +146,9 @@ public sealed class CoordinatorRegistry
                     return new(false, "instance_owner_changed");
                 if (!string.Equals(existing.Heartbeat.SystemId, heartbeat.SystemId, StringComparison.OrdinalIgnoreCase))
                     return new(false, "instance_system_changed");
+                if (!EffectiveSystems(existing.Heartbeat).ToHashSet(StringComparer.OrdinalIgnoreCase)
+                        .SetEquals(EffectiveSystems(heartbeat)))
+                    return new(false, "instance_systems_changed");
                 if (heartbeat.Sequence < existing.Heartbeat.Sequence)
                     return new(false, "stale_sequence");
                 if (heartbeat.Sequence == existing.Heartbeat.Sequence)
@@ -319,7 +326,7 @@ public sealed class CoordinatorRegistry
                 return RejectedTransfer(request.TransferId,
                     string.IsNullOrWhiteSpace(request.TargetInstanceId)
                         ? placement.ReasonCode
-                        : string.Equals(target?.SystemId, request.TargetSystemId, StringComparison.OrdinalIgnoreCase)
+                        : target is not null && PlacementPolicy.SupportsSystem(target, request.TargetSystemId)
                             ? "target_instance_unavailable"
                             : "target_system_mismatch",
                     nowUtc);
@@ -346,7 +353,7 @@ public sealed class CoordinatorRegistry
                 RequestId = request.TransferId,
                 Accepted = true,
                 InstanceId = target.InstanceId,
-                SystemId = target.SystemId,
+                SystemId = request.TargetSystemId.ToLowerInvariant(),
                 Endpoint = target.Endpoint,
                 ReasonCode = "transfer_reserved",
                 ExpiresUtc = expiresUtc.UtcDateTime
@@ -564,7 +571,8 @@ public sealed class CoordinatorRegistry
                         entry.Heartbeat.Sequence,
                         entry.LastHeartbeatUtc,
                         agentAlive,
-                        agentAlive && instanceAlive);
+                        agentAlive && instanceAlive,
+                        EffectiveSystems(entry.Heartbeat));
                 })
                 .ToArray();
 
@@ -595,9 +603,13 @@ public sealed class CoordinatorRegistry
                 entry.LastHeartbeatUtc,
                 heartbeat.Endpoint,
                 hasAffinity,
-                CountReservations(heartbeat.InstanceId, nowUtc));
+                CountReservations(heartbeat.InstanceId, nowUtc),
+                EffectiveSystems(heartbeat));
         }
     }
+
+    private static string[] EffectiveSystems(InstanceHeartbeat heartbeat) =>
+        heartbeat.SystemIds is { Length: > 0 } ? heartbeat.SystemIds : [heartbeat.SystemId];
 
     private bool placementPolicyCanAccept(PlacementRequest request, InstanceCandidate candidate, DateTimeOffset nowUtc)
     {
