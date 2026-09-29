@@ -42,6 +42,16 @@ The source and target progress a transfer with `POST /internal/v1/transfers/{id}
 
 Transfer reservations and lifecycle state are included in the registry snapshot. The file schema upgrades version 1 snapshots in memory and writes schema version 2 on the next state change. This is a Coordinator state-machine foundation; it does not implement the Gateway's MySQL lease transaction, game-state snapshot transport, jump-gate hook, target attach ticket validation or client reconnect yet. Those steps are required for a complete in-game instance switch.
 
+## NPC identity and ownership registry
+
+NPC transfer peers must advertise `npc_ownership_v1` before using the central identity registry. Configure `ConnectionStrings__NpcOwnership` (or `Coordinator__NpcOwnershipConnectionString`) and apply `db/migrations/001_npc_ownership_registry.sql` before enabling the capability. Without a connection string, the registry endpoint returns HTTP 503 and the capability is omitted.
+
+`POST /internal/v1/npcs/allocate` reserves a bounded block of IDs for the registered ready instance and owned system. The Coordinator generates the IDs and inserts the allocation journal and every lease in one MySQL transaction. The NPC ID is the lease table's primary key; exact retries with the same request ID return the original block, while changed retries are rejected. New leases start at `ownership_version=1`. This database record is authoritative; process memory and Redis are not ownership stores. The tables are separate from the registry JSON snapshot because simultaneous Coordinator replicas need database uniqueness and transaction semantics.
+
+`POST /internal/v1/npc-transfers/prepare` reserves up to 256 currently leased NPCs as one unit. Both registered instances must be ready and advertise `npc_transfer_v1`; the target must own the requested system. The request and source leases are committed in one MySQL transaction, and transfer/idempotency conflicts are rejected. `/internal/v1/npc-transfers/{id}/phase` durably records `SourceFrozen` with its validated versioned snapshot and SHA-256, accepts `TargetAccepted`, and atomically changes all NPC owners plus increments their fencing versions at `Committed`. Retries of the current phase are idempotent; abort releases reservations only before commit. The migration's `npc_transfer_journal` retains state and snapshot bytes across Coordinator restarts. Either transfer peer can fetch journal metadata and the snapshot hash from `GET /internal/v1/npc-transfers/{id}/recovery?instanceId=...`; set `includeSnapshot=true` only for recovery that needs the full persisted payload. Other instance IDs receive 404.
+
+The Client repository's LLServer overlays implement the NPC handoff path: asynchronous ID allocation, source-side snapshot and freeze, private mTLS QUIC transfer to the target, durable target staging, journal recovery and target restore/activation after lease commit. Mission NPC snapshots carry their player/mission association so the player and NPC ownership changes can be coordinated. The runtime snapshot contract is versioned; unsupported target capabilities are rejected. Apply the Client patch stack before enabling this path, and configure both peers with `npc_ownership_v1`, `npc_transfer_v1` and the private QUIC trust/certificate settings. The Coordinator journal remains the recovery authority across process restarts.
+
 ## QUIC mTLS handshake
 
 The Coordinator can expose a QUIC/TLS 1.3 handshake listener. It is disabled by default. To enable it, configure `Coordinator__Quic__Enabled=true`, a stable `Coordinator__Quic__NodeId`, `Coordinator__Quic__ServerCertificatePath` (PFX with private key and Server Authentication EKU), and `Coordinator__Quic__ClientCaCertificatePath` (trusted CA certificate). The PFX password is supplied via `Coordinator__Quic__ServerCertificatePassword`; never commit certificate files or passwords. `Coordinator__Quic__ListenAddress` defaults to loopback and `Coordinator__Quic__Port` to UDP 7443. Keep the listener on a private interface.
@@ -58,6 +68,8 @@ dotnet restore tests/LancerNexus.Coordinator.Tests/LancerNexus.Coordinator.Tests
 dotnet build tests/LancerNexus.Coordinator.Tests/LancerNexus.Coordinator.Tests.csproj --configuration Release --no-restore --warnaserror
 dotnet test tests/LancerNexus.Coordinator.Tests/LancerNexus.Coordinator.Tests.csproj --configuration Release --no-build
 ```
+
+The optional MySQL journal recovery integration test runs when `LANCER_NEXUS_COORDINATOR_TEST_MYSQL` points to an isolated test server. It creates and drops a uniquely named test database and verifies transfer replay across fresh store instances.
 
 The implementation provides deterministic placement for registered, ready, fresh and non-draining instances. It prefers group affinity, then lower utilization, and rejects requests when there is no eligible capacity. The heartbeat/placement endpoints above are protected by the configured internal key.
 

@@ -12,6 +12,10 @@ var registryOptions = new CoordinatorRegistryOptions(
 var placementPolicyOptions = new PlacementPolicyOptions(
     ReadPositiveSeconds(builder.Configuration, "Coordinator:Placement:MaximumHeartbeatAgeSeconds", 15),
     ReadPositiveSeconds(builder.Configuration, "Coordinator:Placement:ReservationLifetimeSeconds", 15));
+var npcOwnershipConnectionString = builder.Configuration.GetConnectionString("NpcOwnership") ??
+                                   builder.Configuration["Coordinator:NpcOwnershipConnectionString"];
+if (string.IsNullOrWhiteSpace(npcOwnershipConnectionString))
+    npcOwnershipConnectionString = null;
 builder.Services.AddHealthChecks();
 builder.Services.AddSingleton(placementPolicyOptions);
 builder.Services.AddSingleton(registryOptions);
@@ -20,6 +24,8 @@ var registryStateFile = builder.Configuration["Coordinator:StateFile"] ??
                         Path.Combine(builder.Environment.ContentRootPath, "data", "coordinator-state.json");
 builder.Services.AddSingleton<ICoordinatorRegistryStore>(_ => new FileCoordinatorRegistryStore(registryStateFile));
 builder.Services.AddSingleton<CoordinatorRegistry>();
+builder.Services.AddSingleton(new MySqlNpcOwnershipStore(npcOwnershipConnectionString));
+builder.Services.AddSingleton(new MySqlNpcTransferStore(npcOwnershipConnectionString));
 builder.Services.AddSingleton(TimeProvider.System);
 if (quicSettings is not null)
 {
@@ -92,6 +98,7 @@ app.MapGet("/api/v1/capabilities", () => Results.Ok(new
     service = "coordinator",
     protocolVersion = ProtocolConstants.ProtocolVersion,
     capabilities = new[] { "health_v1", "registry_v1", "placement_policy_v1", "placement_reservations_v1" }
+        .Concat(npcOwnershipConnectionString is null ? [] : [ClusterCapabilities.NpcOwnershipV1, ClusterCapabilities.NpcTransferV1])
         .Concat(quicSettings is null ? [] : ["quic_mtls_handshake_v1", "quic_agent_heartbeat_v1", "quic_instance_heartbeat_v1"])
 }));
 
@@ -133,6 +140,92 @@ app.MapPost("/internal/v1/instances/heartbeat", (
     else if (previous.IsDraining != heartbeat.IsDraining)
         startupLogger.LogInformation("Instance {InstanceId} draining state changed to {IsDraining}.", heartbeat.InstanceId, heartbeat.IsDraining);
     return result.Accepted ? Results.Ok(result) : Results.Conflict(result);
+});
+
+app.MapPost("/internal/v1/npcs/allocate", async (
+    NpcIdBatchAllocationRequest request,
+    MySqlNpcOwnershipStore ownershipStore,
+    CoordinatorRegistry registry,
+    TimeProvider timeProvider,
+    CancellationToken cancellationToken) =>
+{
+    if (!ownershipStore.IsEnabled)
+        return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+
+    var owner = registry.Snapshot(timeProvider.GetUtcNow()).Instances.FirstOrDefault(instance =>
+        string.Equals(instance.InstanceId, request.InstanceId, StringComparison.Ordinal) &&
+        instance.IsAlive && instance.AgentIsAlive && instance.IsReady && !instance.IsDraining);
+    var ownedSystems = owner?.SystemIds is { Length: > 0 } systemIds ? systemIds :
+        owner is null ? [] : [owner.SystemId];
+    if (owner is null || !ownedSystems.Contains(request.SystemId, StringComparer.OrdinalIgnoreCase))
+        return Results.Conflict(new NpcIdBatchAllocationResponse
+            { RequestId = request.RequestId, ReasonCode = "instance_not_authorized_for_system" });
+
+    var result = await ownershipStore.AllocateAsync(request, cancellationToken);
+    return result.Accepted ? Results.Ok(result) : Results.Conflict(result);
+});
+
+app.MapPost("/internal/v1/npc-transfers/prepare", async (
+    NpcTransferPrepareRequest request,
+    MySqlNpcTransferStore transferStore,
+    CoordinatorRegistry registry,
+    TimeProvider timeProvider,
+    CancellationToken cancellationToken) =>
+{
+    if (!transferStore.IsEnabled)
+        return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+    NpcTransferContractValidator.Validate(request);
+    var instances = registry.Snapshot(timeProvider.GetUtcNow()).Instances;
+    var source = instances.FirstOrDefault(i => i.InstanceId == request.SourceInstanceId && i.IsAlive && i.AgentIsAlive && i.IsReady);
+    var target = instances.FirstOrDefault(i => i.InstanceId == request.TargetInstanceId && i.IsAlive && i.AgentIsAlive && i.IsReady && !i.IsDraining);
+    var targetSystems = target?.SystemIds is { Length: > 0 } ids ? ids : target is null ? [] : [target.SystemId];
+    if (source is null || target is null || !targetSystems.Contains(request.TargetSystemId, StringComparer.OrdinalIgnoreCase) ||
+        !source.Capabilities.Contains(ClusterCapabilities.NpcTransferV1, StringComparer.Ordinal) ||
+        !target.Capabilities.Contains(ClusterCapabilities.NpcTransferV1, StringComparer.Ordinal))
+        return Results.Conflict(new NpcTransferPrepared { TransferId = request.TransferId, ReasonCode = "transfer_instance_unavailable" });
+    var result = await transferStore.PrepareAsync(request, timeProvider.GetUtcNow().UtcDateTime, cancellationToken);
+    return result.Accepted
+        ? Results.Ok(new NpcTransferPrepared
+        {
+            TransferId = result.TransferId,
+            Accepted = true,
+            TargetEndpoint = target.Endpoint,
+            ExpiresUtc = result.ExpiresUtc,
+            ReasonCode = result.ReasonCode
+        })
+        : Results.Conflict(result);
+});
+
+app.MapPost("/internal/v1/npc-transfers/{transferId:guid}/phase", async (
+    Guid transferId,
+    NpcTransferPhaseRequest request,
+    MySqlNpcTransferStore transferStore,
+    TimeProvider timeProvider,
+    CancellationToken cancellationToken) =>
+{
+    if (!transferStore.IsEnabled)
+        return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+    if (request.TransferId != transferId)
+        return Results.Conflict(new NpcTransferPhaseResult(false, "transfer_id_mismatch", transferId, request.State));
+    var result = await transferStore.AdvanceAsync(request, timeProvider.GetUtcNow().UtcDateTime, cancellationToken);
+    return result.Accepted ? Results.Ok(result) : Results.Conflict(result);
+});
+
+app.MapGet("/internal/v1/npc-transfers/{transferId:guid}/recovery", async (
+    Guid transferId,
+    string instanceId,
+    MySqlNpcTransferStore transferStore,
+    CancellationToken cancellationToken,
+    bool includeSnapshot = false) =>
+{
+    if (!transferStore.IsEnabled)
+        return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+    if (string.IsNullOrWhiteSpace(instanceId) || instanceId.Length > 96)
+        return Results.BadRequest(new { error = "invalid_instance_id" });
+    var record = await transferStore.GetRecoveryRecordAsync(transferId, includeSnapshot, cancellationToken);
+    if (record is null || (record.SourceInstanceId != instanceId && record.TargetInstanceId != instanceId))
+        return Results.NotFound();
+    return Results.Ok(record);
 });
 
 app.MapGet("/internal/v1/registry", (CoordinatorRegistry registry, TimeProvider timeProvider) =>

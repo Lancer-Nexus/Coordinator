@@ -37,7 +37,8 @@ public sealed record InstanceRegistryView(
     DateTimeOffset LastHeartbeatUtc,
     bool AgentIsAlive,
     bool IsAlive,
-    string[]? SystemIds = null);
+    string[]? SystemIds = null,
+    string[]? Capabilities = null);
 
 public sealed record PlacementOutcome(PlacementDecision Decision, bool Duplicate = false);
 public sealed record TransferOperationOutcome(
@@ -572,7 +573,8 @@ public sealed class CoordinatorRegistry
                         entry.LastHeartbeatUtc,
                         agentAlive,
                         agentAlive && instanceAlive,
-                        EffectiveSystems(entry.Heartbeat));
+                        EffectiveSystems(entry.Heartbeat),
+                        entry.Heartbeat.Capabilities);
                 })
                 .ToArray();
 
