@@ -158,7 +158,8 @@ public sealed class MySqlNpcTransferStore(string? connectionString)
         bool includeSnapshot = false,
         CancellationToken cancellationToken = default)
     {
-        if (!IsEnabled || transferId == Guid.Empty)
+        if (!IsEnabled || transferId == Guid.Empty || string.IsNullOrWhiteSpace(requesterInstanceId) ||
+            requesterInstanceId.Length > 96)
             return null;
         await using var connection = new MySqlConnection(connectionString);
         await connection.OpenAsync(cancellationToken);
@@ -187,6 +188,8 @@ public sealed class MySqlNpcTransferStore(string? connectionString)
             reader.IsDBNull(8) ? null : MessagePackSerializer.Deserialize<NpcTransferSnapshot>(reader.GetFieldValue<byte[]>(8)));
         await reader.CloseAsync();
         await transaction.CommitAsync(cancellationToken);
+        if (record.SourceInstanceId != requesterInstanceId && record.TargetInstanceId != requesterInstanceId)
+            return null;
         if (record.TargetInstanceId == requesterInstanceId &&
             record.State is NpcTransferState.Committed or NpcTransferState.SourceReleased &&
             !await OwnsNpcLeasesAsync(requesterInstanceId, record.NpcIds, cancellationToken))

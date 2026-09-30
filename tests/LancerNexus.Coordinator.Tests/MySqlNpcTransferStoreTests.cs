@@ -59,10 +59,12 @@ public sealed class MySqlNpcTransferStoreTests
                 IdempotencyKey = $"{transferId:N}:mission-npcs"
             };
             var store = new MySqlNpcTransferStore(database.ConnectionString);
-            Assert.Null(await store.GetRecoveryRecordAsync(Guid.NewGuid()));
+            Assert.Null(await store.GetRecoveryRecordAsync(Guid.NewGuid(), "source-01"));
             var prepared = await store.PrepareAsync(prepare, now);
             Assert.True(prepared.Accepted);
-            Assert.Equal(NpcTransferState.Reserved, (await store.GetRecoveryRecordAsync(transferId))!.State);
+            Assert.Equal(NpcTransferState.Reserved,
+                (await store.GetRecoveryRecordAsync(transferId, "source-01"))!.State);
+            Assert.Null(await store.GetRecoveryRecordAsync(transferId, "other-01", includeSnapshot: true));
 
             var snapshot = CreateSnapshot(transferId, npcId);
             var sourceFrozenRequest = new NpcTransferPhaseRequest
@@ -75,7 +77,7 @@ public sealed class MySqlNpcTransferStoreTests
 
             // A fresh store object has no in-memory state; the journal and bytes must be sufficient.
             store = new MySqlNpcTransferStore(database.ConnectionString);
-            var recovered = await store.GetRecoveryRecordAsync(transferId, includeSnapshot: true);
+            var recovered = await store.GetRecoveryRecordAsync(transferId, "source-01", includeSnapshot: true);
             Assert.Equal(NpcTransferState.SourceFrozen, recovered!.State);
             Assert.Equal(snapshot.NpcIds, recovered.Snapshot!.NpcIds);
             Assert.Equal(Convert.ToHexString(SHA256.HashData(MessagePackSerializer.Serialize(snapshot))),
@@ -97,12 +99,12 @@ public sealed class MySqlNpcTransferStoreTests
             }, now)).Accepted);
             store = new MySqlNpcTransferStore(database.ConnectionString);
             Assert.Equal(NpcTransferState.TargetAccepted,
-                (await store.GetRecoveryRecordAsync(transferId))!.State);
+                (await store.GetRecoveryRecordAsync(transferId, "target-01"))!.State);
 
             var commit = new NpcTransferPhaseRequest { TransferId = transferId, State = NpcTransferState.Committed };
             Assert.True((await store.AdvanceAsync(commit, now)).Accepted);
             store = new MySqlNpcTransferStore(database.ConnectionString);
-            var committed = await store.GetRecoveryRecordAsync(transferId, includeSnapshot: true);
+            var committed = await store.GetRecoveryRecordAsync(transferId, "target-01", includeSnapshot: true);
             Assert.Equal(NpcTransferState.Committed, committed!.State);
             Assert.NotNull(committed.Snapshot);
             Assert.False((await store.AdvanceAsync(new NpcTransferPhaseRequest
@@ -133,7 +135,7 @@ public sealed class MySqlNpcTransferStoreTests
             Assert.True((await store.AdvanceAsync(sourceReleased, now)).Accepted);
             store = new MySqlNpcTransferStore(database.ConnectionString);
             Assert.Equal(NpcTransferState.SourceReleased,
-                (await store.GetRecoveryRecordAsync(transferId))!.State);
+                (await store.GetRecoveryRecordAsync(transferId, "target-01"))!.State);
             Assert.True((await store.AdvanceAsync(sourceReleased, now)).Accepted);
         }
         finally

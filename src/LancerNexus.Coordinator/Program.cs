@@ -196,6 +196,25 @@ app.MapPost("/internal/v1/npc-transfers/prepare", async (
         : Results.Conflict(result);
 });
 
+app.MapPost("/internal/v1/npc-transfers/target", (
+    NpcTransferTargetResolveRequestV1 request,
+    CoordinatorRegistry registry,
+    TimeProvider timeProvider) =>
+{
+    NpcTransferContractValidator.Validate(request);
+    var target = NpcTransferTargetResolver.Resolve(
+        registry.Snapshot(timeProvider.GetUtcNow()).Instances, request);
+    return target is null
+        ? Results.Ok(new NpcTransferTargetResolveResultV1 { ReasonCode = "target_system_unavailable" })
+        : Results.Ok(new NpcTransferTargetResolveResultV1
+        {
+            Found = true,
+            TargetInstanceId = target.InstanceId,
+            TargetEndpoint = target.Endpoint,
+            ReasonCode = "target_resolved"
+        });
+});
+
 app.MapPost("/internal/v1/npc-transfers/{transferId:guid}/phase", async (
     Guid transferId,
     NpcTransferPhaseRequest request,

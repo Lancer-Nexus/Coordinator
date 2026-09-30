@@ -13,6 +13,8 @@ Make deterministic, observable and failure-tolerant placement decisions for the 
 - It coordinates idempotent transfers through `Requested -> Reserved -> Prepared -> SourceFrozen -> TargetAccepted -> Committed -> SourceReleased`. The source instance remains authoritative until the atomic MySQL lease commit.
 - Never expire `SourceFrozen`, `TargetAccepted` or `Committed` transfers automatically; they may represent frozen source state or a completed MySQL lease switch and require recovery. Hold target capacity until `SourceReleased`; retain released/aborted records long enough for idempotent retries.
 - Character authority uses MySQL leases with monotonic `lease_version` fencing. The Coordinator must never permit a stale instance to become authoritative again.
+- NPC identities are globally unique in the MySQL `npc_ownership_leases` table; its primary key and registration-key constraint are authoritative. Do not use the registry JSON snapshot, process memory or Redis to decide NPC ownership.
+- NPC transfer snapshots and phase state live in the transactional MySQL journal. Keep the source lease authoritative through target acceptance; switch all ownership rows and increment every `ownership_version` in the same commit transaction. Never auto-expire a frozen NPC transfer; recover it from the journal.
 - Redis is limited to transient distribution and presence. All coordination messages use versioned `Protocol` contracts and negotiated capabilities.
 
 ## Rules
