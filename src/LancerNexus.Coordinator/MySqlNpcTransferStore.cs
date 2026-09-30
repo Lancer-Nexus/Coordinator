@@ -154,7 +154,8 @@ public sealed class MySqlNpcTransferStore(string? connectionString)
         return new(true, "advanced", request.TransferId, request.State);
     }
 
-    public async Task<NpcTransferRecoveryRecord?> GetRecoveryRecordAsync(Guid transferId, bool includeSnapshot = false,
+    public async Task<NpcTransferRecoveryRecord?> GetRecoveryRecordAsync(Guid transferId, string requesterInstanceId,
+        bool includeSnapshot = false,
         CancellationToken cancellationToken = default)
     {
         if (!IsEnabled || transferId == Guid.Empty)
@@ -186,7 +187,133 @@ public sealed class MySqlNpcTransferStore(string? connectionString)
             reader.IsDBNull(8) ? null : MessagePackSerializer.Deserialize<NpcTransferSnapshot>(reader.GetFieldValue<byte[]>(8)));
         await reader.CloseAsync();
         await transaction.CommitAsync(cancellationToken);
+        if (record.TargetInstanceId == requesterInstanceId &&
+            record.State is NpcTransferState.Committed or NpcTransferState.SourceReleased &&
+            !await OwnsNpcLeasesAsync(requesterInstanceId, record.NpcIds, cancellationToken))
+            return null;
         return record;
+    }
+
+    private async Task<bool> OwnsNpcLeasesAsync(string instanceId, Guid[] npcIds,
+        CancellationToken cancellationToken)
+    {
+        if (npcIds.Length == 0)
+            return false;
+        await using var connection = new MySqlConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = $"SELECT npc_id FROM npc_ownership_leases WHERE instance_id=@instance AND active_transfer_id IS NULL AND npc_id IN ({IdParameters(npcIds.Length)})";
+        command.Parameters.AddWithValue("@instance", instanceId);
+        AddIds(command, npcIds);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        var ownedCount = 0;
+        while (await reader.ReadAsync(cancellationToken))
+            ownedCount++;
+        return ownedCount == npcIds.Length;
+    }
+
+    public async Task<NpcTransferRecoveryPageV1> GetRecoverableTransfersAsync(string targetInstanceId,
+        Guid? afterTransferId, int limit, CancellationToken cancellationToken = default)
+    {
+        if (!IsEnabled || string.IsNullOrWhiteSpace(targetInstanceId) || targetInstanceId.Length > 96)
+            return new NpcTransferRecoveryPageV1();
+        if (limit is < 1 or > 128)
+            throw new ArgumentOutOfRangeException(nameof(limit));
+
+        await using var connection = new MySqlConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT transfer_id, npc_ids
+            FROM npc_transfer_journal
+            WHERE target_instance_id=@target AND state IN (@committed, @released)
+              AND (@after IS NULL OR transfer_id > @after)
+            ORDER BY transfer_id
+            LIMIT @take
+            """;
+        command.Parameters.AddWithValue("@target", targetInstanceId);
+        command.Parameters.AddWithValue("@committed", (byte)NpcTransferState.Committed);
+        command.Parameters.AddWithValue("@released", (byte)NpcTransferState.SourceReleased);
+        command.Parameters.AddWithValue("@after", afterTransferId?.ToString("D"));
+        command.Parameters.AddWithValue("@take", limit + 1);
+
+        var candidates = new List<(Guid TransferId, Guid[] NpcIds)>(limit + 1);
+        await using (var reader = await command.ExecuteReaderAsync(cancellationToken))
+        {
+            while (await reader.ReadAsync(cancellationToken))
+                candidates.Add((ReadGuid(reader, 0), MessagePackSerializer.Deserialize<Guid[]>(reader.GetFieldValue<byte[]>(1))));
+        }
+
+        var hasMore = candidates.Count > limit;
+        if (hasMore)
+            candidates.RemoveAt(candidates.Count - 1);
+
+        var npcIds = candidates.SelectMany(candidate => candidate.NpcIds).Distinct().ToArray();
+        var activeNpcIds = new HashSet<Guid>();
+        if (npcIds.Length > 0)
+        {
+            await using var leaseCommand = connection.CreateCommand();
+            var placeholders = string.Join(",", Enumerable.Range(0, npcIds.Length).Select(index => $"@id{index}"));
+            leaseCommand.CommandText = $"SELECT npc_id FROM npc_ownership_leases WHERE instance_id=@target AND active_transfer_id IS NULL AND npc_id IN ({placeholders})";
+            leaseCommand.Parameters.AddWithValue("@target", targetInstanceId);
+            for (var i = 0; i < npcIds.Length; i++)
+                leaseCommand.Parameters.AddWithValue($"@id{i}", npcIds[i].ToString("D"));
+            await using var leaseReader = await leaseCommand.ExecuteReaderAsync(cancellationToken);
+            while (await leaseReader.ReadAsync(cancellationToken))
+                activeNpcIds.Add(ReadGuid(leaseReader, 0));
+        }
+
+        var recoverableIds = candidates
+            .Where(candidate => candidate.NpcIds.Length > 0 && candidate.NpcIds.All(activeNpcIds.Contains))
+            .Select(candidate => candidate.TransferId)
+            .ToArray();
+        return new NpcTransferRecoveryPageV1
+        {
+            TransferIds = recoverableIds,
+            NextAfterTransferId = hasMore ? candidates[^1].TransferId : null
+        };
+    }
+
+    public async Task<NpcTransferRecoveryPageV1> GetPendingSourceTransfersAsync(string sourceInstanceId,
+        Guid? afterTransferId, int limit, CancellationToken cancellationToken = default)
+    {
+        if (!IsEnabled || string.IsNullOrWhiteSpace(sourceInstanceId) || sourceInstanceId.Length > 96)
+            return new NpcTransferRecoveryPageV1();
+        if (limit is < 1 or > 128)
+            throw new ArgumentOutOfRangeException(nameof(limit));
+
+        await using var connection = new MySqlConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT transfer_id
+            FROM npc_transfer_journal
+            WHERE source_instance_id=@source AND state IN (@sourceFrozen, @targetAccepted, @committed)
+              AND (@after IS NULL OR transfer_id > @after)
+            ORDER BY transfer_id
+            LIMIT @take
+            """;
+        command.Parameters.AddWithValue("@source", sourceInstanceId);
+        command.Parameters.AddWithValue("@sourceFrozen", (byte)NpcTransferState.SourceFrozen);
+        command.Parameters.AddWithValue("@targetAccepted", (byte)NpcTransferState.TargetAccepted);
+        command.Parameters.AddWithValue("@committed", (byte)NpcTransferState.Committed);
+        command.Parameters.AddWithValue("@after", afterTransferId?.ToString("D"));
+        command.Parameters.AddWithValue("@take", limit + 1);
+
+        var transferIds = new List<Guid>(limit + 1);
+        await using (var reader = await command.ExecuteReaderAsync(cancellationToken))
+        {
+            while (await reader.ReadAsync(cancellationToken))
+                transferIds.Add(ReadGuid(reader, 0));
+        }
+        var hasMore = transferIds.Count > limit;
+        if (hasMore)
+            transferIds.RemoveAt(transferIds.Count - 1);
+        return new NpcTransferRecoveryPageV1
+        {
+            TransferIds = transferIds.ToArray(),
+            NextAfterTransferId = hasMore ? transferIds[^1] : null
+        };
     }
 
     private static async Task<bool> CommitOwnershipAsync(MySqlConnection connection, MySqlTransaction transaction,

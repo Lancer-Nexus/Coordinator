@@ -222,10 +222,40 @@ app.MapGet("/internal/v1/npc-transfers/{transferId:guid}/recovery", async (
         return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
     if (string.IsNullOrWhiteSpace(instanceId) || instanceId.Length > 96)
         return Results.BadRequest(new { error = "invalid_instance_id" });
-    var record = await transferStore.GetRecoveryRecordAsync(transferId, includeSnapshot, cancellationToken);
+    var record = await transferStore.GetRecoveryRecordAsync(transferId, instanceId, includeSnapshot, cancellationToken);
     if (record is null || (record.SourceInstanceId != instanceId && record.TargetInstanceId != instanceId))
         return Results.NotFound();
     return Results.Ok(record);
+});
+
+app.MapGet("/internal/v1/npc-transfers/recovery", async (
+    string instanceId,
+    Guid? afterTransferId,
+    int limit,
+    MySqlNpcTransferStore transferStore,
+    CancellationToken cancellationToken) =>
+{
+    if (!transferStore.IsEnabled)
+        return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+    if (string.IsNullOrWhiteSpace(instanceId) || instanceId.Length > 96 || limit is < 1 or > 128)
+        return Results.BadRequest(new { error = "invalid_recovery_query" });
+    var page = await transferStore.GetRecoverableTransfersAsync(instanceId, afterTransferId, limit, cancellationToken);
+    return Results.Ok(page);
+});
+
+app.MapGet("/internal/v1/npc-transfers/source-recovery", async (
+    string instanceId,
+    Guid? afterTransferId,
+    int limit,
+    MySqlNpcTransferStore transferStore,
+    CancellationToken cancellationToken) =>
+{
+    if (!transferStore.IsEnabled)
+        return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+    if (string.IsNullOrWhiteSpace(instanceId) || instanceId.Length > 96 || limit is < 1 or > 128)
+        return Results.BadRequest(new { error = "invalid_recovery_query" });
+    var page = await transferStore.GetPendingSourceTransfersAsync(instanceId, afterTransferId, limit, cancellationToken);
+    return Results.Ok(page);
 });
 
 app.MapGet("/internal/v1/registry", (CoordinatorRegistry registry, TimeProvider timeProvider) =>
