@@ -1,5 +1,12 @@
 # Lancer Nexus Coordinator
 
+NPC recovery checks exact ownership versions as well as instance identity. A
+committed target may restore only the captured source version plus one; an
+aborted source may restore only the captured source version. Older journals
+remain durable but are excluded from discovery and target replay after later
+transfers, including round trips back to the same instance. Recovery pages retain
+only ID/version metadata while scanning stored snapshots and batch lease reads.
+
 Instance heartbeats may advertise a separate `NpcTransferEndpoint` in
 `quic://host:port` form. NPC preparation and target resolution prefer that private
 endpoint; player placement continues to use the game endpoint. Legacy reports

@@ -137,6 +137,40 @@ public sealed class MySqlNpcTransferStoreTests
             Assert.Equal(NpcTransferState.SourceReleased,
                 (await store.GetRecoveryRecordAsync(transferId, "target-01"))!.State);
             Assert.True((await store.AdvanceAsync(sourceReleased, now)).Accepted);
+
+            // A round trip returns to the same instance with a different fence.
+            // Neither old journal discovery nor direct lookup may revive version 2.
+            await CompleteTransferAsync(store, npcId, "target-01", "source-01", "li01", 2, now);
+            var latest = await CompleteTransferAsync(store, npcId, "source-01", "target-01", "li02", 3, now);
+            Assert.Null(await store.GetRecoveryRecordAsync(transferId, "target-01"));
+            Assert.Null(await store.GetRecoveryRecordAsync(transferId, "target-01", includeSnapshot: true));
+            Assert.Equal(latest, Assert.Single((await store.GetRecoverableTransfersAsync("target-01", null, 128)).TransferIds));
+            Assert.NotNull(await store.GetRecoveryRecordAsync(latest, "target-01"));
+            Assert.Null((await store.GetRecoveryRecordAsync(latest, "target-01"))!.Snapshot);
+            Assert.Equal(3, (await store.GetRecoveryRecordAsync(latest, "target-01", includeSnapshot: true))!
+                .Snapshot!.Npcs[0].OwnershipVersion);
+
+            // Aborted rollback snapshots need their original source fence too.
+            var aborted = Guid.NewGuid();
+            Assert.True((await store.PrepareAsync(new NpcTransferPrepareRequest
+            {
+                TransferId = aborted, SourceInstanceId = "target-01", TargetInstanceId = "source-01",
+                TargetSystemId = "li01", NpcIds = [npcId], ExpiresUtc = now.AddMinutes(1),
+                IdempotencyKey = aborted.ToString("N")
+            }, now)).Accepted);
+            Assert.True((await store.AdvanceAsync(new NpcTransferPhaseRequest
+            {
+                TransferId = aborted, State = NpcTransferState.SourceFrozen,
+                Snapshot = CreateSnapshot(aborted, npcId, ownershipVersion: 4, sourceSystem: "li02", targetSystem: "li01")
+            }, now)).Accepted);
+            Assert.True((await store.AdvanceAsync(new NpcTransferPhaseRequest
+                { TransferId = aborted, State = NpcTransferState.Aborted }, now)).Accepted);
+            Assert.NotNull(await store.GetRecoveryRecordAsync(aborted, "target-01", includeSnapshot: true));
+            await CompleteTransferAsync(store, npcId, "target-01", "source-01", "li01", 4, now);
+            var final = await CompleteTransferAsync(store, npcId, "source-01", "target-01", "li02", 5, now);
+            Assert.Null(await store.GetRecoveryRecordAsync(aborted, "target-01", includeSnapshot: true));
+            Assert.Null(await store.GetRecoveryRecordAsync(latest, "target-01"));
+            Assert.Equal(final, Assert.Single((await store.GetRecoverableTransfersAsync("target-01", null, 128)).TransferIds));
         }
         finally
         {
@@ -146,6 +180,28 @@ public sealed class MySqlNpcTransferStoreTests
             drop.CommandText = $"DROP DATABASE IF EXISTS `{databaseName}`";
             await drop.ExecuteNonQueryAsync();
         }
+    }
+
+    private static async Task<Guid> CompleteTransferAsync(MySqlNpcTransferStore store, Guid npcId,
+        string source, string target, string targetSystem, long version, DateTime now)
+    {
+        var transfer = Guid.NewGuid();
+        Assert.True((await store.PrepareAsync(new NpcTransferPrepareRequest
+        {
+            TransferId = transfer, SourceInstanceId = source, TargetInstanceId = target,
+            TargetSystemId = targetSystem, NpcIds = [npcId], ExpiresUtc = now.AddMinutes(1),
+            IdempotencyKey = transfer.ToString("N")
+        }, now)).Accepted);
+        Assert.True((await store.AdvanceAsync(new NpcTransferPhaseRequest
+        {
+            TransferId = transfer, State = NpcTransferState.SourceFrozen,
+            Snapshot = CreateSnapshot(transfer, npcId, ownershipVersion: version,
+                sourceSystem: targetSystem == "li01" ? "li02" : "li01", targetSystem: targetSystem)
+        }, now)).Accepted);
+        foreach (var phase in new[] { NpcTransferState.TargetAccepted, NpcTransferState.Committed, NpcTransferState.SourceReleased })
+            Assert.True((await store.AdvanceAsync(new NpcTransferPhaseRequest
+                { TransferId = transfer, State = phase }, now)).Accepted);
+        return transfer;
     }
 
     private static async Task ApplySchemaAsync(string connectionString)
@@ -182,7 +238,8 @@ public sealed class MySqlNpcTransferStoreTests
         await lease.ExecuteNonQueryAsync();
     }
 
-    private static NpcTransferSnapshot CreateSnapshot(Guid transferId, Guid npcId, float positionX = 0)
+    private static NpcTransferSnapshot CreateSnapshot(Guid transferId, Guid npcId, float positionX = 0,
+        long ownershipVersion = 1, string sourceSystem = "li01", string targetSystem = "li02")
     {
         var runtime = new NpcRuntimeStateV1
         {
@@ -197,14 +254,14 @@ public sealed class MySqlNpcTransferStoreTests
         {
             TransferId = transferId,
             NpcIds = [npcId],
-            TargetSystemId = "li02",
+            TargetSystemId = targetSystem,
             Npcs =
             [
                 new NpcRuntimeSnapshot
                 {
                     NpcId = npcId,
-                    OwnershipVersion = 1,
-                    SystemId = "li01",
+                    OwnershipVersion = ownershipVersion,
+                    SystemId = sourceSystem,
                     RuntimeState = MessagePackSerializer.Serialize(runtime)
                 }
             ]

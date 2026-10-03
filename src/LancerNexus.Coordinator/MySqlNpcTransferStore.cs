@@ -164,7 +164,7 @@ public sealed class MySqlNpcTransferStore(string? connectionString)
         await using var connection = new MySqlConnection(connectionString);
         await connection.OpenAsync(cancellationToken);
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
-        var snapshotColumn = includeSnapshot ? "snapshot" : "NULL";
+        var snapshotColumn = includeSnapshot ? "snapshot" : "CASE WHEN state IN (6, 7, 22) THEN snapshot ELSE NULL END";
         await using var command = connection.CreateCommand();
         command.Transaction = transaction;
         command.CommandText = $"""
@@ -187,32 +187,62 @@ public sealed class MySqlNpcTransferStore(string? connectionString)
             reader.IsDBNull(7) ? null : Convert.ToHexString(reader.GetFieldValue<byte[]>(7)),
             reader.IsDBNull(8) ? null : MessagePackSerializer.Deserialize<NpcTransferSnapshot>(reader.GetFieldValue<byte[]>(8)));
         await reader.CloseAsync();
-        await transaction.CommitAsync(cancellationToken);
         if (record.SourceInstanceId != requesterInstanceId && record.TargetInstanceId != requesterInstanceId)
             return null;
-        if (record.TargetInstanceId == requesterInstanceId &&
-            record.State is NpcTransferState.Committed or NpcTransferState.SourceReleased &&
-            !await OwnsNpcLeasesAsync(requesterInstanceId, record.NpcIds, cancellationToken))
-            return null;
-        return record;
+        var targetRestore = record.TargetInstanceId == requesterInstanceId &&
+            record.State is NpcTransferState.Committed or NpcTransferState.SourceReleased;
+        var sourceRestore = record.SourceInstanceId == requesterInstanceId &&
+            record.State == NpcTransferState.Aborted && record.Snapshot is not null;
+        if (targetRestore || sourceRestore)
+        {
+            var versions = RecoveryVersions(record.Snapshot, record.NpcIds, targetRestore);
+            if (!await OwnsNpcLeasesAsync(connection, transaction, requesterInstanceId, versions, cancellationToken))
+                return null;
+        }
+        await transaction.CommitAsync(cancellationToken);
+        return includeSnapshot ? record : record with { Snapshot = null };
     }
 
-    private async Task<bool> OwnsNpcLeasesAsync(string instanceId, Guid[] npcIds,
-        CancellationToken cancellationToken)
+    // Keep only identity/version metadata after decoding; page scans must not retain runtime payloads.
+    private static Dictionary<Guid, long> RecoveryVersions(NpcTransferSnapshot? snapshot, Guid[] ids,
+        bool targetRestore)
     {
-        if (npcIds.Length == 0)
+        if (snapshot is null || ids.Length == 0 || snapshot.Npcs.Length != ids.Length ||
+            !snapshot.NpcIds.Order().SequenceEqual(ids.Order()))
+            return [];
+        var idSet = ids.ToHashSet();
+        if (idSet.Count != ids.Length)
+            return [];
+        var versions = new Dictionary<Guid, long>(ids.Length);
+        foreach (var npc in snapshot.Npcs)
+        {
+            if (!idSet.Contains(npc.NpcId) || npc.OwnershipVersion <= 0 ||
+                targetRestore && npc.OwnershipVersion == long.MaxValue ||
+                !versions.TryAdd(npc.NpcId, npc.OwnershipVersion + (targetRestore ? 1 : 0)))
+                return [];
+        }
+        return versions;
+    }
+
+    private static async Task<bool> OwnsNpcLeasesAsync(MySqlConnection connection, MySqlTransaction transaction,
+        string instanceId, Dictionary<Guid, long> expectedVersions, CancellationToken cancellationToken)
+    {
+        if (expectedVersions.Count == 0)
             return false;
-        await using var connection = new MySqlConnection(connectionString);
-        await connection.OpenAsync(cancellationToken);
         await using var command = connection.CreateCommand();
-        command.CommandText = $"SELECT npc_id FROM npc_ownership_leases WHERE instance_id=@instance AND active_transfer_id IS NULL AND npc_id IN ({IdParameters(npcIds.Length)})";
+        command.Transaction = transaction;
+        command.CommandText = $"SELECT npc_id, ownership_version FROM npc_ownership_leases WHERE instance_id=@instance AND active_transfer_id IS NULL AND npc_id IN ({IdParameters(expectedVersions.Count)})";
         command.Parameters.AddWithValue("@instance", instanceId);
-        AddIds(command, npcIds);
+        AddIds(command, expectedVersions.Keys.ToArray());
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         var ownedCount = 0;
         while (await reader.ReadAsync(cancellationToken))
+        {
+            if (!expectedVersions.TryGetValue(ReadGuid(reader, 0), out var version) || version != reader.GetInt64(1))
+                return false;
             ownedCount++;
-        return ownedCount == npcIds.Length;
+        }
+        return ownedCount == expectedVersions.Count;
     }
 
     public async Task<NpcTransferRecoveryPageV1> GetRecoverableTransfersAsync(string targetInstanceId,
@@ -227,7 +257,7 @@ public sealed class MySqlNpcTransferStore(string? connectionString)
         await connection.OpenAsync(cancellationToken);
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT transfer_id, npc_ids
+            SELECT transfer_id, npc_ids, snapshot
             FROM npc_transfer_journal
             WHERE target_instance_id=@target AND state IN (@committed, @released)
               AND (@after IS NULL OR transfer_id > @after)
@@ -240,34 +270,40 @@ public sealed class MySqlNpcTransferStore(string? connectionString)
         command.Parameters.AddWithValue("@after", afterTransferId?.ToString("D"));
         command.Parameters.AddWithValue("@take", limit + 1);
 
-        var candidates = new List<(Guid TransferId, Guid[] NpcIds)>(limit + 1);
+        var candidates = new List<(Guid TransferId, Dictionary<Guid, long> Versions)>(limit + 1);
         await using (var reader = await command.ExecuteReaderAsync(cancellationToken))
         {
             while (await reader.ReadAsync(cancellationToken))
-                candidates.Add((ReadGuid(reader, 0), MessagePackSerializer.Deserialize<Guid[]>(reader.GetFieldValue<byte[]>(1))));
+            {
+                var ids = MessagePackSerializer.Deserialize<Guid[]>(reader.GetFieldValue<byte[]>(1));
+                var snapshot = reader.IsDBNull(2) ? null :
+                    MessagePackSerializer.Deserialize<NpcTransferSnapshot>(reader.GetFieldValue<byte[]>(2));
+                candidates.Add((ReadGuid(reader, 0), RecoveryVersions(snapshot, ids, targetRestore: true)));
+            }
         }
 
         var hasMore = candidates.Count > limit;
         if (hasMore)
             candidates.RemoveAt(candidates.Count - 1);
 
-        var npcIds = candidates.SelectMany(candidate => candidate.NpcIds).Distinct().ToArray();
-        var activeNpcIds = new HashSet<Guid>();
+        var npcIds = candidates.SelectMany(candidate => candidate.Versions.Keys).Distinct().ToArray();
+        var activeNpcVersions = new Dictionary<Guid, long>();
         if (npcIds.Length > 0)
         {
             await using var leaseCommand = connection.CreateCommand();
             var placeholders = string.Join(",", Enumerable.Range(0, npcIds.Length).Select(index => $"@id{index}"));
-            leaseCommand.CommandText = $"SELECT npc_id FROM npc_ownership_leases WHERE instance_id=@target AND active_transfer_id IS NULL AND npc_id IN ({placeholders})";
+            leaseCommand.CommandText = $"SELECT npc_id, ownership_version FROM npc_ownership_leases WHERE instance_id=@target AND active_transfer_id IS NULL AND npc_id IN ({placeholders})";
             leaseCommand.Parameters.AddWithValue("@target", targetInstanceId);
             for (var i = 0; i < npcIds.Length; i++)
                 leaseCommand.Parameters.AddWithValue($"@id{i}", npcIds[i].ToString("D"));
             await using var leaseReader = await leaseCommand.ExecuteReaderAsync(cancellationToken);
             while (await leaseReader.ReadAsync(cancellationToken))
-                activeNpcIds.Add(ReadGuid(leaseReader, 0));
+                activeNpcVersions.Add(ReadGuid(leaseReader, 0), leaseReader.GetInt64(1));
         }
 
         var recoverableIds = candidates
-            .Where(candidate => candidate.NpcIds.Length > 0 && candidate.NpcIds.All(activeNpcIds.Contains))
+            .Where(candidate => candidate.Versions.Count > 0 && candidate.Versions.All(expected =>
+                activeNpcVersions.TryGetValue(expected.Key, out var current) && current == expected.Value))
             .Select(candidate => candidate.TransferId)
             .ToArray();
         return new NpcTransferRecoveryPageV1
