@@ -184,6 +184,50 @@ app.MapPost("/internal/v1/npc-retirements", async (
     return result.ReasonCode == "processed" ? Results.Ok(result) : Results.Conflict(result);
 });
 
+app.MapPost("/internal/v1/npc-checkpoints", async (
+    NpcCheckpointWriteRequestV1 request,
+    MySqlNpcOwnershipStore ownershipStore,
+    CancellationToken cancellationToken) =>
+{
+    if (!ownershipStore.IsEnabled)
+        return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+    try { NpcCheckpointContractValidator.Validate(request); }
+    catch (ProtocolViolationException)
+    {
+        return Results.BadRequest(new NpcCheckpointWriteResponseV1
+            { RequestId = request.RequestId, ReasonCode = "invalid_npc_checkpoint_request" });
+    }
+    var result = await ownershipStore.WriteCheckpointAsync(request, cancellationToken);
+    return result.Accepted ? Results.Ok(result) : Results.Conflict(result);
+});
+
+app.MapGet("/internal/v1/npc-checkpoints/{checkpointId:guid}/recovery", async (
+    Guid checkpointId,
+    string instanceId,
+    MySqlNpcOwnershipStore ownershipStore,
+    CancellationToken cancellationToken) =>
+{
+    if (!ownershipStore.IsEnabled)
+        return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+    var result = await ownershipStore.GetCheckpointAsync(checkpointId, instanceId, cancellationToken);
+    return result is null ? Results.NotFound() : Results.Ok(result);
+});
+
+app.MapGet("/internal/v1/npc-checkpoints/recovery", async (
+    string instanceId,
+    Guid? afterCheckpointId,
+    int? limit,
+    MySqlNpcOwnershipStore ownershipStore,
+    CancellationToken cancellationToken) =>
+{
+    if (!ownershipStore.IsEnabled)
+        return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+    if (string.IsNullOrWhiteSpace(instanceId) || instanceId.Length > 96 || (limit ?? 32) is < 1 or > 128)
+        return Results.BadRequest();
+    return Results.Ok(await ownershipStore.GetRecoverableCheckpointsAsync(instanceId,
+        afterCheckpointId, limit ?? 32, cancellationToken));
+});
+
 app.MapPost("/internal/v1/npc-transfers/prepare", async (
     NpcTransferPrepareRequest request,
     MySqlNpcTransferStore transferStore,

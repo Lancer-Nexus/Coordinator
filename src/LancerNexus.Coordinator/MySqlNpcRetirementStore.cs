@@ -38,13 +38,13 @@ public sealed partial class MySqlNpcOwnershipStore
         {
             select.Transaction = transaction;
             var parameters = entries.Select((npc, i) => $"@npc{i}").ToArray();
-            select.CommandText = $"SELECT npc_id, instance_id, ownership_version, active_transfer_id, retired_at_utc, retirement_reason FROM npc_ownership_leases WHERE npc_id IN ({string.Join(',', parameters)}) ORDER BY npc_id FOR UPDATE";
+            select.CommandText = $"SELECT npc_id, instance_id, ownership_version, active_transfer_id, retired_at_utc, retirement_reason, checkpoint_id FROM npc_ownership_leases WHERE npc_id IN ({string.Join(',', parameters)}) ORDER BY npc_id FOR UPDATE";
             for (var i = 0; i < entries.Length; i++)
                 select.Parameters.AddWithValue(parameters[i], entries[i].NpcId.ToString("D"));
             await using var reader = await select.ExecuteReaderAsync(cancellationToken);
             while (await reader.ReadAsync(cancellationToken))
                 rows.Add(ReadGuid(reader, 0), new(reader.GetString(1), reader.GetInt64(2),
-                    !reader.IsDBNull(3), !reader.IsDBNull(4), reader.IsDBNull(5) ? null : reader.GetByte(5)));
+                    !reader.IsDBNull(3), !reader.IsDBNull(4), reader.IsDBNull(5) ? null : reader.GetByte(5), !reader.IsDBNull(6)));
         }
 
         var updates = new List<NpcRetirementEntryV1>();
@@ -67,6 +67,8 @@ public sealed partial class MySqlNpcOwnershipStore
                     code = "npc_ownership_conflict";
                 else if (row.HasTransfer)
                     code = "npc_transfer_in_progress";
+                else if (row.HasCheckpoint)
+                    code = "npc_checkpoint_required";
                 else
                 {
                     accepted = true;
@@ -128,5 +130,5 @@ public sealed partial class MySqlNpcOwnershipStore
         return MessagePackSerializer.Deserialize<NpcRetirementResponseV1>((byte[])reader.GetValue(1));
     }
 
-    private sealed record RetirementLease(string InstanceId, long Version, bool HasTransfer, bool Retired, byte? Reason);
+    private sealed record RetirementLease(string InstanceId, long Version, bool HasTransfer, bool Retired, byte? Reason, bool HasCheckpoint);
 }

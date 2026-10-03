@@ -138,3 +138,20 @@ errors. New retirement source/test files pass the scoped format verification. Th
 full test-project format check still reports existing whitespace issues in
 `MySqlNpcTransferStoreTests.cs` and `NpcMissionAuthorityClientTests.cs`; unrelated
 formatting was preserved. No running cluster service has been upgraded yet.
+
+### NPC runtime checkpoints
+
+Migration `004_npc_checkpoints.sql` follows NPC retirement migration 003. The
+protected `POST /internal/v1/npc-checkpoints` endpoint stores an ambient NPC
+checkpoint, expected per-member revisions, formation state and optional retirement
+entries in one MySQL transaction. Replaying the same request ID and exact payload
+returns its recorded response. A changed payload under that ID conflicts.
+
+Recovery discovery is available at `GET /internal/v1/npc-checkpoints/recovery`; the
+per-checkpoint endpoint returns bytes only after checking every active lease, owner,
+system, transfer and resulting revision. Transfer preparation must include complete
+prior checkpoint groups. Legacy retirement cannot remove a checkpointed NPC alone.
+
+The Coordinator does not yet accept mission checkpoint state: Gateway character
+lease arbitration and GameServer lifecycle/recovery integration remain necessary.
+Until then do not advertise `npc_checkpoint_v1` or connect terminal event hooks.

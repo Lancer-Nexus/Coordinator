@@ -66,6 +66,15 @@ public sealed class MySqlNpcTransferStore(string? connectionString, INpcMissionA
             }
         }
 
+        var checkpointMembers = await MySqlNpcOwnershipStore.LockCheckpointMembersAsync(connection, transaction,
+            request.NpcIds, cancellationToken);
+        if (!await MySqlNpcOwnershipStore.IncludesCheckpointGroupsAsync(connection, transaction, checkpointMembers,
+                request.NpcIds.ToHashSet(), cancellationToken))
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return Rejected(request.TransferId, "npc_checkpoint_group_incomplete");
+        }
+
         await using (var claim = connection.CreateCommand())
         {
             claim.Transaction = transaction;
@@ -132,7 +141,7 @@ public sealed class MySqlNpcTransferStore(string? connectionString, INpcMissionA
         {
             if (row.State is NpcTransferState.Committed or NpcTransferState.SourceReleased)
                 return new(false, "committed_transfer_cannot_abort", request.TransferId, row.State);
-            await ClearTransferLeasesAsync(connection, transaction, request.TransferId, cancellationToken);
+            await ClearTransferLeasesAsync(connection, transaction, request.TransferId, row.Snapshot is not null, cancellationToken);
             await SetStateAsync(connection, transaction, request.TransferId, NpcTransferState.Aborted, null, null, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return new(true, "aborted", request.TransferId, NpcTransferState.Aborted);
@@ -268,7 +277,7 @@ public sealed class MySqlNpcTransferStore(string? connectionString, INpcMissionA
             return false;
         await using var command = connection.CreateCommand();
         command.Transaction = transaction;
-        command.CommandText = $"SELECT npc_id, ownership_version FROM npc_ownership_leases WHERE instance_id=@instance AND active_transfer_id IS NULL AND retired_at_utc IS NULL AND npc_id IN ({IdParameters(expectedVersions.Count)})";
+        command.CommandText = $"SELECT npc_id, ownership_version FROM npc_ownership_leases WHERE instance_id=@instance AND active_transfer_id IS NULL AND retired_at_utc IS NULL AND checkpoint_id IS NULL AND npc_id IN ({IdParameters(expectedVersions.Count)})";
         command.Parameters.AddWithValue("@instance", instanceId);
         AddIds(command, expectedVersions.Keys.ToArray());
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
@@ -329,7 +338,7 @@ public sealed class MySqlNpcTransferStore(string? connectionString, INpcMissionA
         {
             await using var leaseCommand = connection.CreateCommand();
             var placeholders = string.Join(",", Enumerable.Range(0, npcIds.Length).Select(index => $"@id{index}"));
-            leaseCommand.CommandText = $"SELECT npc_id, ownership_version FROM npc_ownership_leases WHERE instance_id=@target AND active_transfer_id IS NULL AND retired_at_utc IS NULL AND npc_id IN ({placeholders})";
+            leaseCommand.CommandText = $"SELECT npc_id, ownership_version FROM npc_ownership_leases WHERE instance_id=@target AND active_transfer_id IS NULL AND retired_at_utc IS NULL AND checkpoint_id IS NULL AND npc_id IN ({placeholders})";
             leaseCommand.Parameters.AddWithValue("@target", targetInstanceId);
             for (var i = 0; i < npcIds.Length; i++)
                 leaseCommand.Parameters.AddWithValue($"@id{i}", npcIds[i].ToString("D"));
@@ -397,7 +406,7 @@ public sealed class MySqlNpcTransferStore(string? connectionString, INpcMissionA
     {
         await using var command = connection.CreateCommand();
         command.Transaction = transaction;
-        command.CommandText = $"UPDATE npc_ownership_leases SET instance_id=@target, system_id=@system, ownership_version=ownership_version+1, active_transfer_id=NULL, updated_at_utc=UTC_TIMESTAMP(6) WHERE active_transfer_id=@transfer AND instance_id=@source AND npc_id IN ({IdParameters(row.NpcIds.Length)})";
+        command.CommandText = $"UPDATE npc_ownership_leases SET instance_id=@target, system_id=@system, ownership_version=ownership_version+1, active_transfer_id=NULL, checkpoint_id=NULL, checkpoint_revision=0, updated_at_utc=UTC_TIMESTAMP(6) WHERE active_transfer_id=@transfer AND instance_id=@source AND npc_id IN ({IdParameters(row.NpcIds.Length)})";
         command.Parameters.AddWithValue("@target", row.TargetInstanceId);
         command.Parameters.AddWithValue("@system", row.TargetSystemId);
         command.Parameters.AddWithValue("@transfer", row.TransferId.ToString("D"));
@@ -423,11 +432,13 @@ public sealed class MySqlNpcTransferStore(string? connectionString, INpcMissionA
     }
 
     private static async Task ClearTransferLeasesAsync(MySqlConnection connection, MySqlTransaction transaction,
-        Guid transferId, CancellationToken cancellationToken)
+        Guid transferId, bool clearCheckpoint, CancellationToken cancellationToken)
     {
         await using var command = connection.CreateCommand();
         command.Transaction = transaction;
-        command.CommandText = "UPDATE npc_ownership_leases SET active_transfer_id=NULL, updated_at_utc=UTC_TIMESTAMP(6) WHERE active_transfer_id=@transfer";
+        command.CommandText = "UPDATE npc_ownership_leases SET active_transfer_id=NULL, " +
+            (clearCheckpoint ? "checkpoint_id=NULL, " : "") +
+            "updated_at_utc=UTC_TIMESTAMP(6) WHERE active_transfer_id=@transfer";
         command.Parameters.AddWithValue("@transfer", transferId.ToString("D"));
         await command.ExecuteNonQueryAsync(cancellationToken);
     }

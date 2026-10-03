@@ -69,3 +69,20 @@ InstanceHeartbeat.SystemIds lists all systems owned by an instance; an absent/em
 - Keep terminal journal recovery restricted to active exact fences. Surviving group
   checkpoints and GameServer durable lifecycle notifications remain required work;
   do not claim those implemented from Coordinator tombstone tests alone.
+
+## NPC runtime checkpoints
+
+- Apply migration 004 before enabling `npc_checkpoint_v1`; it builds on retirement
+  migration 003. The checkpoint route currently stores ambient NPC runtime state.
+- A write changes all expected member rows and persists the exact response in one
+  MySQL transaction. CAS includes both ownership version and checkpoint revision.
+  Conflicts are permanent for that request ID; reconcile and submit a new ID.
+- Replacing a checkpoint must include every active member of every referenced
+  previous checkpoint. Transfers likewise claim the whole prior checkpoint group.
+  Legacy single-NPC retirement is rejected for checkpointed NPCs; use an atomic
+  survivor checkpoint with retirement entries.
+- Checkpoint recovery revalidates active owner, system, transfer state and all
+  resulting revisions before exposing bytes. Never activate before that validation.
+- MissionRuntime payloads are rejected until the Coordinator has authoritative,
+  transactional Gateway character lease arbitration. Do not advertise checkpoint
+  capability until the GameServer writer, lifecycle barriers and recovery are wired.
