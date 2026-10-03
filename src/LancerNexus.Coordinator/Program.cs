@@ -102,7 +102,7 @@ app.MapGet("/api/v1/capabilities", () => Results.Ok(new
     service = "coordinator",
     protocolVersion = ProtocolConstants.ProtocolVersion,
     capabilities = new[] { "health_v1", "registry_v1", "placement_policy_v1", "placement_reservations_v1" }
-        .Concat(npcOwnershipConnectionString is null ? [] : [ClusterCapabilities.NpcOwnershipV1, ClusterCapabilities.NpcTransferV1])
+        .Concat(npcOwnershipConnectionString is null ? [] : [ClusterCapabilities.NpcOwnershipV1, ClusterCapabilities.NpcTransferV1, ClusterCapabilities.NpcRetirementV1])
         .Concat(quicSettings is null ? [] : ["quic_mtls_handshake_v1", "quic_agent_heartbeat_v1", "quic_instance_heartbeat_v1"])
 }));
 
@@ -167,6 +167,21 @@ app.MapPost("/internal/v1/npcs/allocate", async (
 
     var result = await ownershipStore.AllocateAsync(request, cancellationToken);
     return result.Accepted ? Results.Ok(result) : Results.Conflict(result);
+});
+
+app.MapPost("/internal/v1/npc-retirements", async (
+    NpcRetirementRequestV1 request,
+    MySqlNpcOwnershipStore ownershipStore,
+    CancellationToken cancellationToken) =>
+{
+    if (!ownershipStore.IsEnabled)
+        return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+    if (!request.IsValid())
+        return Results.BadRequest(new NpcRetirementResponseV1
+            { RequestId = request.RequestId, ReasonCode = "invalid_npc_retirement_request" });
+    // SQL owner/fence checks apply even to draining or temporarily unregistered instances.
+    var result = await ownershipStore.RetireAsync(request, cancellationToken);
+    return result.ReasonCode == "processed" ? Results.Ok(result) : Results.Conflict(result);
 });
 
 app.MapPost("/internal/v1/npc-transfers/prepare", async (

@@ -96,3 +96,45 @@ This is a recoverable saga across service-owned schemas. SQL character commit an
 The implementation provides deterministic placement for registered, ready, fresh and non-draining instances. It prefers group affinity, then lower utilization, and rejects requests when there is no eligible capacity. The heartbeat/placement endpoints above are protected by the configured internal key.
 
 Nexus group instances advertise multiple `InstanceHeartbeat.SystemIds`. Placement matches any owned system and returns the requested world; shared instance capacity and reservations are counted once. The canonical eight-group inventory is maintained in the Scripts repository.
+
+## Durable NPC retirement
+
+Apply `db/migrations/003_npc_retirement.sql` after migrations 001 and 002 before
+starting this revision. The protected `POST /internal/v1/npc-retirements` route
+implements Protocol's `npc_retirement_v1` batches. MySQL owns the tombstone;
+retirement increments the ownership fence, preserves the identity/allocation row
+permanently and rejects stale owners, stale versions and any pending transfer.
+Retired IDs are excluded from new transfer claims and terminal snapshot recovery.
+Allocation retries append `IsRetired` so consumers cannot treat retired IDs as
+fresh spawns.
+
+The request ID, exact MessagePack request and response are committed in the same
+transaction as the lease changes. After uncertain delivery, repeat that ID and
+payload to receive the persisted result. A conflicting payload is rejected.
+Individual entry failures are returned inside a successful `processed` batch;
+clients must inspect every result. A known `npc_transfer_in_progress` rejection
+requires a new request ID after transfer resolution, whereas an unknown outcome
+requires retrying the original request. Instance ownership is checked in SQL,
+including for draining instances; registry timeout never authorizes retirement.
+
+At most 256 distinct entries are accepted. Rows are locked in sorted ID order and
+updated in one SQL statement. A stale entry does not block valid entries in the
+same batch. Concurrent identical request IDs converge on one durable response.
+Integration tests use separate temporary databases and cover duplicate delivery,
+store recreation, stale/foreign ownership, pending transfers, 256-entry batches,
+allocation replay and journal recovery exclusion.
+
+GameServer death/docking notification and a durable outbox are not yet connected.
+Old formation snapshots are currently eligible only when every member retains its
+exact active fence. Retiring one member therefore blocks replay of that old group
+snapshot; checkpoints of surviving members are still required for complete group
+recovery. This service change alone does not establish crash-safe NPC lifecycle
+or exact runtime continuation after death/docking.
+
+Verification for the retirement implementation: 57 Protocol tests and all 44
+Coordinator tests passed, with MySQL integration tests enabled against the isolated
+local test server. The Coordinator Release build completed with zero warnings and
+errors. New retirement source/test files pass the scoped format verification. The
+full test-project format check still reports existing whitespace issues in
+`MySqlNpcTransferStoreTests.cs` and `NpcMissionAuthorityClientTests.cs`; unrelated
+formatting was preserved. No running cluster service has been upgraded yet.

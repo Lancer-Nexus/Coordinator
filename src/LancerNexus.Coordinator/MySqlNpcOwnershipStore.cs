@@ -5,7 +5,7 @@ using System.Text;
 namespace LancerNexus.Coordinator;
 
 /// <summary>Authoritative, cross-process NPC identity and ownership registry.</summary>
-public sealed class MySqlNpcOwnershipStore
+public sealed partial class MySqlNpcOwnershipStore
 {
     public const int MaximumBatchSize = 256;
     private readonly string? connectionString;
@@ -150,7 +150,7 @@ public sealed class MySqlNpcOwnershipStore
         {
             rows.Transaction = transaction;
             rows.CommandText = """
-                SELECT npc_id, instance_id, ownership_version, active_transfer_id
+                SELECT npc_id, instance_id, ownership_version, active_transfer_id, retired_at_utc
                 FROM npc_ownership_leases
                 WHERE allocation_request_id = @request
                 ORDER BY allocation_ordinal
@@ -164,7 +164,8 @@ public sealed class MySqlNpcOwnershipStore
                     NpcId = ReadGuid(reader, 0),
                     InstanceId = reader.GetString(1),
                     OwnershipVersion = reader.GetInt64(2),
-                    ActiveTransferId = reader.IsDBNull(3) ? null : ReadGuid(reader, 3)
+                    ActiveTransferId = reader.IsDBNull(3) ? null : ReadGuid(reader, 3),
+                    IsRetired = !reader.IsDBNull(4)
                 });
             }
         }

@@ -9,8 +9,8 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="3.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="../../db/migrations/001_npc_ownership_registry.sql"
-          Link="db/migrations/001_npc_ownership_registry.sql"
+    <None Include="../../db/migrations/*.sql"
+          Link="db/migrations/%(Filename)%(Extension)"
           CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

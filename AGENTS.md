@@ -56,3 +56,16 @@ dotnet test tests/LancerNexus.Coordinator.Tests/LancerNexus.Coordinator.Tests.cs
 
 The base Nexus topology uses eight game instances, one per group: BR01-BR06 (`br-01`), BW01-BW10 (`bw-01`), EW01-EW05 (`ew-01`), IW01-IW06 (`iw-01`), KU01-KU06 (`ku-01`), LI01-LI05 (`li-01`), RH01-RH05 (`rh-01`), and `mixed-01` for all remaining registered systems. System nicknames are compared case insensitively and emitted lowercase. Folder names are not always world nicknames: `fp7` contains `fp7_system`; `intro` and `miners` are asset directories, not registered worlds.
 InstanceHeartbeat.SystemIds lists all systems owned by an instance; an absent/empty list retains the legacy primary SystemId. Match every owned system during placement and return the requested system, while counting reservations/capacity once per instance. Reject ownership-set changes for an already registered instance; require an explicit drain/recovery/re-registration procedure. Do not create fake heartbeat registrations from configuration.
+
+## NPC retirement
+
+- Apply migration 003 before this revision uses the NPC database. NPC retirement
+  is authoritative in MySQL; retain IDs permanently and increment ownership fences.
+- Retirement requires the exact current instance/version and no active transfer.
+  Never retire an NPC merely because a source/target heartbeat or timeout expired.
+- Batch response persistence and lease updates commit together. Unknown outcomes
+  retry the same request ID/payload; a different payload under that ID is rejected.
+  Check individual entry results even when the batch HTTP response is successful.
+- Keep terminal journal recovery restricted to active exact fences. Surviving group
+  checkpoints and GameServer durable lifecycle notifications remain required work;
+  do not claim those implemented from Coordinator tombstone tests alone.

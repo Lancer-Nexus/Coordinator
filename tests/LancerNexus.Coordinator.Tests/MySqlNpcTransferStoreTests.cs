@@ -314,10 +314,11 @@ public sealed class MySqlNpcTransferStoreTests
         return transfer;
     }
 
-    private static async Task ApplySchemaAsync(string connectionString)
+    internal static async Task ApplySchemaAsync(string connectionString)
     {
-        var path = Path.Combine(AppContext.BaseDirectory, "db", "migrations", "001_npc_ownership_registry.sql");
-        var statements = (await File.ReadAllTextAsync(path)).Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var directory = Path.Combine(AppContext.BaseDirectory, "db", "migrations");
+        var schema = string.Join("\n", await Task.WhenAll(Directory.GetFiles(directory, "*.sql").Order().Select(path => File.ReadAllTextAsync(path))));
+        var statements = schema.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         await using var connection = new MySqlConnection(connectionString);
         await connection.OpenAsync();
         foreach (var statement in statements)
@@ -348,7 +349,7 @@ public sealed class MySqlNpcTransferStoreTests
         await lease.ExecuteNonQueryAsync();
     }
 
-    private static NpcTransferSnapshot CreateSnapshot(Guid transferId, Guid npcId, float positionX = 0,
+    internal static NpcTransferSnapshot CreateSnapshot(Guid transferId, Guid npcId, float positionX = 0,
         long ownershipVersion = 1, string sourceSystem = "li01", string targetSystem = "li02", Guid? missionId = null)
     {
         var runtime = new NpcRuntimeStateV1

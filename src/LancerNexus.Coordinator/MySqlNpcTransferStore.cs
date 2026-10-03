@@ -69,7 +69,7 @@ public sealed class MySqlNpcTransferStore(string? connectionString, INpcMissionA
         await using (var claim = connection.CreateCommand())
         {
             claim.Transaction = transaction;
-            claim.CommandText = $"UPDATE npc_ownership_leases SET active_transfer_id=@transfer, updated_at_utc=UTC_TIMESTAMP(6) WHERE instance_id=@source AND active_transfer_id IS NULL AND npc_id IN ({IdParameters(request.NpcIds.Length)})";
+            claim.CommandText = $"UPDATE npc_ownership_leases SET active_transfer_id=@transfer, updated_at_utc=UTC_TIMESTAMP(6) WHERE instance_id=@source AND active_transfer_id IS NULL AND retired_at_utc IS NULL AND npc_id IN ({IdParameters(request.NpcIds.Length)})";
             claim.Parameters.AddWithValue("@transfer", request.TransferId.ToString("D"));
             claim.Parameters.AddWithValue("@source", request.SourceInstanceId);
             AddIds(claim, request.NpcIds);
@@ -268,7 +268,7 @@ public sealed class MySqlNpcTransferStore(string? connectionString, INpcMissionA
             return false;
         await using var command = connection.CreateCommand();
         command.Transaction = transaction;
-        command.CommandText = $"SELECT npc_id, ownership_version FROM npc_ownership_leases WHERE instance_id=@instance AND active_transfer_id IS NULL AND npc_id IN ({IdParameters(expectedVersions.Count)})";
+        command.CommandText = $"SELECT npc_id, ownership_version FROM npc_ownership_leases WHERE instance_id=@instance AND active_transfer_id IS NULL AND retired_at_utc IS NULL AND npc_id IN ({IdParameters(expectedVersions.Count)})";
         command.Parameters.AddWithValue("@instance", instanceId);
         AddIds(command, expectedVersions.Keys.ToArray());
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
@@ -329,7 +329,7 @@ public sealed class MySqlNpcTransferStore(string? connectionString, INpcMissionA
         {
             await using var leaseCommand = connection.CreateCommand();
             var placeholders = string.Join(",", Enumerable.Range(0, npcIds.Length).Select(index => $"@id{index}"));
-            leaseCommand.CommandText = $"SELECT npc_id, ownership_version FROM npc_ownership_leases WHERE instance_id=@target AND active_transfer_id IS NULL AND npc_id IN ({placeholders})";
+            leaseCommand.CommandText = $"SELECT npc_id, ownership_version FROM npc_ownership_leases WHERE instance_id=@target AND active_transfer_id IS NULL AND retired_at_utc IS NULL AND npc_id IN ({placeholders})";
             leaseCommand.Parameters.AddWithValue("@target", targetInstanceId);
             for (var i = 0; i < npcIds.Length; i++)
                 leaseCommand.Parameters.AddWithValue($"@id{i}", npcIds[i].ToString("D"));
