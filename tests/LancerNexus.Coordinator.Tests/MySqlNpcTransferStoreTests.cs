@@ -201,6 +201,71 @@ public sealed class MySqlNpcTransferStoreTests
             var missionRecovery = await new MySqlNpcTransferStore(database.ConnectionString)
                 .GetRecoveryRecordAsync(missionTransfer, "source-01", includeSnapshot: true);
             Assert.Equal(missionTransfer, missionRecovery!.Snapshot!.MissionRuntimeId);
+            Assert.True((await store.AdvanceAsync(new NpcTransferPhaseRequest
+                { TransferId = missionTransfer, State = NpcTransferState.TargetAccepted }, now)).Accepted);
+            foreach (var phase in new[] { NpcTransferState.Committed, NpcTransferState.Aborted })
+            {
+                var denied = await store.AdvanceAsync(new NpcTransferPhaseRequest
+                    { TransferId = missionTransfer, State = phase }, now);
+                Assert.False(denied.Accepted);
+                Assert.Equal("mission_authority_not_configured", denied.ReasonCode);
+                Assert.Equal(NpcTransferState.TargetAccepted, denied.State);
+            }
+            var authority = new TestMissionAuthority();
+            store = new MySqlNpcTransferStore(database.ConnectionString, authority);
+            foreach (var phase in new[] { NpcTransferState.Committed, NpcTransferState.Aborted })
+            {
+                Assert.False((await store.AdvanceAsync(new NpcTransferPhaseRequest
+                    { TransferId = missionTransfer, State = phase }, now)).Accepted);
+                Assert.Equal(NpcTransferState.TargetAccepted,
+                    (await store.GetRecoveryRecordAsync(missionTransfer, "source-01", includeSnapshot: true))!.State);
+            }
+            authority.Authorized = true;
+            Assert.True((await store.AdvanceAsync(new NpcTransferPhaseRequest
+                { TransferId = missionTransfer, State = NpcTransferState.Committed }, now)).Accepted);
+            Assert.NotNull(await new MySqlNpcTransferStore(database.ConnectionString, authority)
+                .GetRecoveryRecordAsync(missionTransfer, "target-01", includeSnapshot: true));
+            Assert.Null(await new MySqlNpcTransferStore(database.ConnectionString)
+                .GetRecoveryRecordAsync(missionTransfer, "target-01", includeSnapshot: true));
+            authority.Authorized = false;
+            Assert.Null(await store.GetRecoveryRecordAsync(missionTransfer, "target-01", includeSnapshot: true));
+            authority.Authorized = true;
+            var calls = authority.Calls;
+            Assert.False((await store.AdvanceAsync(new NpcTransferPhaseRequest
+                { TransferId = missionTransfer, State = NpcTransferState.Aborted }, now)).Accepted);
+            Assert.Equal(calls, authority.Calls);
+
+            // An uncertain authority reply leaves the frozen source reservation
+            // and snapshot intact. Retry after durable abort confirmation rolls back.
+            var rollbackNpc = Guid.NewGuid();
+            var rollback = Guid.NewGuid();
+            await SeedLeaseAsync(database.ConnectionString, rollbackNpc, Guid.NewGuid(), now);
+            Assert.True((await store.PrepareAsync(new NpcTransferPrepareRequest
+            {
+                TransferId = rollback, SourceInstanceId = "source-01", TargetInstanceId = "target-01",
+                TargetSystemId = "li02", NpcIds = [rollbackNpc], MissionRuntimeId = rollback,
+                ExpiresUtc = now.AddMinutes(1), IdempotencyKey = rollback.ToString("N")
+            }, now)).Accepted);
+            Assert.True((await store.AdvanceAsync(new NpcTransferPhaseRequest
+            {
+                TransferId = rollback, State = NpcTransferState.SourceFrozen,
+                Snapshot = CreateSnapshot(rollback, rollbackNpc, missionId: rollback)
+            }, now)).Accepted);
+            authority.Authorized = false;
+            var abortRequest = new NpcTransferPhaseRequest { TransferId = rollback, State = NpcTransferState.Aborted };
+            Assert.False((await store.AdvanceAsync(abortRequest, now)).Accepted);
+            Assert.Equal(NpcTransferState.SourceFrozen,
+                (await store.GetRecoveryRecordAsync(rollback, "source-01", includeSnapshot: true))!.State);
+            authority.Authorized = true;
+            Assert.True((await store.AdvanceAsync(abortRequest, now)).Accepted);
+            Assert.True((await new MySqlNpcTransferStore(database.ConnectionString, authority)
+                .AdvanceAsync(abortRequest, now)).Accepted);
+            Assert.Equal(NpcTransferState.Aborted,
+                (await store.GetRecoveryRecordAsync(rollback, "source-01", includeSnapshot: true))!.State);
+            Assert.Null(await new MySqlNpcTransferStore(database.ConnectionString)
+                .GetRecoveryRecordAsync(rollback, "source-01", includeSnapshot: true));
+            authority.Authorized = false;
+            Assert.Null(await store.GetRecoveryRecordAsync(rollback, "source-01", includeSnapshot: true));
         }
         finally
         {
@@ -324,6 +389,23 @@ public sealed class MySqlNpcTransferStoreTests
         {
             if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("LANCER_NEXUS_COORDINATOR_TEST_MYSQL")))
                 Skip = "Set LANCER_NEXUS_COORDINATOR_TEST_MYSQL to an isolated MySQL test server.";
+        }
+    }
+
+    private sealed class TestMissionAuthority : INpcMissionAuthorityClient
+    {
+        public bool Authorized { get; set; }
+        public int Calls { get; private set; }
+        public Task<NpcMissionAuthorityCheck> AuthorizeAsync(NpcMissionAuthorityRequestV1 request,
+            CancellationToken cancellationToken = default)
+        {
+            Calls++;
+            Assert.True(request.IsValid());
+            Assert.Equal("source-01", request.SourceInstanceId);
+            Assert.Equal("target-01", request.TargetInstanceId);
+            Assert.Equal("li02", request.TargetSystemId);
+            return Task.FromResult(new NpcMissionAuthorityCheck(Authorized,
+                Authorized ? "confirmed" : "mission_authority_unavailable"));
         }
     }
 }

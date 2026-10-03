@@ -5,7 +5,7 @@ using MySqlConnector;
 namespace LancerNexus.Coordinator;
 
 /// <summary>Durable transfer journal and atomic NPC ownership fencing.</summary>
-public sealed class MySqlNpcTransferStore(string? connectionString)
+public sealed class MySqlNpcTransferStore(string? connectionString, INpcMissionAuthorityClient? missionAuthority = null)
 {
     private const int MaximumDurableSnapshotBytes = 15 * 1024 * 1024;
     private readonly string? connectionString = string.IsNullOrWhiteSpace(connectionString) ? null : connectionString;
@@ -98,6 +98,27 @@ public sealed class MySqlNpcTransferStore(string? connectionString)
         var row = await ReadTransferAsync(connection, transaction, request.TransferId, null, cancellationToken);
         if (row is null)
             return new(false, "npc_transfer_not_found", request.TransferId, request.State);
+        if (row.MissionRuntimeId is not null && request.State is NpcTransferState.Committed or NpcTransferState.Aborted)
+        {
+            if (row.MissionRuntimeId != row.TransferId)
+                return new(false, "mission_transfer_id_mismatch", request.TransferId, row.State);
+            if (request.State == NpcTransferState.Aborted &&
+                row.State is NpcTransferState.Committed or NpcTransferState.SourceReleased)
+                return new(false, "committed_transfer_cannot_abort", request.TransferId, row.State);
+            if (missionAuthority is null)
+                return new(false, "mission_authority_not_configured", request.TransferId, row.State);
+            // Keep the NPC journal row locked until the permanent Gateway decision
+            // is confirmed. If delivery is uncertain, no NPC state/lease changes;
+            // retrying the same decision safely completes this recoverable saga.
+            var proof = await missionAuthority.AuthorizeAsync(new NpcMissionAuthorityRequestV1
+            {
+                TransferId = row.TransferId, SourceInstanceId = row.SourceInstanceId,
+                TargetInstanceId = row.TargetInstanceId, TargetSystemId = row.TargetSystemId,
+                Decision = request.State
+            }, cancellationToken);
+            if (!proof.Authorized)
+                return new(false, proof.ReasonCode, request.TransferId, row.State);
+        }
         if (row.State == request.State)
         {
             if (request.State == NpcTransferState.SourceFrozen &&
@@ -201,6 +222,19 @@ public sealed class MySqlNpcTransferStore(string? connectionString)
             var versions = RecoveryVersions(record.Snapshot, record.NpcIds, targetRestore);
             if (!await OwnsNpcLeasesAsync(connection, transaction, requesterInstanceId, versions, cancellationToken))
                 return null;
+            if (record.Snapshot?.MissionRuntimeId is Guid missionId)
+            {
+                if (missionId != record.TransferId || missionAuthority is null)
+                    return null;
+                var proof = await missionAuthority.AuthorizeAsync(new NpcMissionAuthorityRequestV1
+                {
+                    TransferId = record.TransferId, SourceInstanceId = record.SourceInstanceId,
+                    TargetInstanceId = record.TargetInstanceId, TargetSystemId = record.TargetSystemId,
+                    Decision = targetRestore ? NpcTransferState.Committed : NpcTransferState.Aborted
+                }, cancellationToken);
+                if (!proof.Authorized)
+                    return null;
+            }
         }
         await transaction.CommitAsync(cancellationToken);
         return includeSnapshot ? record : record with { Snapshot = null };

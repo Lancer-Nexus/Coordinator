@@ -83,7 +83,15 @@ dotnet test tests/LancerNexus.Coordinator.Tests/LancerNexus.Coordinator.Tests.cs
 
 The optional MySQL journal recovery integration test runs when `LANCER_NEXUS_COORDINATOR_TEST_MYSQL` points to an isolated test server. It creates and drops a uniquely named test database and verifies transfer replay across fresh store instances.
 
-The journal also binds each `SourceFrozen` snapshot to its reserved target system and optional mission runtime ID. A mismatched target or added, removed or substituted mission association returns `snapshot_reservation_mismatch`; state and snapshot remain unchanged. The MySQL integration test covers these rejections and valid mission association recovery after recreating the store. This binding check does not yet make character and NPC ownership commits atomic across Gateway and Coordinator; authoritative joint commit/abort recovery still needs separate verification.
+The journal also binds each `SourceFrozen` snapshot to its reserved target system and optional mission runtime ID. A mismatched target or added, removed or substituted mission association returns `snapshot_reservation_mismatch`; state and snapshot remain unchanged. The MySQL integration test covers these rejections and valid mission association recovery after recreating the store.
+
+### Mission character authority
+
+Configure `Coordinator:NpcMissionAuthorityBaseUrl` as the private Gateway HTTPS origin and `Coordinator:NpcMissionAuthorityApiKey` with the dedicated key configured as `Gateway:NpcMissionAuthorityApiKey`. Use a distinct credential from game-instance keys and the Coordinator's inbound internal key. Gateway requires migration 005 and its decision-aware build. TLS trust uses the normal service certificate trust store; redirects are disabled and requests time out after eight seconds.
+
+For mission-bound transfers, the mission runtime ID must equal the shared character transfer ID. Before NPC `Committed` or `Aborted`, the store holds its journal row lock while asking Gateway for the same permanent character decision. Gateway confirms the SQL character commit or durably vetoes later character commit before acknowledging abort. Only a successful reply bound to transfer, peers, system and requested decision authorizes the NPC transaction. If the reply is lost, no NPC journal or lease changes; retry the same operation. Terminal mission snapshot recovery also requires Gateway confirmation plus exact NPC ownership fences. Missing configuration/authority rejects mission operations and restoration; autonomous population transfers continue through their existing MySQL transaction.
+
+This is a recoverable saga across service-owned schemas. SQL character commit and NPC commit occur in sequence, and the target simulation still waits for both. The MySQL tests cover rejected/unavailable authority without journal changes, confirmed commit/abort, retries and restart restoration; HTTP-client tests reject unavailable, malformed and mismatched replies. Real process-failure and live player/mission acceptance remain to be verified.
 
 The implementation provides deterministic placement for registered, ready, fresh and non-draining instances. It prefers group affinity, then lower utilization, and rejects requests when there is no eligible capacity. The heartbeat/placement endpoints above are protected by the configured internal key.
 

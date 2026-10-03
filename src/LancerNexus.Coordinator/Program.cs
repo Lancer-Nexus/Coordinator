@@ -25,7 +25,11 @@ var registryStateFile = builder.Configuration["Coordinator:StateFile"] ??
 builder.Services.AddSingleton<ICoordinatorRegistryStore>(_ => new FileCoordinatorRegistryStore(registryStateFile));
 builder.Services.AddSingleton<CoordinatorRegistry>();
 builder.Services.AddSingleton(new MySqlNpcOwnershipStore(npcOwnershipConnectionString));
-builder.Services.AddSingleton(new MySqlNpcTransferStore(npcOwnershipConnectionString));
+builder.Services.AddHttpClient<INpcMissionAuthorityClient, NpcMissionAuthorityClient>(http =>
+    http.Timeout = TimeSpan.FromSeconds(8)).ConfigurePrimaryHttpMessageHandler(() =>
+    new HttpClientHandler { AllowAutoRedirect = false });
+builder.Services.AddSingleton(services => new MySqlNpcTransferStore(npcOwnershipConnectionString,
+    services.GetRequiredService<INpcMissionAuthorityClient>()));
 builder.Services.AddSingleton(TimeProvider.System);
 if (quicSettings is not null)
 {
