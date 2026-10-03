@@ -1,5 +1,10 @@
 # Lancer Nexus Coordinator
 
+Instance heartbeats may advertise a separate `NpcTransferEndpoint` in
+`quic://host:port` form. NPC preparation and target resolution prefer that private
+endpoint; player placement continues to use the game endpoint. Legacy reports
+without the field retain the configured NPC-port fallback on the sending server.
+
 The Coordinator maintains cluster membership and makes placement decisions for Lancer Nexus game instances.
 
 ## Responsibilities

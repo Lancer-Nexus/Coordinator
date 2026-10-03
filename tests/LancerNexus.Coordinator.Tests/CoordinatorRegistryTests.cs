@@ -9,6 +9,21 @@ public sealed class CoordinatorRegistryTests
     private static readonly DateTimeOffset Now = new(2026, 9, 22, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
+    public void HeartbeatPreservesSeparateNpcPeerPortAndRejectsMalformedEndpoint()
+    {
+        var registry = CreateRegistry();
+        Assert.True(registry.ApplyAgentHeartbeat(Agent(), Now).Accepted);
+        var valid = Instance(npcEndpoint: "quic://127.0.0.3:26456");
+        Assert.True(registry.ApplyInstanceHeartbeat(valid, Now).Accepted);
+        var instance = Assert.Single(registry.Snapshot(Now).Instances);
+        Assert.Equal(valid.Endpoint, instance.Endpoint);
+        Assert.Equal("quic://127.0.0.3:26456", instance.NpcTransferEndpoint);
+        Assert.Equal("invalid_npc_transfer_endpoint", registry.ApplyInstanceHeartbeat(
+            Instance(sequence: 2, npcEndpoint: "quic://host:26456/private"), Now).ReasonCode);
+        Assert.Equal(1UL, Assert.Single(registry.Snapshot(Now).Instances).Sequence);
+    }
+
+    [Fact]
     public void Heartbeats_RegisterOnlyFreshAgentsAndRejectReplayedSequences()
     {
         var registry = CreateRegistry();
@@ -434,7 +449,7 @@ public sealed class CoordinatorRegistryTests
         Sequence = sequence
     };
 
-    private static InstanceHeartbeat Instance(string id = "instance-1", string system = "li01", ulong sequence = 1, int maxPlayers = 20, bool isReady = true, int currentPlayers = 0, string[]? systemIds = null) => new()
+    private static InstanceHeartbeat Instance(string id = "instance-1", string system = "li01", ulong sequence = 1, int maxPlayers = 20, bool isReady = true, int currentPlayers = 0, string[]? systemIds = null, string? npcEndpoint = null) => new()
     {
         AgentId = "agent-1",
         InstanceId = id,
@@ -444,7 +459,8 @@ public sealed class CoordinatorRegistryTests
         IsReady = isReady,
         CurrentPlayers = currentPlayers,
         MaxPlayers = maxPlayers,
-        Endpoint = $"quic://{id}:7443"
+        Endpoint = $"quic://{id}:7443",
+        NpcTransferEndpoint = npcEndpoint
     };
 
     private static TransferPrepareRequest TransferRequest(string targetSystem = "li02", string? idempotencyKey = null,

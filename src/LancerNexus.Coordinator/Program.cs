@@ -190,6 +190,7 @@ app.MapPost("/internal/v1/npc-transfers/prepare", async (
             TransferId = result.TransferId,
             Accepted = true,
             TargetEndpoint = target.Endpoint,
+            NpcTransferEndpoint = target.NpcTransferEndpoint,
             ExpiresUtc = result.ExpiresUtc,
             ReasonCode = result.ReasonCode
         })
@@ -211,6 +212,7 @@ app.MapPost("/internal/v1/npc-transfers/target", (
             Found = true,
             TargetInstanceId = target.InstanceId,
             TargetEndpoint = target.Endpoint,
+            NpcTransferEndpoint = target.NpcTransferEndpoint,
             ReasonCode = "target_resolved"
         });
 });

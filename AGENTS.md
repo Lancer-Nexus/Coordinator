@@ -28,6 +28,7 @@ Make deterministic, observable and failure-tolerant placement decisions for the 
 - Event-server reservations require explicit capacity and lifecycle state.
 - Do not mutate authoritative character data owned by Gateway or game servers.
 - Record the reason for placement and rejection decisions for diagnostics.
+- Validate and retain the optional private NpcTransferEndpoint independently of the game endpoint. NPC prepare/resolve responses prefer this advertised QUIC address and explicit port.
 
 ## Verification
 

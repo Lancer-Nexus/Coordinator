@@ -38,7 +38,8 @@ public sealed record InstanceRegistryView(
     bool AgentIsAlive,
     bool IsAlive,
     string[]? SystemIds = null,
-    string[]? Capabilities = null);
+    string[]? Capabilities = null,
+    string? NpcTransferEndpoint = null);
 
 public sealed record PlacementOutcome(PlacementDecision Decision, bool Duplicate = false);
 public sealed record TransferOperationOutcome(
@@ -135,6 +136,9 @@ public sealed class CoordinatorRegistry
                 heartbeat.SystemIds.Distinct(StringComparer.OrdinalIgnoreCase).Count() != heartbeat.SystemIds.Length ||
                 (heartbeat.SystemIds.Length > 0 && !heartbeat.SystemIds.Contains(heartbeat.SystemId, StringComparer.OrdinalIgnoreCase)))
                 return new(false, "invalid_heartbeat");
+            if (heartbeat.NpcTransferEndpoint is not null &&
+                !NpcTransferContractValidator.IsValidPeerEndpoint(heartbeat.NpcTransferEndpoint))
+                return new(false, "invalid_npc_transfer_endpoint");
             if (!agents.TryGetValue(heartbeat.AgentId, out var agent) || !IsFresh(agent.LastHeartbeatUtc, receivedAtUtc, options.AgentHeartbeatTimeout))
                 return new(false, "agent_not_registered_or_stale");
             if (authenticatedNodeId is not null &&
@@ -574,7 +578,8 @@ public sealed class CoordinatorRegistry
                         agentAlive,
                         agentAlive && instanceAlive,
                         EffectiveSystems(entry.Heartbeat),
-                        entry.Heartbeat.Capabilities);
+                        entry.Heartbeat.Capabilities,
+                        entry.Heartbeat.NpcTransferEndpoint);
                 })
                 .ToArray();
 
