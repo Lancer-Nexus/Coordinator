@@ -83,6 +83,8 @@ dotnet test tests/LancerNexus.Coordinator.Tests/LancerNexus.Coordinator.Tests.cs
 
 The optional MySQL journal recovery integration test runs when `LANCER_NEXUS_COORDINATOR_TEST_MYSQL` points to an isolated test server. It creates and drops a uniquely named test database and verifies transfer replay across fresh store instances.
 
+The journal also binds each `SourceFrozen` snapshot to its reserved target system and optional mission runtime ID. A mismatched target or added, removed or substituted mission association returns `snapshot_reservation_mismatch`; state and snapshot remain unchanged. The MySQL integration test covers these rejections and valid mission association recovery after recreating the store. This binding check does not yet make character and NPC ownership commits atomic across Gateway and Coordinator; authoritative joint commit/abort recovery still needs separate verification.
+
 The implementation provides deterministic placement for registered, ready, fresh and non-draining instances. It prefers group affinity, then lower utilization, and rejects requests when there is no eligible capacity. The heartbeat/placement endpoints above are protected by the configured internal key.
 
 Nexus group instances advertise multiple `InstanceHeartbeat.SystemIds`. Placement matches any owned system and returns the requested world; shared instance capacity and reservations are counted once. The canonical eight-group inventory is maintained in the Scripts repository.

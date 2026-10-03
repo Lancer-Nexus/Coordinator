@@ -15,6 +15,7 @@ Make deterministic, observable and failure-tolerant placement decisions for the 
 - Character authority uses MySQL leases with monotonic `lease_version` fencing. The Coordinator must never permit a stale instance to become authoritative again.
 - NPC identities are globally unique in the MySQL `npc_ownership_leases` table; its primary key and registration-key constraint are authoritative. Do not use the registry JSON snapshot, process memory or Redis to decide NPC ownership.
 - NPC transfer snapshots and phase state live in the transactional MySQL journal. Keep the source lease authoritative through target acceptance; switch all ownership rows and increment every `ownership_version` in the same commit transaction. Never auto-expire a frozen NPC transfer; recover it from the journal.
+- Bind SourceFrozen snapshots to the reserved target system (case insensitive) and exact optional MissionRuntimeId. Reject added, omitted or substituted mission associations before storing snapshot bytes or changing state.
 - Recovery requires exact snapshot fences: committed target leases equal captured source versions plus one; aborted source leases equal their captured versions. An instance match alone does not authorize replay after another round trip. Apply this to direct recovery and discovery pages.
 - Redis is limited to transient distribution and presence. All coordination messages use versioned `Protocol` contracts and negotiated capabilities.
 

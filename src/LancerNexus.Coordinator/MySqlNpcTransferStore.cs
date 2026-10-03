@@ -130,6 +130,9 @@ public sealed class MySqlNpcTransferStore(string? connectionString)
                 if (request.Snapshot.TransferId != request.TransferId ||
                     !request.Snapshot.NpcIds.Order().SequenceEqual(row.NpcIds.Order()))
                     return new(false, "snapshot_identity_mismatch", request.TransferId, row.State);
+                if (!string.Equals(request.Snapshot.TargetSystemId, row.TargetSystemId, StringComparison.OrdinalIgnoreCase) ||
+                    request.Snapshot.MissionRuntimeId != row.MissionRuntimeId)
+                    return new(false, "snapshot_reservation_mismatch", request.TransferId, row.State);
                 if (!await SnapshotVersionsMatchAsync(connection, transaction, request.Snapshot, cancellationToken))
                     return new(false, "npc_ownership_version_conflict", request.TransferId, row.State);
                 snapshotBytes = MessagePackSerializer.Serialize(request.Snapshot);

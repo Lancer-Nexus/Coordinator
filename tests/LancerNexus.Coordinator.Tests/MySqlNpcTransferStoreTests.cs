@@ -66,6 +66,11 @@ public sealed class MySqlNpcTransferStoreTests
                 (await store.GetRecoveryRecordAsync(transferId, "source-01"))!.State);
             Assert.Null(await store.GetRecoveryRecordAsync(transferId, "other-01", includeSnapshot: true));
 
+            await AssertReservationMismatchAsync(store, transferId,
+                CreateSnapshot(transferId, npcId, targetSystem: "li03"), now);
+            await AssertReservationMismatchAsync(store, transferId,
+                CreateSnapshot(transferId, npcId, missionId: Guid.NewGuid()), now);
+
             var snapshot = CreateSnapshot(transferId, npcId);
             var sourceFrozenRequest = new NpcTransferPhaseRequest
             {
@@ -171,6 +176,31 @@ public sealed class MySqlNpcTransferStoreTests
             Assert.Null(await store.GetRecoveryRecordAsync(aborted, "target-01", includeSnapshot: true));
             Assert.Null(await store.GetRecoveryRecordAsync(latest, "target-01"));
             Assert.Equal(final, Assert.Single((await store.GetRecoverableTransfersAsync("target-01", null, 128)).TransferIds));
+
+            // Mission binding must survive restart, including omission or replacement
+            // of the association by an otherwise valid runtime payload.
+            var missionNpc = Guid.NewGuid();
+            var missionTransfer = Guid.NewGuid();
+            await SeedLeaseAsync(database.ConnectionString, missionNpc, Guid.NewGuid(), now);
+            Assert.True((await store.PrepareAsync(new NpcTransferPrepareRequest
+            {
+                TransferId = missionTransfer, SourceInstanceId = "source-01", TargetInstanceId = "target-01",
+                TargetSystemId = "li02", NpcIds = [missionNpc], MissionRuntimeId = missionTransfer,
+                ExpiresUtc = now.AddMinutes(1), IdempotencyKey = missionTransfer.ToString("N")
+            }, now)).Accepted);
+            store = new MySqlNpcTransferStore(database.ConnectionString);
+            await AssertReservationMismatchAsync(store, missionTransfer,
+                CreateSnapshot(missionTransfer, missionNpc), now);
+            await AssertReservationMismatchAsync(store, missionTransfer,
+                CreateSnapshot(missionTransfer, missionNpc, missionId: Guid.NewGuid()), now);
+            Assert.True((await store.AdvanceAsync(new NpcTransferPhaseRequest
+            {
+                TransferId = missionTransfer, State = NpcTransferState.SourceFrozen,
+                Snapshot = CreateSnapshot(missionTransfer, missionNpc, targetSystem: "LI02", missionId: missionTransfer)
+            }, now)).Accepted);
+            var missionRecovery = await new MySqlNpcTransferStore(database.ConnectionString)
+                .GetRecoveryRecordAsync(missionTransfer, "source-01", includeSnapshot: true);
+            Assert.Equal(missionTransfer, missionRecovery!.Snapshot!.MissionRuntimeId);
         }
         finally
         {
@@ -180,6 +210,21 @@ public sealed class MySqlNpcTransferStoreTests
             drop.CommandText = $"DROP DATABASE IF EXISTS `{databaseName}`";
             await drop.ExecuteNonQueryAsync();
         }
+    }
+
+    private static async Task AssertReservationMismatchAsync(MySqlNpcTransferStore store, Guid transferId,
+        NpcTransferSnapshot snapshot, DateTime now)
+    {
+        var rejected = await store.AdvanceAsync(new NpcTransferPhaseRequest
+        {
+            TransferId = transferId, State = NpcTransferState.SourceFrozen, Snapshot = snapshot
+        }, now);
+        Assert.False(rejected.Accepted);
+        Assert.Equal("snapshot_reservation_mismatch", rejected.ReasonCode);
+        var unchanged = await store.GetRecoveryRecordAsync(transferId, "source-01", includeSnapshot: true);
+        Assert.Equal(NpcTransferState.Reserved, unchanged!.State);
+        Assert.Null(unchanged.Snapshot);
+        Assert.Null(unchanged.SnapshotSha256);
     }
 
     private static async Task<Guid> CompleteTransferAsync(MySqlNpcTransferStore store, Guid npcId,
@@ -239,7 +284,7 @@ public sealed class MySqlNpcTransferStoreTests
     }
 
     private static NpcTransferSnapshot CreateSnapshot(Guid transferId, Guid npcId, float positionX = 0,
-        long ownershipVersion = 1, string sourceSystem = "li01", string targetSystem = "li02")
+        long ownershipVersion = 1, string sourceSystem = "li01", string targetSystem = "li02", Guid? missionId = null)
     {
         var runtime = new NpcRuntimeStateV1
         {
@@ -255,6 +300,11 @@ public sealed class MySqlNpcTransferStoreTests
             TransferId = transferId,
             NpcIds = [npcId],
             TargetSystemId = targetSystem,
+            MissionRuntimeId = missionId,
+            MissionRuntimeState = missionId is null ? [] : MessagePackSerializer.Serialize(new NpcMissionRuntimeStateV1
+            {
+                MissionNickname = "mission_01", RandomState = 1
+            }),
             Npcs =
             [
                 new NpcRuntimeSnapshot
