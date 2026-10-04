@@ -129,17 +129,19 @@ public sealed partial class MySqlNpcOwnershipStore
     }
 
     public async Task<NpcCheckpointRecoveryPageV1> GetRecoverableCheckpointsAsync(string instanceId,
-        Guid? afterCheckpointId, int limit, CancellationToken cancellationToken = default)
+        Guid? afterCheckpointId, int limit, CancellationToken cancellationToken = default, string? systemId = null)
     {
         if (limit is < 1 or > 128) throw new ArgumentOutOfRangeException(nameof(limit));
-        if (!IsEnabled || string.IsNullOrWhiteSpace(instanceId) || instanceId.Length > 96) return new();
+        if (!IsEnabled || string.IsNullOrWhiteSpace(instanceId) || instanceId.Length > 96 ||
+            systemId is not null && (string.IsNullOrWhiteSpace(systemId) || systemId.Length > 96)) return new();
         await using var connection = new MySqlConnection(connectionString);
         await connection.OpenAsync(cancellationToken);
         await using var command = connection.CreateCommand();
         // Discover only current pointers, not all historical runtime blobs. Direct
         // recovery rechecks the complete group before handing out snapshot data.
-        command.CommandText = "SELECT DISTINCT checkpoint_id FROM npc_ownership_leases WHERE instance_id=@instance AND retired_at_utc IS NULL AND active_transfer_id IS NULL AND checkpoint_id IS NOT NULL AND (@after IS NULL OR checkpoint_id>@after) ORDER BY checkpoint_id LIMIT @take";
+        command.CommandText = "SELECT DISTINCT checkpoint_id FROM npc_ownership_leases WHERE instance_id=@instance AND (@system IS NULL OR system_id=@system) AND retired_at_utc IS NULL AND active_transfer_id IS NULL AND checkpoint_id IS NOT NULL AND (@after IS NULL OR checkpoint_id>@after) ORDER BY checkpoint_id LIMIT @take";
         command.Parameters.AddWithValue("@instance", instanceId);
+        command.Parameters.AddWithValue("@system", (object?)systemId ?? DBNull.Value);
         command.Parameters.AddWithValue("@after", afterCheckpointId?.ToString("D"));
         command.Parameters.AddWithValue("@take", limit + 1);
         var ids = new List<Guid>();

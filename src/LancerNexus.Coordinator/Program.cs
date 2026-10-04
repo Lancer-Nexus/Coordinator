@@ -215,6 +215,7 @@ app.MapGet("/internal/v1/npc-checkpoints/{checkpointId:guid}/recovery", async (
 
 app.MapGet("/internal/v1/npc-checkpoints/recovery", async (
     string instanceId,
+    string? systemId,
     Guid? afterCheckpointId,
     int? limit,
     MySqlNpcOwnershipStore ownershipStore,
@@ -222,10 +223,12 @@ app.MapGet("/internal/v1/npc-checkpoints/recovery", async (
 {
     if (!ownershipStore.IsEnabled)
         return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
-    if (string.IsNullOrWhiteSpace(instanceId) || instanceId.Length > 96 || (limit ?? 32) is < 1 or > 128)
+    if (string.IsNullOrWhiteSpace(instanceId) || instanceId.Length > 96 ||
+        systemId is not null && (string.IsNullOrWhiteSpace(systemId) || systemId.Length > 96) ||
+        (limit ?? 32) is < 1 or > 128)
         return Results.BadRequest();
     return Results.Ok(await ownershipStore.GetRecoverableCheckpointsAsync(instanceId,
-        afterCheckpointId, limit ?? 32, cancellationToken));
+        afterCheckpointId, limit ?? 32, cancellationToken, systemId));
 });
 
 app.MapPost("/internal/v1/npc-transfers/prepare", async (

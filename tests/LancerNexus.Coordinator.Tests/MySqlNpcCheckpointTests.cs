@@ -8,7 +8,7 @@ namespace LancerNexus.Coordinator.Tests;
 
 public sealed class MySqlNpcCheckpointTests
 {
-    [Fact]
+    [MySqlCheckpointFact]
     public async Task CheckpointAtomicallyReplacesSurvivorsRetiresTerminalMembersAndRecoversAfterRestart()
     {
         await WithDatabaseAsync(async connectionString =>
@@ -76,6 +76,12 @@ public sealed class MySqlNpcCheckpointTests
 
             var ids = await store.GetRecoverableCheckpointsAsync("source-01", null, 20);
             Assert.Contains(next.RequestId, ids.CheckpointIds);
+            var wrongSystem = await store.GetRecoverableCheckpointsAsync("source-01", null, 20,
+                systemId: "li02");
+            Assert.DoesNotContain(next.RequestId, wrongSystem.CheckpointIds);
+            var sameSystem = await store.GetRecoverableCheckpointsAsync("source-01", null, 20,
+                systemId: "li01");
+            Assert.Contains(next.RequestId, sameSystem.CheckpointIds);
             var recovery = await new MySqlNpcOwnershipStore(connectionString).GetCheckpointAsync(next.RequestId, "source-01");
             Assert.NotNull(recovery);
             Assert.Equal(1, Assert.Single(recovery.Snapshot.Npcs).NpcId == second.NpcId ? 1 : 0);
@@ -88,7 +94,7 @@ public sealed class MySqlNpcCheckpointTests
         });
     }
 
-    [Fact]
+    [MySqlCheckpointFact]
     public async Task TransferMustCarryCompleteCheckpointGroupAndSuccessfulTransferInvalidatesOldCheckpoint()
     {
         await WithDatabaseAsync(async connectionString =>
@@ -123,7 +129,7 @@ public sealed class MySqlNpcCheckpointTests
         });
     }
 
-    [Fact]
+    [MySqlCheckpointFact]
     public async Task MissionCheckpointsFailClosedUntilCharacterAuthorityIsImplemented()
     {
         await WithDatabaseAsync(async connectionString =>
@@ -201,5 +207,14 @@ public sealed class MySqlNpcCheckpointTests
             await action(isolated.ConnectionString);
         }
         finally { command.CommandText = $"DROP DATABASE `{database}`"; await command.ExecuteNonQueryAsync(); }
+    }
+
+    private sealed class MySqlCheckpointFactAttribute : FactAttribute
+    {
+        public MySqlCheckpointFactAttribute()
+        {
+            if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("LANCER_NEXUS_COORDINATOR_TEST_MYSQL")))
+                Skip = "Set LANCER_NEXUS_COORDINATOR_TEST_MYSQL to an isolated MySQL test server.";
+        }
     }
 }
