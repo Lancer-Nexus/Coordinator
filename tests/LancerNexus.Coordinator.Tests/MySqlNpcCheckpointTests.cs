@@ -80,7 +80,7 @@ public sealed class MySqlNpcCheckpointTests
                 systemId: "li02");
             Assert.DoesNotContain(next.RequestId, wrongSystem.CheckpointIds);
             var sameSystem = await store.GetRecoverableCheckpointsAsync("source-01", null, 20,
-                systemId: "li01");
+                systemId: "Li01");
             Assert.Contains(next.RequestId, sameSystem.CheckpointIds);
             var recovery = await new MySqlNpcOwnershipStore(connectionString).GetCheckpointAsync(next.RequestId, "source-01");
             Assert.NotNull(recovery);

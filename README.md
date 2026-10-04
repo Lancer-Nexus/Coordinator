@@ -148,7 +148,8 @@ entries in one MySQL transaction. Replaying the same request ID and exact payloa
 returns its recorded response. A changed payload under that ID conflicts.
 
 Recovery discovery is available at `GET /internal/v1/npc-checkpoints/recovery` and
-can be filtered by `instanceId` and `systemId`. The per-checkpoint endpoint returns
+can be filtered by `instanceId` and `systemId`; system nicknames are compared
+case-insensitively and normalized to lowercase. The per-checkpoint endpoint returns
 bytes only after checking every active lease, owner, system, transfer and resulting
 revision. GameServers drain pending writes and recover each system before publishing
 the world. Transfer preparation must include complete prior checkpoint groups.

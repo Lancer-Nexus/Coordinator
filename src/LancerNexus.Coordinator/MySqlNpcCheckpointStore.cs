@@ -134,6 +134,7 @@ public sealed partial class MySqlNpcOwnershipStore
         if (limit is < 1 or > 128) throw new ArgumentOutOfRangeException(nameof(limit));
         if (!IsEnabled || string.IsNullOrWhiteSpace(instanceId) || instanceId.Length > 96 ||
             systemId is not null && (string.IsNullOrWhiteSpace(systemId) || systemId.Length > 96)) return new();
+        systemId = systemId?.ToLowerInvariant();
         await using var connection = new MySqlConnection(connectionString);
         await connection.OpenAsync(cancellationToken);
         await using var command = connection.CreateCommand();
