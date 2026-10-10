@@ -16,6 +16,24 @@ var npcOwnershipConnectionString = builder.Configuration.GetConnectionString("Np
                                    builder.Configuration["Coordinator:NpcOwnershipConnectionString"];
 if (string.IsNullOrWhiteSpace(npcOwnershipConnectionString))
     npcOwnershipConnectionString = null;
+var flHookEventsConnectionString = builder.Configuration.GetConnectionString("FlHookEvents") ??
+                                  builder.Configuration["Coordinator:FlHookEventsConnectionString"] ??
+                                  npcOwnershipConnectionString;
+if (string.IsNullOrWhiteSpace(flHookEventsConnectionString))
+    flHookEventsConnectionString = null;
+var flHookEventStore = new MySqlFlHookEventStore(flHookEventsConnectionString);
+if (quicSettings is not null && flHookEventStore.IsEnabled)
+    quicSettings = quicSettings with
+    {
+        LocalHello = new ClusterHello
+        {
+            NodeId = quicSettings.LocalHello.NodeId,
+            InstanceId = quicSettings.LocalHello.InstanceId,
+            BuildVersion = quicSettings.LocalHello.BuildVersion,
+            ProtocolVersion = quicSettings.LocalHello.ProtocolVersion,
+            Capabilities = [.. quicSettings.LocalHello.Capabilities, ClusterCapabilities.FlHookEventsV1]
+        }
+    };
 builder.Services.AddHealthChecks();
 builder.Services.AddSingleton(placementPolicyOptions);
 builder.Services.AddSingleton(registryOptions);
@@ -25,6 +43,8 @@ var registryStateFile = builder.Configuration["Coordinator:StateFile"] ??
 builder.Services.AddSingleton<ICoordinatorRegistryStore>(_ => new FileCoordinatorRegistryStore(registryStateFile));
 builder.Services.AddSingleton<CoordinatorRegistry>();
 builder.Services.AddSingleton(new MySqlNpcOwnershipStore(npcOwnershipConnectionString));
+builder.Services.AddSingleton<IFlHookEventStore>(flHookEventStore);
+builder.Services.AddSingleton<CoordinatorFlHookEventReceiver>();
 builder.Services.AddHttpClient<INpcMissionAuthorityClient, NpcMissionAuthorityClient>(http =>
     http.Timeout = TimeSpan.FromSeconds(8)).ConfigurePrimaryHttpMessageHandler(() =>
     new HttpClientHandler { AllowAutoRedirect = false });

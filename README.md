@@ -70,6 +70,19 @@ The Coordinator can expose a QUIC/TLS 1.3 handshake listener. It is disabled by 
 
 Client certificates must chain to that configured CA, include Client Authentication EKU and contain exactly one non-wildcard DNS SAN. The SAN value must match the peer `ClusterHello.NodeId`. Revocation is not checked by this initial listener; issue short-lived client certificates and rotate them. Peers must separately trust the Coordinator server certificate. The Agent keeps the authenticated connection open and sends one `AgentHeartbeat` request per bidirectional QUIC stream; the Coordinator validates the heartbeat NodeId against the client certificate SAN and acknowledges its sequence. The Coordinator also accepts `InstanceHeartbeat` streams, requiring the heartbeat's AgentId to map to the authenticated certificate NodeId and a fresh registered Agent. When configured with a fresh LLServer status file, the Agent now reports instance readiness, player count and drain state; a drain flag makes the Coordinator exclude that instance from new placements while existing players remain connected. Lifecycle commands are not yet carried over this control channel. On Linux, install `libmsquic` 2.2+ and allow the configured UDP port. If QUIC is enabled but its platform dependency is unavailable, the Coordinator fails startup instead of advertising the listener as active.
 
+The listener also accepts `FlHookEventV1` when `flhook_events_v1` was
+negotiated. Configure `ConnectionStrings__FlHookEvents` or
+`Coordinator__FlHookEventsConnectionString`; if unset, the existing NPC
+ownership connection string is reused. Apply
+`db/migrations/005_flhook_server_events.sql` first. The receiver checks that
+the event's live instance belongs to the certificate-authenticated Agent and
+persists the exact MessagePack payload under `(instance_id, producer_epoch,
+sequence_number)`. It returns `Stored` or `Duplicate` only after the transaction
+commits, `Conflict` for a reused identity with different content and
+`Unavailable` when storage cannot be reached. The service capability is omitted
+when no event database connection is configured. LLServer publishing and replay
+requests are not yet connected.
+
 Registry and placement timeouts can be overridden with `Coordinator__Registry__AgentHeartbeatTimeoutSeconds`, `Coordinator__Registry__InstanceHeartbeatTimeoutSeconds`, `Coordinator__Placement__MaximumHeartbeatAgeSeconds`, `Coordinator__Placement__ReservationLifetimeSeconds` and `Coordinator__Placement__GroupAffinityLifetimeSeconds`. All must be positive; defaults are 15, 15, 15, 15 and 30 seconds respectively.
 
 ## Development

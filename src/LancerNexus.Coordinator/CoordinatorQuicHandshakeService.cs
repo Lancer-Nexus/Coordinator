@@ -23,6 +23,7 @@ public sealed class CoordinatorQuicHandshakeService : BackgroundService
     private readonly CoordinatorQuicSettings settings;
     private readonly ILogger<CoordinatorQuicHandshakeService> logger;
     private readonly CoordinatorRegistry registry;
+    private readonly CoordinatorFlHookEventReceiver flHookEventReceiver;
     private readonly TimeProvider timeProvider;
     private readonly X509Certificate2 serverCertificate;
     private readonly X509Certificate2 clientCaCertificate;
@@ -33,11 +34,13 @@ public sealed class CoordinatorQuicHandshakeService : BackgroundService
         CoordinatorQuicSettings settings,
         ILogger<CoordinatorQuicHandshakeService> logger,
         CoordinatorRegistry registry,
+        CoordinatorFlHookEventReceiver flHookEventReceiver,
         TimeProvider timeProvider)
     {
         this.settings = settings;
         this.logger = logger;
         this.registry = registry;
+        this.flHookEventReceiver = flHookEventReceiver;
         this.timeProvider = timeProvider;
 
         serverCertificate = X509CertificateLoader.LoadPkcs12FromFile(
@@ -131,7 +134,8 @@ public sealed class CoordinatorQuicHandshakeService : BackgroundService
                     return;
                 }
 
-                if (!await NegotiatePeerAsync(connection, certificateNodeId, stoppingToken))
+                var negotiatedCapabilities = await NegotiatePeerAsync(connection, certificateNodeId, stoppingToken);
+                if (negotiatedCapabilities is null)
                     return;
 
                 logger.LogInformation(
@@ -147,7 +151,7 @@ public sealed class CoordinatorQuicHandshakeService : BackgroundService
                     if (stream.Type != QuicStreamType.Bidirectional)
                         throw new ProtocolViolationException("Agent control messages require bidirectional streams.");
 
-                    await HandleAgentMessageAsync(stream, certificateNodeId, stoppingToken);
+                    await HandleAgentMessageAsync(stream, certificateNodeId, negotiatedCapabilities, stoppingToken);
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -166,7 +170,7 @@ public sealed class CoordinatorQuicHandshakeService : BackgroundService
         }
     }
 
-    private async Task<bool> NegotiatePeerAsync(
+    private async Task<string[]?> NegotiatePeerAsync(
         QuicConnection connection,
         string certificateNodeId,
         CancellationToken stoppingToken)
@@ -205,12 +209,13 @@ public sealed class CoordinatorQuicHandshakeService : BackgroundService
         await stream.WriteAsync(MessagePackSerializer.Serialize(response), stoppingToken);
         stream.CompleteWrites();
         logger.LogInformation("Coordinator QUIC handshake {Result} for peer {NodeId}", result.ReasonCode, certificateNodeId);
-        return result.Accepted;
+        return result.Accepted ? result.NegotiatedCapabilities : null;
     }
 
     private async Task HandleAgentMessageAsync(
         QuicStream stream,
         string certificateNodeId,
+        string[] negotiatedCapabilities,
         CancellationToken cancellationToken)
     {
         var request = await ReadEnvelopeAsync(stream, cancellationToken);
@@ -264,6 +269,19 @@ public sealed class CoordinatorQuicHandshakeService : BackgroundService
                 logger.LogWarning("Instance {InstanceId} is no longer ready.", heartbeat.InstanceId);
             else if (previous.IsDraining != heartbeat.IsDraining)
                 logger.LogInformation("Instance {InstanceId} draining state changed to {IsDraining}.", heartbeat.InstanceId, heartbeat.IsDraining);
+        }
+        else if (request.MessageType == (ushort)ClusterMessageType.FlHookEvent)
+        {
+            if (!negotiatedCapabilities.Contains(ClusterCapabilities.FlHookEventsV1, StringComparer.Ordinal))
+                throw new ProtocolViolationException("FLHook events were not negotiated for this connection.");
+            var value = MessagePackSerializer.Deserialize<FlHookEventV1>(request.Payload, UntrustedMessagePack);
+            var result = await flHookEventReceiver.IngestAsync(request.CorrelationId, request.Sequence,
+                certificateNodeId, value, cancellationToken);
+            var accepted = result.Status is FlHookEventIngestStatusV1.Stored or FlHookEventIngestStatusV1.Duplicate;
+            response = CreateControlResponse(request, ClusterMessageType.FlHookEventIngestResult, result, accepted);
+            if (result.Status is FlHookEventIngestStatusV1.Rejected or FlHookEventIngestStatusV1.Conflict)
+                logger.LogWarning("Coordinator rejected FLHook event {InstanceId}/{ProducerEpoch}/{Sequence}: {Status}",
+                    result.InstanceId, result.ProducerEpoch, result.Sequence, result.Status);
         }
         else
         {
