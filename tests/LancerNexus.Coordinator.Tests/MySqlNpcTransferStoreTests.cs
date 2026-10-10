@@ -159,17 +159,22 @@ public sealed class MySqlNpcTransferStoreTests
             var aborted = Guid.NewGuid();
             Assert.True((await store.PrepareAsync(new NpcTransferPrepareRequest
             {
-                TransferId = aborted, SourceInstanceId = "target-01", TargetInstanceId = "source-01",
-                TargetSystemId = "li01", NpcIds = [npcId], ExpiresUtc = now.AddMinutes(1),
+                TransferId = aborted,
+                SourceInstanceId = "target-01",
+                TargetInstanceId = "source-01",
+                TargetSystemId = "li01",
+                NpcIds = [npcId],
+                ExpiresUtc = now.AddMinutes(1),
                 IdempotencyKey = aborted.ToString("N")
             }, now)).Accepted);
             Assert.True((await store.AdvanceAsync(new NpcTransferPhaseRequest
             {
-                TransferId = aborted, State = NpcTransferState.SourceFrozen,
+                TransferId = aborted,
+                State = NpcTransferState.SourceFrozen,
                 Snapshot = CreateSnapshot(aborted, npcId, ownershipVersion: 4, sourceSystem: "li02", targetSystem: "li01")
             }, now)).Accepted);
             Assert.True((await store.AdvanceAsync(new NpcTransferPhaseRequest
-                { TransferId = aborted, State = NpcTransferState.Aborted }, now)).Accepted);
+            { TransferId = aborted, State = NpcTransferState.Aborted }, now)).Accepted);
             Assert.NotNull(await store.GetRecoveryRecordAsync(aborted, "target-01", includeSnapshot: true));
             await CompleteTransferAsync(store, npcId, "target-01", "source-01", "li01", 4, now);
             var final = await CompleteTransferAsync(store, npcId, "source-01", "target-01", "li02", 5, now);
@@ -184,9 +189,14 @@ public sealed class MySqlNpcTransferStoreTests
             await SeedLeaseAsync(database.ConnectionString, missionNpc, Guid.NewGuid(), now);
             Assert.True((await store.PrepareAsync(new NpcTransferPrepareRequest
             {
-                TransferId = missionTransfer, SourceInstanceId = "source-01", TargetInstanceId = "target-01",
-                TargetSystemId = "li02", NpcIds = [missionNpc], MissionRuntimeId = missionTransfer,
-                ExpiresUtc = now.AddMinutes(1), IdempotencyKey = missionTransfer.ToString("N")
+                TransferId = missionTransfer,
+                SourceInstanceId = "source-01",
+                TargetInstanceId = "target-01",
+                TargetSystemId = "li02",
+                NpcIds = [missionNpc],
+                MissionRuntimeId = missionTransfer,
+                ExpiresUtc = now.AddMinutes(1),
+                IdempotencyKey = missionTransfer.ToString("N")
             }, now)).Accepted);
             store = new MySqlNpcTransferStore(database.ConnectionString);
             await AssertReservationMismatchAsync(store, missionTransfer,
@@ -195,18 +205,19 @@ public sealed class MySqlNpcTransferStoreTests
                 CreateSnapshot(missionTransfer, missionNpc, missionId: Guid.NewGuid()), now);
             Assert.True((await store.AdvanceAsync(new NpcTransferPhaseRequest
             {
-                TransferId = missionTransfer, State = NpcTransferState.SourceFrozen,
+                TransferId = missionTransfer,
+                State = NpcTransferState.SourceFrozen,
                 Snapshot = CreateSnapshot(missionTransfer, missionNpc, targetSystem: "LI02", missionId: missionTransfer)
             }, now)).Accepted);
             var missionRecovery = await new MySqlNpcTransferStore(database.ConnectionString)
                 .GetRecoveryRecordAsync(missionTransfer, "source-01", includeSnapshot: true);
             Assert.Equal(missionTransfer, missionRecovery!.Snapshot!.MissionRuntimeId);
             Assert.True((await store.AdvanceAsync(new NpcTransferPhaseRequest
-                { TransferId = missionTransfer, State = NpcTransferState.TargetAccepted }, now)).Accepted);
+            { TransferId = missionTransfer, State = NpcTransferState.TargetAccepted }, now)).Accepted);
             foreach (var phase in new[] { NpcTransferState.Committed, NpcTransferState.Aborted })
             {
                 var denied = await store.AdvanceAsync(new NpcTransferPhaseRequest
-                    { TransferId = missionTransfer, State = phase }, now);
+                { TransferId = missionTransfer, State = phase }, now);
                 Assert.False(denied.Accepted);
                 Assert.Equal("mission_authority_not_configured", denied.ReasonCode);
                 Assert.Equal(NpcTransferState.TargetAccepted, denied.State);
@@ -216,13 +227,13 @@ public sealed class MySqlNpcTransferStoreTests
             foreach (var phase in new[] { NpcTransferState.Committed, NpcTransferState.Aborted })
             {
                 Assert.False((await store.AdvanceAsync(new NpcTransferPhaseRequest
-                    { TransferId = missionTransfer, State = phase }, now)).Accepted);
+                { TransferId = missionTransfer, State = phase }, now)).Accepted);
                 Assert.Equal(NpcTransferState.TargetAccepted,
                     (await store.GetRecoveryRecordAsync(missionTransfer, "source-01", includeSnapshot: true))!.State);
             }
             authority.Authorized = true;
             Assert.True((await store.AdvanceAsync(new NpcTransferPhaseRequest
-                { TransferId = missionTransfer, State = NpcTransferState.Committed }, now)).Accepted);
+            { TransferId = missionTransfer, State = NpcTransferState.Committed }, now)).Accepted);
             Assert.NotNull(await new MySqlNpcTransferStore(database.ConnectionString, authority)
                 .GetRecoveryRecordAsync(missionTransfer, "target-01", includeSnapshot: true));
             Assert.Null(await new MySqlNpcTransferStore(database.ConnectionString)
@@ -232,7 +243,7 @@ public sealed class MySqlNpcTransferStoreTests
             authority.Authorized = true;
             var calls = authority.Calls;
             Assert.False((await store.AdvanceAsync(new NpcTransferPhaseRequest
-                { TransferId = missionTransfer, State = NpcTransferState.Aborted }, now)).Accepted);
+            { TransferId = missionTransfer, State = NpcTransferState.Aborted }, now)).Accepted);
             Assert.Equal(calls, authority.Calls);
 
             // An uncertain authority reply leaves the frozen source reservation
@@ -242,13 +253,19 @@ public sealed class MySqlNpcTransferStoreTests
             await SeedLeaseAsync(database.ConnectionString, rollbackNpc, Guid.NewGuid(), now);
             Assert.True((await store.PrepareAsync(new NpcTransferPrepareRequest
             {
-                TransferId = rollback, SourceInstanceId = "source-01", TargetInstanceId = "target-01",
-                TargetSystemId = "li02", NpcIds = [rollbackNpc], MissionRuntimeId = rollback,
-                ExpiresUtc = now.AddMinutes(1), IdempotencyKey = rollback.ToString("N")
+                TransferId = rollback,
+                SourceInstanceId = "source-01",
+                TargetInstanceId = "target-01",
+                TargetSystemId = "li02",
+                NpcIds = [rollbackNpc],
+                MissionRuntimeId = rollback,
+                ExpiresUtc = now.AddMinutes(1),
+                IdempotencyKey = rollback.ToString("N")
             }, now)).Accepted);
             Assert.True((await store.AdvanceAsync(new NpcTransferPhaseRequest
             {
-                TransferId = rollback, State = NpcTransferState.SourceFrozen,
+                TransferId = rollback,
+                State = NpcTransferState.SourceFrozen,
                 Snapshot = CreateSnapshot(rollback, rollbackNpc, missionId: rollback)
             }, now)).Accepted);
             authority.Authorized = false;
@@ -282,7 +299,9 @@ public sealed class MySqlNpcTransferStoreTests
     {
         var rejected = await store.AdvanceAsync(new NpcTransferPhaseRequest
         {
-            TransferId = transferId, State = NpcTransferState.SourceFrozen, Snapshot = snapshot
+            TransferId = transferId,
+            State = NpcTransferState.SourceFrozen,
+            Snapshot = snapshot
         }, now);
         Assert.False(rejected.Accepted);
         Assert.Equal("snapshot_reservation_mismatch", rejected.ReasonCode);
@@ -298,19 +317,24 @@ public sealed class MySqlNpcTransferStoreTests
         var transfer = Guid.NewGuid();
         Assert.True((await store.PrepareAsync(new NpcTransferPrepareRequest
         {
-            TransferId = transfer, SourceInstanceId = source, TargetInstanceId = target,
-            TargetSystemId = targetSystem, NpcIds = [npcId], ExpiresUtc = now.AddMinutes(1),
+            TransferId = transfer,
+            SourceInstanceId = source,
+            TargetInstanceId = target,
+            TargetSystemId = targetSystem,
+            NpcIds = [npcId],
+            ExpiresUtc = now.AddMinutes(1),
             IdempotencyKey = transfer.ToString("N")
         }, now)).Accepted);
         Assert.True((await store.AdvanceAsync(new NpcTransferPhaseRequest
         {
-            TransferId = transfer, State = NpcTransferState.SourceFrozen,
+            TransferId = transfer,
+            State = NpcTransferState.SourceFrozen,
             Snapshot = CreateSnapshot(transfer, npcId, ownershipVersion: version,
                 sourceSystem: targetSystem == "li01" ? "li02" : "li01", targetSystem: targetSystem)
         }, now)).Accepted);
         foreach (var phase in new[] { NpcTransferState.TargetAccepted, NpcTransferState.Committed, NpcTransferState.SourceReleased })
             Assert.True((await store.AdvanceAsync(new NpcTransferPhaseRequest
-                { TransferId = transfer, State = phase }, now)).Accepted);
+            { TransferId = transfer, State = phase }, now)).Accepted);
         return transfer;
     }
 
@@ -369,7 +393,8 @@ public sealed class MySqlNpcTransferStoreTests
             MissionRuntimeId = missionId,
             MissionRuntimeState = missionId is null ? [] : MessagePackSerializer.Serialize(new NpcMissionRuntimeStateV1
             {
-                MissionNickname = "mission_01", RandomState = 1
+                MissionNickname = "mission_01",
+                RandomState = 1
             }),
             Npcs =
             [

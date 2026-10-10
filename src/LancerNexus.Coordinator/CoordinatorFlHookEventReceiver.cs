@@ -35,4 +35,30 @@ public sealed class CoordinatorFlHookEventReceiver(
             Status = status
         };
     }
+
+    public async Task<FlHookEventReplayResultV1> ReplayAsync(Guid correlationId, ulong frameSequence,
+        string certificateNodeId, FlHookEventReplayRequestV1 request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (correlationId == Guid.Empty || request.CorrelationId != correlationId ||
+            !request.IsValid() || checked((ulong)request.AfterSequence) != frameSequence)
+            throw new ProtocolViolationException("FLHook replay identity does not match its authenticated frame.");
+
+        var now = timeProvider.GetUtcNow();
+        var snapshot = registry.Snapshot(now);
+        var instance = snapshot.Instances.FirstOrDefault(candidate =>
+            candidate.InstanceId == request.InstanceId && candidate.IsAlive && candidate.AgentIsAlive);
+        var certificateOwnsInstance = instance is not null && snapshot.Agents.Any(agent =>
+            agent.IsAlive && agent.AgentId == instance.AgentId &&
+            string.Equals(agent.NodeId, certificateNodeId, StringComparison.OrdinalIgnoreCase));
+        if (!certificateOwnsInstance)
+            throw new ProtocolViolationException("Authenticated Agent does not own the requested FLHook event stream.");
+
+        var result = await store.ReplayAsync(request, cancellationToken);
+        if (!result.IsValid() || result.CorrelationId != correlationId || result.InstanceId != request.InstanceId ||
+            result.RequestedSequence != request.AfterSequence || result.RequestedProducerEpoch != request.ProducerEpoch)
+            throw new ProtocolViolationException("FLHook event store returned an invalid replay result.");
+        return result;
+    }
 }

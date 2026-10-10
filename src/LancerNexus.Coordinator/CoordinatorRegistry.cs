@@ -66,6 +66,7 @@ public sealed class CoordinatorRegistry
     private readonly Dictionary<string, ReservationEntry> reservations = new(StringComparer.Ordinal);
     private readonly Dictionary<string, GroupAffinityEntry> groupAffinities = new(StringComparer.Ordinal);
     private readonly Dictionary<Guid, TransferEntry> transfers = [];
+    private readonly Dictionary<string, EventReservationEntry> eventServerReservations = new(StringComparer.Ordinal);
 
     public CoordinatorRegistry(
         PlacementPolicy placementPolicy,
@@ -267,6 +268,173 @@ public sealed class CoordinatorRegistry
             return new(decision);
         }
     }
+
+    public EventServerReservationDecisionV1 ReserveEventServer(
+        EventServerReservationRequestV1 request,
+        DateTimeOffset nowUtc)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        lock (sync)
+        {
+            if (!request.IsValid())
+                return EventReservationFailure(request, EventServerReservationStatus.Invalid, "invalid_request");
+
+            if (eventServerReservations.TryGetValue(request.EventId, out var existing))
+            {
+                if (!MatchesEventReservation(existing.Request, request))
+                    return EventReservationFailure(request, EventServerReservationStatus.Conflict, "event_reservation_conflict");
+                return existing.Decision with
+                {
+                    RequestId = request.RequestId,
+                    CorrelationId = request.CorrelationId,
+                    Status = EventServerReservationStatus.AlreadyReserved
+                };
+            }
+            if (eventServerReservations.Values.Any(entry =>
+                    string.Equals(entry.Request.IdempotencyKey, request.IdempotencyKey, StringComparison.Ordinal)))
+                return EventReservationFailure(request, EventServerReservationStatus.Conflict, "idempotency_conflict");
+
+            var now = nowUtc.ToUniversalTime();
+            var candidates = instances.Values
+                .Select(entry =>
+                {
+                    var heartbeat = entry.Heartbeat;
+                    var agentAlive = agents.TryGetValue(heartbeat.AgentId, out var agent) &&
+                                     IsFresh(agent.LastHeartbeatUtc, now, options.AgentHeartbeatTimeout);
+                    var ownedSystems = EffectiveSystems(heartbeat);
+                    var overlappingCapacity = eventServerReservations.Values
+                        .Where(reservation => reservation.ReleaseDecision is null &&
+                            reservation.Decision.InstanceId == heartbeat.InstanceId &&
+                            Overlaps(reservation.Request.StartsUtc, reservation.Request.EndsUtc,
+                                request.StartsUtc, request.EndsUtc))
+                        .Sum(reservation => reservation.Request.MaximumParticipants);
+                    return new
+                    {
+                        Entry = entry,
+                        AgentAlive = agentAlive,
+                        OwnedSystems = ownedSystems,
+                        Used = heartbeat.CurrentPlayers + CountPlacementReservations(heartbeat.InstanceId, now) + overlappingCapacity
+                    };
+                })
+                .Where(candidate => candidate.AgentAlive && candidate.Entry.LastHeartbeatUtc <= now &&
+                    now - candidate.Entry.LastHeartbeatUtc <= options.InstanceHeartbeatTimeout &&
+                    candidate.Entry.Heartbeat.IsReady && !candidate.Entry.Heartbeat.IsDraining &&
+                    candidate.OwnedSystems.Contains(request.TargetSystemId, StringComparer.OrdinalIgnoreCase) &&
+                    candidate.Used + request.MaximumParticipants <= candidate.Entry.Heartbeat.MaxPlayers)
+                .OrderBy(candidate => (double)candidate.Used / candidate.Entry.Heartbeat.MaxPlayers)
+                .ThenBy(candidate => candidate.Used)
+                .ThenBy(candidate => candidate.Entry.Heartbeat.InstanceId, StringComparer.Ordinal)
+                .FirstOrDefault();
+
+            if (candidates is null)
+                return EventReservationFailure(request, EventServerReservationStatus.NoCapacity, "no_event_capacity");
+
+            var decision = new EventServerReservationDecisionV1
+            {
+                RequestId = request.RequestId,
+                CorrelationId = request.CorrelationId,
+                EventId = request.EventId,
+                ReservationId = Guid.NewGuid(),
+                Status = EventServerReservationStatus.Reserved,
+                InstanceId = candidates.Entry.Heartbeat.InstanceId,
+                SystemId = request.TargetSystemId.ToLowerInvariant(),
+                Endpoint = candidates.Entry.Heartbeat.Endpoint,
+                ReservedCapacity = request.MaximumParticipants
+            };
+            var reservation = new EventReservationEntry(request, decision, null, null);
+            eventServerReservations.Add(request.EventId, reservation);
+            try
+            {
+                Persist();
+            }
+            catch
+            {
+                eventServerReservations.Remove(request.EventId);
+                throw;
+            }
+            return decision;
+        }
+    }
+
+    public EventServerReservationReleaseDecisionV1 ReleaseEventServer(
+        EventServerReservationReleaseRequestV1 request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        lock (sync)
+        {
+            if (!request.IsValid())
+                return EventReleaseFailure(request, EventServerReservationReleaseStatus.Invalid, "invalid_request");
+            if (!eventServerReservations.TryGetValue(request.EventId, out var reservation) ||
+                reservation.Decision.ReservationId != request.ReservationId)
+                return EventReleaseFailure(request, EventServerReservationReleaseStatus.NotFound, "reservation_not_found");
+            if (reservation.ReleaseDecision is not null)
+            {
+                if (!string.Equals(reservation.ReleaseIdempotencyKey, request.IdempotencyKey, StringComparison.Ordinal))
+                    return EventReleaseFailure(request, EventServerReservationReleaseStatus.Conflict, "idempotency_conflict");
+                return reservation.ReleaseDecision with
+                {
+                    RequestId = request.RequestId,
+                    CorrelationId = request.CorrelationId,
+                    Status = EventServerReservationReleaseStatus.AlreadyReleased
+                };
+            }
+            var decision = new EventServerReservationReleaseDecisionV1
+            {
+                RequestId = request.RequestId,
+                CorrelationId = request.CorrelationId,
+                EventId = request.EventId,
+                ReservationId = request.ReservationId,
+                Status = EventServerReservationReleaseStatus.Released
+            };
+            eventServerReservations[request.EventId] = reservation with
+            {
+                ReleaseDecision = decision,
+                ReleaseIdempotencyKey = request.IdempotencyKey
+            };
+            try
+            {
+                Persist();
+            }
+            catch
+            {
+                eventServerReservations[request.EventId] = reservation;
+                throw;
+            }
+            return decision;
+        }
+    }
+
+    private static bool Overlaps(DateTimeOffset leftStart, DateTimeOffset leftEnd,
+        DateTimeOffset rightStart, DateTimeOffset rightEnd) => leftStart < rightEnd && leftEnd > rightStart;
+
+    private static bool MatchesEventReservation(EventServerReservationRequestV1 left,
+        EventServerReservationRequestV1 right) =>
+        string.Equals(left.EventId, right.EventId, StringComparison.Ordinal) &&
+        left.EventRevision == right.EventRevision &&
+        string.Equals(left.TargetSystemId, right.TargetSystemId, StringComparison.OrdinalIgnoreCase) &&
+        left.MaximumParticipants == right.MaximumParticipants && left.StartsUtc == right.StartsUtc &&
+        left.EndsUtc == right.EndsUtc &&
+        string.Equals(left.IdempotencyKey, right.IdempotencyKey, StringComparison.Ordinal);
+
+    private static EventServerReservationDecisionV1 EventReservationFailure(
+        EventServerReservationRequestV1 request, EventServerReservationStatus status, string errorCode) => new()
+    {
+        RequestId = request.RequestId,
+        CorrelationId = request.CorrelationId,
+        EventId = request.EventId,
+        Status = status,
+        ErrorCode = errorCode
+    };
+
+    private static EventServerReservationReleaseDecisionV1 EventReleaseFailure(
+        EventServerReservationReleaseRequestV1 request, EventServerReservationReleaseStatus status, string errorCode) => new()
+    {
+        RequestId = request.RequestId,
+        CorrelationId = request.CorrelationId,
+        EventId = request.EventId,
+        Status = status,
+        ErrorCode = errorCode
+    };
 
     public TransferOperationOutcome PrepareTransfer(TransferPrepareRequest request, DateTimeOffset nowUtc)
     {
@@ -624,11 +792,17 @@ public sealed class CoordinatorRegistry
         return decision.Accepted;
     }
 
-    private int CountReservations(string instanceId, DateTimeOffset nowUtc) => reservations.Values
+    private int CountPlacementReservations(string instanceId, DateTimeOffset nowUtc) => reservations.Values
         .Where(entry => string.Equals(entry.InstanceId, instanceId, StringComparison.Ordinal) && entry.ExpiresUtc > nowUtc)
         .Select(entry => entry.SessionId)
         .Distinct()
         .Count();
+
+    private int CountReservations(string instanceId, DateTimeOffset nowUtc) =>
+        CountPlacementReservations(instanceId, nowUtc) + eventServerReservations.Values
+            .Where(entry => entry.ReleaseDecision is null &&
+                string.Equals(entry.Decision.InstanceId, instanceId, StringComparison.Ordinal))
+            .Sum(entry => entry.Request.MaximumParticipants);
 
     private bool CleanupExpired(DateTimeOffset nowUtc)
     {
@@ -691,7 +865,7 @@ public sealed class CoordinatorRegistry
     {
         if (state.SchemaVersion != CoordinatorRegistryState.CurrentSchemaVersion ||
             state.Agents is null || state.Instances is null || state.Reservations is null ||
-            state.GroupAffinities is null || state.Transfers is null)
+            state.GroupAffinities is null || state.Transfers is null || state.EventServerReservations is null)
             throw new InvalidDataException("Coordinator registry state has an unsupported or invalid schema.");
 
         foreach (var entry in state.Agents)
@@ -711,6 +885,10 @@ public sealed class CoordinatorRegistry
             if (!transfers.TryAdd(entry.TransferId, new TransferEntry(
                     entry.Request, entry.ReservationKey, entry.State, entry.ExpiresUtc, entry.LeaseVersion)))
                 throw new InvalidDataException($"Duplicate persisted transfer ID '{entry.TransferId}'.");
+        foreach (var entry in state.EventServerReservations)
+            if (!eventServerReservations.TryAdd(entry.Request.EventId, new EventReservationEntry(
+                    entry.Request, entry.Decision, entry.ReleaseDecision, entry.ReleaseIdempotencyKey)))
+                throw new InvalidDataException($"Duplicate persisted event reservation '{entry.Request.EventId}'.");
     }
 
     private void Persist() => store.Save(new CoordinatorRegistryState(
@@ -737,7 +915,9 @@ public sealed class CoordinatorRegistry
             pair.Value.ReservationKey,
             pair.Value.State,
             pair.Value.ExpiresUtc,
-            pair.Value.LeaseVersion)).ToArray()
+            pair.Value.LeaseVersion)).ToArray(),
+        EventServerReservations = eventServerReservations.Values.Select(entry => new PersistedEventServerReservation(
+            entry.Request, entry.Decision, entry.ReleaseDecision, entry.ReleaseIdempotencyKey)).ToArray()
     });
 
     private static string? ValidateTransferRequest(TransferPrepareRequest request, DateTimeOffset nowUtc)
@@ -880,4 +1060,9 @@ public sealed class CoordinatorRegistry
         TransferState State,
         DateTimeOffset ExpiresUtc,
         long LeaseVersion);
+    private sealed record EventReservationEntry(
+        EventServerReservationRequestV1 Request,
+        EventServerReservationDecisionV1 Decision,
+        EventServerReservationReleaseDecisionV1? ReleaseDecision,
+        string? ReleaseIdempotencyKey);
 }

@@ -21,6 +21,11 @@ public sealed record PersistedTransfer(
     TransferState State,
     DateTimeOffset ExpiresUtc,
     long LeaseVersion);
+public sealed record PersistedEventServerReservation(
+    EventServerReservationRequestV1 Request,
+    EventServerReservationDecisionV1 Decision,
+    EventServerReservationReleaseDecisionV1? ReleaseDecision,
+    string? ReleaseIdempotencyKey);
 
 public sealed record CoordinatorRegistryState(
     int SchemaVersion,
@@ -29,12 +34,13 @@ public sealed record CoordinatorRegistryState(
     PersistedReservation[] Reservations,
     PersistedGroupAffinity[] GroupAffinities)
 {
-    public const int CurrentSchemaVersion = 2;
+    public const int CurrentSchemaVersion = 3;
 
     public PersistedTransfer[] Transfers { get; init; } = [];
+    public PersistedEventServerReservation[] EventServerReservations { get; init; } = [];
 
     public static CoordinatorRegistryState Empty { get; } = new(
-        CurrentSchemaVersion, [], [], [], []) { Transfers = [] };
+        CurrentSchemaVersion, [], [], [], []) { Transfers = [], EventServerReservations = [] };
 }
 
 /// <summary>
@@ -83,7 +89,9 @@ public sealed class FileCoordinatorRegistryStore : ICoordinatorRegistryStore
             var state = JsonSerializer.Deserialize<CoordinatorRegistryState>(stream, JsonOptions)
                 ?? throw new InvalidDataException("Coordinator registry state file is empty or invalid.");
             if (state.SchemaVersion == 1)
-                return state with { SchemaVersion = CoordinatorRegistryState.CurrentSchemaVersion, Transfers = [] };
+                return state with { SchemaVersion = CoordinatorRegistryState.CurrentSchemaVersion, Transfers = [], EventServerReservations = [] };
+            if (state.SchemaVersion == 2)
+                return state with { SchemaVersion = CoordinatorRegistryState.CurrentSchemaVersion, EventServerReservations = [] };
             if (state.SchemaVersion != CoordinatorRegistryState.CurrentSchemaVersion)
                 throw new InvalidDataException($"Unsupported Coordinator registry schema version {state.SchemaVersion}.");
             return state;

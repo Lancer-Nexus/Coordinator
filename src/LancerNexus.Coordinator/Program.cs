@@ -121,7 +121,7 @@ app.MapGet("/api/v1/capabilities", () => Results.Ok(new
 {
     service = "coordinator",
     protocolVersion = ProtocolConstants.ProtocolVersion,
-    capabilities = new[] { "health_v1", "registry_v1", "placement_policy_v1", "placement_reservations_v1" }
+    capabilities = new[] { "health_v1", "registry_v1", "placement_policy_v1", "placement_reservations_v1", "event_server_reservations_v1" }
         .Concat(npcOwnershipConnectionString is null ? [] : [ClusterCapabilities.NpcOwnershipV1, ClusterCapabilities.NpcTransferV1, ClusterCapabilities.NpcRetirementV1])
         .Concat(quicSettings is null ? [] : ["quic_mtls_handshake_v1", "quic_agent_heartbeat_v1", "quic_instance_heartbeat_v1"])
 }));
@@ -363,6 +363,35 @@ app.MapGet("/internal/v1/npc-transfers/source-recovery", async (
         return Results.BadRequest(new { error = "invalid_recovery_query" });
     var page = await transferStore.GetPendingSourceTransfersAsync(instanceId, afterTransferId, limit, cancellationToken);
     return Results.Ok(page);
+});
+
+app.MapPost("/internal/v1/events/server-reservations", (
+    EventServerReservationRequestV1 request,
+    CoordinatorRegistry registry,
+    TimeProvider timeProvider) =>
+{
+    var result = registry.ReserveEventServer(request, timeProvider.GetUtcNow());
+    return result.Status switch
+    {
+        EventServerReservationStatus.Reserved or EventServerReservationStatus.AlreadyReserved => Results.Ok(result),
+        EventServerReservationStatus.Invalid => Results.BadRequest(result),
+        EventServerReservationStatus.NoCapacity => Results.Conflict(result),
+        _ => Results.Conflict(result)
+    };
+});
+
+app.MapPost("/internal/v1/events/server-reservations/release", (
+    EventServerReservationReleaseRequestV1 request,
+    CoordinatorRegistry registry) =>
+{
+    var result = registry.ReleaseEventServer(request);
+    return result.Status switch
+    {
+        EventServerReservationReleaseStatus.Released or EventServerReservationReleaseStatus.AlreadyReleased => Results.Ok(result),
+        EventServerReservationReleaseStatus.Invalid => Results.BadRequest(result),
+        EventServerReservationReleaseStatus.NotFound => Results.NotFound(result),
+        _ => Results.Conflict(result)
+    };
 });
 
 app.MapGet("/internal/v1/registry", (CoordinatorRegistry registry, TimeProvider timeProvider) =>

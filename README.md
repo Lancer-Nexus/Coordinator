@@ -34,7 +34,7 @@ The shared contracts are checked out in the `Protocol` submodule. Update it befo
 git submodule update --init --remote --merge Protocol
 ```
 
-CI performs the same update before restoring and building the Coordinator.
+CI recursively checks out the `Protocol` revision pinned by the Coordinator repository before restoring and building.
 
 ## Heartbeat registry and placement API
 
@@ -42,9 +42,15 @@ Agents register through `POST /internal/v1/agents/heartbeat`; instances report r
 
 All `/internal/*` and `/api/v1/placement` routes require `Authorization: Bearer <key>`. Configure `Coordinator__InternalApiKey` with a random secret of at least 32 UTF-8 bytes. If it is absent or too short, protected routes fail closed with HTTP 503. Terminate TLS and restrict network access at the deployment boundary; the Coordinator does not provide TLS itself.
 
-Registry heartbeats, reservations, idempotency records and group affinity are saved to `data/coordinator-state.json` by default. Set `Coordinator__StateFile` to choose another path (for containers, mount a persistent writable volume there). Snapshots are written to a temporary file, flushed, then atomically renamed; malformed or unsupported state fails startup rather than silently discarding it. Configure backups and protect the file because it contains live cluster metadata.
+Registry heartbeats, player and transfer reservations, event server assignments, idempotency records and group affinity are saved to `data/coordinator-state.json` by default. Set `Coordinator__StateFile` to choose another path (for containers, mount a persistent writable volume there). Snapshots are written to a temporary file, flushed, then atomically renamed; malformed or unsupported state fails startup rather than silently discarding it. Configure backups and protect the file because it contains live cluster metadata.
 
-The storage boundary is `ICoordinatorRegistryStore`, so a transactional database-backed implementation can replace the filesystem provider later. The current file provider is single-writer and only coordinates within one process; do not run multiple Coordinator replicas against the same file or assume multi-replica placement safety. For replicas, the replacement store must offer cross-process atomic transactions/locking, fencing and shared durable storage.
+The storage boundary is `ICoordinatorRegistryStore`, so a transactional database-backed implementation can replace the filesystem provider later. The current file provider is single-writer and only coordinates within one process; do not run multiple Coordinator replicas against the same file or assume multi-replica placement safety. For replicas, the replacement store must offer cross-process atomic transactions/locking, fencing and shared durable storage. Registry schema 3 adds durable event assignments and migrates schema 1 and 2 snapshots without dropping existing records.
+
+## Event server assignments
+
+`POST /internal/v1/events/server-reservations` assigns one fresh, ready, non-draining instance that owns the requested system and has enough capacity for the event's participant maximum. The request binds the event ID, revision, time window, capacity and idempotency key. A matching retry returns the stable reservation and instance; changed event data conflicts. Concurrent requests are serialized by the registry lock. Overlapping event windows consume capacity together; non-overlapping events may share an instance. Ordinary player and transfer placement counts every unreleased event reservation conservatively, including future events.
+
+`POST /internal/v1/events/server-reservations/release` releases capacity using the event and reservation IDs plus a release idempotency key. There is no automatic expiry: the Events service must release only after its authoritative terminal lifecycle decision. Release tombstones and assignments survive Coordinator restarts. Both routes require the internal bearer key and are advertised by `event_server_reservations_v1`.
 
 ## Transfer reservation lifecycle
 
@@ -80,8 +86,11 @@ persists the exact MessagePack payload under `(instance_id, producer_epoch,
 sequence_number)`. It returns `Stored` or `Duplicate` only after the transaction
 commits, `Conflict` for a reused identity with different content and
 `Unavailable` when storage cannot be reached. The service capability is omitted
-when no event database connection is configured. LLServer publishing and replay
-requests are not yet connected.
+when no event database connection is configured. Authenticated Agent peers can
+request bounded event replay for instances they currently own. Replay results
+report cursor gaps and producer-epoch changes; responses stay within the
+Protocol envelope payload limit. Downstream event consumers and a live
+Agent/Coordinator/MySQL end-to-end deployment check remain outstanding.
 
 Registry and placement timeouts can be overridden with `Coordinator__Registry__AgentHeartbeatTimeoutSeconds`, `Coordinator__Registry__InstanceHeartbeatTimeoutSeconds`, `Coordinator__Placement__MaximumHeartbeatAgeSeconds`, `Coordinator__Placement__ReservationLifetimeSeconds` and `Coordinator__Placement__GroupAffinityLifetimeSeconds`. All must be positive; defaults are 15, 15, 15, 15 and 30 seconds respectively.
 
@@ -94,7 +103,7 @@ dotnet build tests/LancerNexus.Coordinator.Tests/LancerNexus.Coordinator.Tests.c
 dotnet test tests/LancerNexus.Coordinator.Tests/LancerNexus.Coordinator.Tests.csproj --configuration Release --no-build
 ```
 
-The optional MySQL journal recovery integration test runs when `LANCER_NEXUS_COORDINATOR_TEST_MYSQL` points to an isolated test server. It creates and drops a uniquely named test database and verifies transfer replay across fresh store instances.
+The MySQL integration tests run when `LANCER_NEXUS_COORDINATOR_TEST_MYSQL` points to an isolated test server. They create and drop uniquely named databases and exercise transfer-journal replay, checkpoint/retirement transactions, and mission-authority fail-closed behavior. CI provisions an ephemeral MySQL 8.0 service and runs these tests; locally, set the connection string only for a disposable test server.
 
 The journal also binds each `SourceFrozen` snapshot to its reserved target system and optional mission runtime ID. A mismatched target or added, removed or substituted mission association returns `snapshot_reservation_mismatch`; state and snapshot remain unchanged. The MySQL integration test covers these rejections and valid mission association recovery after recreating the store.
 

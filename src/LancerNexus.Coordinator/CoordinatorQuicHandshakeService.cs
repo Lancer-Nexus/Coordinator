@@ -283,6 +283,15 @@ public sealed class CoordinatorQuicHandshakeService : BackgroundService
                 logger.LogWarning("Coordinator rejected FLHook event {InstanceId}/{ProducerEpoch}/{Sequence}: {Status}",
                     result.InstanceId, result.ProducerEpoch, result.Sequence, result.Status);
         }
+        else if (request.MessageType == (ushort)ClusterMessageType.FlHookEventReplayRequest)
+        {
+            if (!negotiatedCapabilities.Contains(ClusterCapabilities.FlHookEventsV1, StringComparer.Ordinal))
+                throw new ProtocolViolationException("FLHook event replay was not negotiated for this connection.");
+            var replayRequest = MessagePackSerializer.Deserialize<FlHookEventReplayRequestV1>(request.Payload, UntrustedMessagePack);
+            var result = await flHookEventReceiver.ReplayAsync(request.CorrelationId, request.Sequence,
+                certificateNodeId, replayRequest, cancellationToken);
+            response = CreateControlResponse(request, ClusterMessageType.FlHookEventReplayResult, result, accepted: true);
+        }
         else
         {
             throw new ProtocolViolationException($"Unsupported QUIC control message type {request.MessageType}.");

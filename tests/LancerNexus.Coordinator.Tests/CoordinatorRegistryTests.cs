@@ -135,6 +135,112 @@ public sealed class CoordinatorRegistryTests
     }
 
     [Fact]
+    public void EventServerReservation_IsIdempotentAndCapacityIsAtomic()
+    {
+        var registry = CreateRegistry();
+        Register(registry, maxPlayers: 4);
+        var request = EventReservation("event-1", 4);
+
+        var results = new System.Collections.Concurrent.ConcurrentBag<EventServerReservationDecisionV1>();
+        Parallel.For(0, 12, _ => results.Add(registry.ReserveEventServer(request, Now)));
+        var reserved = Assert.Single(results, result => result.Status == EventServerReservationStatus.Reserved);
+
+        Assert.Equal(11, results.Count(result => result.Status == EventServerReservationStatus.AlreadyReserved));
+        Assert.Equal(4, Assert.Single(registry.Snapshot(Now).Instances).ReservedPlayers);
+        Assert.Equal(EventServerReservationStatus.NoCapacity,
+            registry.ReserveEventServer(EventReservation("event-2", 1), Now).Status);
+        Assert.Equal(EventServerReservationStatus.AlreadyReserved,
+            registry.ReserveEventServer(EventReservation("event-1", 4), Now).Status);
+        Assert.NotNull(reserved.ReservationId);
+    }
+
+    [Fact]
+    public void EventServerReservation_AllowsNonOverlappingEventsToShareInstance()
+    {
+        var registry = CreateRegistry();
+        Register(registry, maxPlayers: 5);
+        var first = EventReservation("event-1", 5);
+        var second = EventReservation("event-2", 5) with
+        {
+            StartsUtc = Now.AddHours(2),
+            EndsUtc = Now.AddHours(3)
+        };
+
+        var firstResult = registry.ReserveEventServer(first, Now);
+        var secondResult = registry.ReserveEventServer(second, Now);
+
+        Assert.Equal(EventServerReservationStatus.Reserved, firstResult.Status);
+        Assert.Equal(EventServerReservationStatus.Reserved, secondResult.Status);
+        Assert.Equal(firstResult.InstanceId, secondResult.InstanceId);
+        Assert.Equal(10, Assert.Single(registry.Snapshot(Now).Instances).ReservedPlayers);
+    }
+
+    [Fact]
+    public void EventServerReservation_ReleaseIsIdempotentAndFreesCapacityAfterRestart()
+    {
+        var tempDirectory = Path.Combine(Path.GetTempPath(), $"lancer-nexus-event-reservation-{Guid.NewGuid():N}");
+        var statePath = Path.Combine(tempDirectory, "state.json");
+        try
+        {
+            var firstProcess = new CoordinatorRegistry(new PlacementPolicy(), CoordinatorRegistryOptions.Default,
+                new FileCoordinatorRegistryStore(statePath));
+            Register(firstProcess, maxPlayers: 3);
+            var request = EventReservation("event-1", 3);
+            var reserved = firstProcess.ReserveEventServer(request, Now);
+            Assert.Equal(EventServerReservationStatus.Reserved, reserved.Status);
+
+            var restarted = new CoordinatorRegistry(new PlacementPolicy(), CoordinatorRegistryOptions.Default,
+                new FileCoordinatorRegistryStore(statePath));
+            Assert.Equal(EventServerReservationStatus.AlreadyReserved,
+                restarted.ReserveEventServer(request, Now.AddSeconds(1)).Status);
+            var release = new EventServerReservationReleaseRequestV1
+            {
+                RequestId = Guid.NewGuid(),
+                CorrelationId = Guid.NewGuid(),
+                EventId = request.EventId,
+                ReservationId = reserved.ReservationId!.Value,
+                IdempotencyKey = "event-release-1",
+                ReasonCode = "event_completed"
+            };
+            Assert.Equal(EventServerReservationReleaseStatus.Released, restarted.ReleaseEventServer(release).Status);
+            Assert.Equal(EventServerReservationReleaseStatus.AlreadyReleased,
+                restarted.ReleaseEventServer(release with { RequestId = Guid.NewGuid(), CorrelationId = Guid.NewGuid() }).Status);
+            Assert.Equal(0, Assert.Single(restarted.Snapshot(Now.AddSeconds(1)).Instances).ReservedPlayers);
+            Assert.Equal(EventServerReservationStatus.Reserved,
+                restarted.ReserveEventServer(EventReservation("event-2", 3), Now.AddSeconds(1)).Status);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDirectory))
+                Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void EventServerReservation_RejectsChangedReplayAndWrongReleaseReservation()
+    {
+        var registry = CreateRegistry();
+        Register(registry);
+        var request = EventReservation("event-1", 2);
+        var reserved = registry.ReserveEventServer(request, Now);
+        var changed = registry.ReserveEventServer(request with { MaximumParticipants = 3 }, Now);
+        var wrongRelease = registry.ReleaseEventServer(new EventServerReservationReleaseRequestV1
+        {
+            RequestId = Guid.NewGuid(),
+            CorrelationId = Guid.NewGuid(),
+            EventId = request.EventId,
+            ReservationId = Guid.NewGuid(),
+            IdempotencyKey = "release-wrong",
+            ReasonCode = "event_cancelled"
+        });
+
+        Assert.Equal(EventServerReservationStatus.Conflict, changed.Status);
+        Assert.Equal(EventServerReservationReleaseStatus.NotFound, wrongRelease.Status);
+        Assert.Equal(2, Assert.Single(registry.Snapshot(Now).Instances).ReservedPlayers);
+        Assert.NotNull(reserved.ReservationId);
+    }
+
+    [Fact]
     public void FileStore_RestoresHeartbeatsReservationsAndIdempotencyAfterRestart()
     {
         var tempDirectory = Path.Combine(Path.GetTempPath(), $"lancer-nexus-registry-{Guid.NewGuid():N}");
@@ -483,5 +589,18 @@ public sealed class CoordinatorRegistryTests
         TargetSystem = targetSystem,
         GroupId = groupId,
         IdempotencyKey = key
+    };
+
+    private static EventServerReservationRequestV1 EventReservation(string eventId, int capacity) => new()
+    {
+        RequestId = Guid.NewGuid(),
+        CorrelationId = Guid.NewGuid(),
+        EventId = eventId,
+        EventRevision = 1,
+        TargetSystemId = "li01",
+        MaximumParticipants = capacity,
+        StartsUtc = Now.AddHours(1),
+        EndsUtc = Now.AddHours(2),
+        IdempotencyKey = $"reserve-{eventId}"
     };
 }

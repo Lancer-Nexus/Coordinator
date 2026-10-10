@@ -10,11 +10,24 @@ permissions:
 jobs:
   dotnet:
     runs-on: ubuntu-24.04
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: coordinator-test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pcoordinator-test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      LANCER_NEXUS_COORDINATOR_TEST_MYSQL: Server=127.0.0.1;Port=3306;User ID=root;Password=coordinator-test
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - run: git submodule update --init --remote --merge Protocol
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'

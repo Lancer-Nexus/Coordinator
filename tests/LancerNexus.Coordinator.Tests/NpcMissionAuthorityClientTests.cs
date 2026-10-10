@@ -18,14 +18,21 @@ public sealed class NpcMissionAuthorityClientTests
     {
         var request = new NpcMissionAuthorityRequestV1
         {
-            TransferId = Guid.NewGuid(), SourceInstanceId = "source", TargetInstanceId = "target",
-            TargetSystemId = "li02", Decision = NpcTransferState.Committed
+            TransferId = Guid.NewGuid(),
+            SourceInstanceId = "source",
+            TargetInstanceId = "target",
+            TargetSystemId = "li02",
+            Decision = NpcTransferState.Committed
         };
         var reply = new NpcMissionAuthorityResultV1
         {
-            TransferId = scenario == 1 ? Guid.NewGuid() : request.TransferId, SourceInstanceId = "source",
-            TargetInstanceId = "target", TargetSystemId = "li02", Decision = request.Decision,
-            Accepted = scenario != 2, CommittedLeaseVersion = 15
+            TransferId = scenario == 1 ? Guid.NewGuid() : request.TransferId,
+            SourceInstanceId = "source",
+            TargetInstanceId = "target",
+            TargetSystemId = "li02",
+            Decision = request.Decision,
+            Accepted = scenario != 2,
+            CommittedLeaseVersion = 15
         };
         using var http = new HttpClient(new Handler(scenario, reply));
         var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>

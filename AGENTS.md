@@ -29,6 +29,7 @@ Make deterministic, observable and failure-tolerant placement decisions for the 
 - Use stable instance IDs and idempotent assignment IDs.
 - Prefer draining an instance over assigning new players to it.
 - Event-server reservations require explicit capacity and lifecycle state.
+- Persist event assignments and release tombstones in registry schema 3. Reserve one ready instance under the registry lock, account for overlapping event windows, and never release event capacity automatically on a timeout. The Events service may release after its durable terminal decision; retries must match the reservation and release idempotency key.
 - Do not mutate authoritative character data owned by Gateway or game servers.
 - Record the reason for placement and rejection decisions for diagnostics.
 - Validate and retain the optional private NpcTransferEndpoint independently of the game endpoint. NPC prepare/resolve responses prefer this advertised QUIC address and explicit port.
