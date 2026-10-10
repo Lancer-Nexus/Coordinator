@@ -105,7 +105,7 @@ public sealed class MySqlFlHookEventStoreTests
         {
             await connection.OpenAsync();
             await using var command = connection.CreateCommand();
-            command.CommandText = $"CREATE DATABASE `{databaseName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci";
+            command.CommandText = $"CREATE DATABASE `{databaseName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_bin";
             await command.ExecuteNonQueryAsync();
         }
 
