@@ -89,8 +89,13 @@ commits, `Conflict` for a reused identity with different content and
 when no event database connection is configured. Authenticated Agent peers can
 request bounded event replay for instances they currently own. Replay results
 report cursor gaps and producer-epoch changes; responses stay within the
-Protocol envelope payload limit. Downstream event consumers and a live
-Agent/Coordinator/MySQL end-to-end deployment check remain outstanding.
+Protocol envelope payload limit. A local live check on 2026-10-10 used the real
+.NET Agent over QUIC/mTLS, forwarded fresh LI02 runtime readiness and drain
+changes, and exercised client login/disconnect through Gateway, LLServer and the
+Coordinator MySQL event store; the stored lifecycle events were acknowledged
+through sequence 34. This local check used short-lived test certificates and is
+not a production deployment result. Downstream event consumers remain
+outstanding.
 
 Registry and placement timeouts can be overridden with `Coordinator__Registry__AgentHeartbeatTimeoutSeconds`, `Coordinator__Registry__InstanceHeartbeatTimeoutSeconds`, `Coordinator__Placement__MaximumHeartbeatAgeSeconds`, `Coordinator__Placement__ReservationLifetimeSeconds` and `Coordinator__Placement__GroupAffinityLifetimeSeconds`. All must be positive; defaults are 15, 15, 15, 15 and 30 seconds respectively.
 
