@@ -19,6 +19,8 @@ public sealed class MtlsPeerCertificateValidatorTests
         Assert.Equal("agent-01", new X509SubjectAlternativeNameExtension(sanExtension.RawData, sanExtension.Critical)
             .EnumerateDnsNames().Single());
         Assert.True(validator.Validate(peer, SslPolicyErrors.None));
+        Assert.True(validator.Validate(peer,
+            SslPolicyErrors.RemoteCertificateNameMismatch | SslPolicyErrors.RemoteCertificateChainErrors));
         Assert.Equal("agent-01", MtlsPeerCertificateValidator.GetNodeId(peer));
     }
 

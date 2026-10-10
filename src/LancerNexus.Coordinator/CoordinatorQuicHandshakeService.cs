@@ -65,7 +65,18 @@ public sealed class CoordinatorQuicHandshakeService : BackgroundService
             EnabledSslProtocols = SslProtocols.Tls13,
             ServerCertificate = serverCertificate,
             RemoteCertificateValidationCallback = (_, certificate, _, errors) =>
-                peerCertificateValidator.Validate(certificate, errors)
+            {
+                var accepted = peerCertificateValidator.Validate(certificate, errors);
+                if (!accepted)
+                {
+                    var thumbprint = certificate?.GetCertHashString(HashAlgorithmName.SHA256) ?? "missing";
+                    logger.LogWarning(
+                        "Coordinator rejected client certificate {Thumbprint}; TLS policy errors: {PolicyErrors}",
+                        thumbprint,
+                        errors);
+                }
+                return accepted;
+            }
         };
 
         var listenerOptions = new QuicListenerOptions
@@ -95,6 +106,18 @@ public sealed class CoordinatorQuicHandshakeService : BackgroundService
                 try
                 {
                     connection = await listener.AcceptConnectionAsync(stoppingToken);
+                }
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                {
+                    activeConnectionLimit.Release();
+                    break;
+                }
+                catch (AuthenticationException exception)
+                {
+                    activeConnectionLimit.Release();
+                    logger.LogWarning(exception,
+                        "Coordinator rejected a QUIC TLS handshake; the listener remains available.");
+                    continue;
                 }
                 catch
                 {

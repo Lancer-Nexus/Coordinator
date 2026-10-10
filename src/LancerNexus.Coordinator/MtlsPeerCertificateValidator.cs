@@ -24,8 +24,7 @@ public sealed class MtlsPeerCertificateValidator
     public bool Validate(X509Certificate? certificate, SslPolicyErrors policyErrors)
     {
         if (certificate is null ||
-            (policyErrors & (SslPolicyErrors.RemoteCertificateNotAvailable |
-                             SslPolicyErrors.RemoteCertificateNameMismatch)) != 0)
+            (policyErrors & SslPolicyErrors.RemoteCertificateNotAvailable) != 0)
             return false;
 
         using var leaf = X509CertificateLoader.LoadCertificate(certificate.Export(X509ContentType.Cert));
