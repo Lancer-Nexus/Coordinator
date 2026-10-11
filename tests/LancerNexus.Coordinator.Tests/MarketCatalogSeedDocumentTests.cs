@@ -44,6 +44,24 @@ public sealed class MarketCatalogSeedDocumentTests
         }
     }
 
+    [Fact]
+    public async Task RejectsNonUnitShipPackageMultiplierUntilPricingPolicyIsReviewed()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "market-seed-" + Guid.NewGuid().ToString("N") + ".json");
+        try
+        {
+            await File.WriteAllTextAsync(path, MinimalReport.Replace(
+                "\"legacyPackagePrice\": 250", "\"multiplierRaw\": \"1.25\", \"legacyPackagePrice\": 250",
+                StringComparison.Ordinal));
+            var error = await Assert.ThrowsAsync<InvalidDataException>(() => MarketCatalogSeedDocument.LoadAsync(path));
+            Assert.Contains("non-unit MarketGood.Multiplier", error.Message, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
     [MySqlFact]
     public async Task ImportsSeedAtomicallyAndAcceptsOnlyExactRetries()
     {
@@ -148,6 +166,7 @@ public sealed class MarketCatalogSeedDocumentTests
             "marketId": "test_base", "localFactionId": "test_faction", "systemIds": ["test_system"],
             "entries": [{ "goodId": "test_package", "rank": 0, "reputationThreshold": -1.0,
               "min": 0, "max": 1, "forSale": true, "source": "market_ships.ini",
+              "multiplierRaw": "1",
               "legacyRuntimeUnitPrice": null, "legacyPackagePrice": 250 }]
           }]
         }

@@ -93,6 +93,52 @@ public sealed class MySqlMarketSnapshotStoreTests
         });
     }
 
+    [MarketCatalogMySqlFact]
+    public async Task FullFreelancerMarketSeedListsAllWorldsAndStaticOfferCoverage()
+    {
+        var reportPath = Environment.GetEnvironmentVariable("LANCER_NEXUS_MARKET_CATALOG_REPORT")!;
+        var seed = await MarketCatalogSeedDocument.LoadAsync(reportPath);
+        await WithDatabaseAsync(async connectionString =>
+        {
+            await ApplySchemaAsync(connectionString);
+            await new MarketCatalogSeedImporter(connectionString).ImportAsync(seed);
+
+            var store = new MySqlMarketSystemsReadStore(connectionString);
+            var revision = Convert.ToHexString(seed.SourceSha256).ToLowerInvariant();
+            var request = new MarketSystemsReadRequestV1
+            {
+                CorrelationId = Guid.NewGuid(),
+                PageSize = 7
+            };
+            var systems = new List<MarketSystemSummaryV1>();
+            while (true)
+            {
+                var page = await store.ReadAsync(request);
+                Assert.True(page.IsValidFor(request));
+                Assert.Equal(MarketCatalogReadStatusV1.Ok, page.Status);
+                Assert.Equal(revision, page.CatalogRevision);
+                systems.AddRange(page.Systems);
+                if (page.NextSystemId is null)
+                    break;
+                request = request with
+                {
+                    CorrelationId = Guid.NewGuid(),
+                    AfterSystemId = page.NextSystemId,
+                    ExpectedCatalogRevision = revision
+                };
+            }
+
+            Assert.Equal(seed.Systems.Select(system => system.SystemId).Order(StringComparer.Ordinal),
+                systems.Select(system => system.SystemId));
+            Assert.Equal(53, systems.Count);
+            Assert.Equal(8, systems.Count(system => system.StaticOfferCount == 0));
+            Assert.Equal(seed.Markets.LongLength, systems.Sum(system => system.MarketCount));
+            Assert.Equal(seed.Offers.LongLength, systems.Sum(system => system.StaticOfferCount));
+            Assert.Equal(seed.Offers.Select(offer => offer.MarketId).Distinct(StringComparer.Ordinal).LongCount(),
+                systems.Sum(system => system.OfferingMarketCount));
+        });
+    }
+
     [MySqlFact]
     public async Task MarketGoodReadReturnsExactRowAndReportsRevisionChanges()
     {
@@ -316,6 +362,17 @@ public sealed class MySqlMarketSnapshotStoreTests
         {
             if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("LANCER_NEXUS_COORDINATOR_TEST_MYSQL")))
                 Skip = "Set LANCER_NEXUS_COORDINATOR_TEST_MYSQL to an isolated MySQL test server.";
+        }
+    }
+
+    private sealed class MarketCatalogMySqlFactAttribute : FactAttribute
+    {
+        public MarketCatalogMySqlFactAttribute()
+        {
+            if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("LANCER_NEXUS_COORDINATOR_TEST_MYSQL")))
+                Skip = "Set LANCER_NEXUS_COORDINATOR_TEST_MYSQL to an isolated MySQL test server.";
+            else if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("LANCER_NEXUS_MARKET_CATALOG_REPORT")))
+                Skip = "Set LANCER_NEXUS_MARKET_CATALOG_REPORT to a validated full market catalog report.";
         }
     }
 }

@@ -74,6 +74,10 @@ public sealed record MarketCatalogSeedDocument(
                     ? runtimeValue : default;
                 var packagePrice = entry.TryGetProperty("legacyPackagePrice", out var packageValue)
                     ? packageValue : default;
+                if (packagePrice.ValueKind == JsonValueKind.Number &&
+                    entry.TryGetProperty("multiplierRaw", out var packageMultiplier) &&
+                    Decimal(packageMultiplier, $"ship package multiplier for {marketId}/{goodId}") != 1m)
+                    throw new InvalidDataException($"Ship package '{marketId}/{goodId}' has a non-unit MarketGood.Multiplier; review the versioned package pricing policy before importing it.");
                 var priceValue = runtimePrice.ValueKind == JsonValueKind.Number ? runtimePrice : packagePrice;
                 if (priceValue.ValueKind != JsonValueKind.Number)
                     throw new InvalidDataException($"No resolved legacy baseline price for '{marketId}/{goodId}'.");

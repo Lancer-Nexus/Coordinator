@@ -143,7 +143,10 @@ an explicit catalog migration is provided. It loads all goods, all mapped
 systems and market locations, and static offer rules. It does not treat INI
 `Max` as live inventory. Consequently the snapshot route can return a valid
 empty page after import; a stock initialization policy and live writer are still
-required before the offers appear as market state.
+required before the offers appear as market state. The V1 import keeps the
+legacy ship-package price (hull plus market-specific addon prices) and rejects
+non-unit package `MarketGood.Multiplier` values until a versioned policy is
+reviewed.
 
 Migration `008_market_trade_events.sql` adds the idempotency journal and the
 Coordinator's transactional market trade store. Migration
@@ -200,6 +203,11 @@ dotnet test tests/LancerNexus.Coordinator.Tests/LancerNexus.Coordinator.Tests.cs
 ```
 
 The MySQL integration tests run when `LANCER_NEXUS_COORDINATOR_TEST_MYSQL` points to an isolated test server. They create and drop uniquely named databases and exercise transfer-journal replay, checkpoint/retirement transactions, and mission-authority fail-closed behavior. CI provisions an ephemeral MySQL 8.0 service and runs these tests; locally, set the connection string only for a disposable test server.
+
+The complete market-seed integration test additionally runs when
+`LANCER_NEXUS_MARKET_CATALOG_REPORT` points to the validated output of
+`analyze-market-catalog.py`. It imports the full report into a uniquely named
+database and checks all system pages, including systems without offers.
 
 The journal also binds each `SourceFrozen` snapshot to its reserved target system and optional mission runtime ID. A mismatched target or added, removed or substituted mission association returns `snapshot_reservation_mismatch`; state and snapshot remain unchanged. The MySQL integration test covers these rejections and valid mission association recovery after recreating the store.
 
