@@ -5,6 +5,8 @@
 
 **Verbindliche Umfangsregel:** Der globale Katalog enthält jede definierte Waren-ID, einschließlich Schiffe und Schiffspakete. Eine Katalogaufnahme schaltet eine Ware aber nicht automatisch an jedem Händler zum Kauf frei: `buyEnabled` und `sellEnabled`, Startbestand und Rufregeln gelten je Marktstandort. Waren ohne statisches Angebot bleiben im Katalog sichtbar und erhalten erst durch eine geprüfte Marktregel ein Angebot. Missions-/Questwaren werden nur mit dokumentiertem Grund aus dem Katalog ausgeschlossen. Damit ist „alle Waren“ eine vollständige, prüfbare Abdeckung und keine globale Freigabe zum Kaufen.
 
+**Abgleich zur Anfrage (2026-10-11):** Der Fraktionsruf ist bereits über Gateway REST lesbar; dafür ist keine neue Coordinator-öffentliche Route nötig. Der Endpunkt liefert alle gespeicherten Fraktionswerte eines autorisierten Charakters. Für die Marktquote liest Coordinator den benötigten Fraktionswert über Gateway intern und authentisiert. Der Ruf stammt derzeit aus dem letzten persistierten SaveGame-Snapshot; sofortige Sichtbarkeit noch nicht gespeicherter Live-Änderungen bleibt ein gesonderter offener Punkt. Der dynamische Markt gilt clusterweit für alle 53 registrierten Systeme und wird je Marktstandort gemeinsam von allen Instanzen genutzt; alle 855 Good-IDs sind im Katalog, aber 420 bislang nicht statisch angebotene Waren bleiben bis zur geprüften Standort-Policy gesperrt.
+
 ## Zuständigkeiten
 
 - Der Coordinator verwaltet die clusterweite Marktprojektion: Marktstandorte, Warenangebote, Bestände, Preisrevisionen und die Verteilung von Handelsereignissen. Alle Coordinator-Replikate müssen dieselbe transaktionale Datenbank verwenden; eine Replik darf keinen eigenen Marktstand führen.
