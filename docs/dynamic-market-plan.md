@@ -9,6 +9,8 @@
 
 **Read-Smoke (2026-10-11):** Nach Migrationen 006–012 und Vollseed in der isolierten E2E-MariaDB lieferte die laufende Gateway-REST-Fassade alle 855 Goods über neun revision-gepinnte Seiten sowie 53/53 Systeme, 191 Standorte und 14.694 statische Angebotszeilen. Das belegt den clusterweiten Read-Pfad. Es wurde keine Handels-Policy importiert; `dynamic_market_v1` blieb deaktiviert und Kauf/Verkauf wurde nicht als Laufzeitbeweis gewertet.
 
+**Shared-DB concurrency check (2026-10-11):** Zwei unabhängige `MySqlMarketTradeReservationStore`-Instanzen versuchen gleichzeitig, denselben Bestand unter derselben Revision zu reservieren. Genau eine Reservierung wird angenommen; beide anschließenden Snapshot-Leser sehen dieselbe Systemrevision und denselben verfügbaren Bestand. Das prüft konkurrierende Stores auf einer gemeinsamen MariaDB in einem Prozess, aber keinen Mehrprozess-Failover zweier Coordinator-Replikate.
+
 ## Zuständigkeiten
 
 - Der Coordinator verwaltet die clusterweite Marktprojektion: Marktstandorte, Warenangebote, Bestände, Preisrevisionen und die Verteilung von Handelsereignissen. Alle Coordinator-Replikate müssen dieselbe transaktionale Datenbank verwenden; eine Replik darf keinen eigenen Marktstand führen.

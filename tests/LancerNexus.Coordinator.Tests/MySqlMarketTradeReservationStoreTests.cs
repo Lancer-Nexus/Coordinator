@@ -102,18 +102,35 @@ public sealed class MySqlMarketTradeReservationStoreTests
     }
 
     [MySqlFact]
-    public async Task ConcurrentReservationsAgainstOneRevisionCannotOverbookStock()
+    public async Task ConcurrentReservationsAcrossCoordinatorStoreInstancesCannotOverbookStock()
     {
         await WithDatabaseAsync(async connectionString =>
         {
             await ApplySchemaAsync(connectionString);
             await SeedMarketAsync(connectionString);
-            var store = new MySqlMarketTradeReservationStore(connectionString);
+            var firstCoordinatorStore = new MySqlMarketTradeReservationStore(connectionString);
+            var secondCoordinatorStore = new MySqlMarketTradeReservationStore(connectionString);
             var first = Reserve(MarketTradeSideV1.Buy, quantity: 12);
             var second = Reserve(MarketTradeSideV1.Buy, quantity: 12);
-            var results = await Task.WhenAll(store.ReserveAsync(first), store.ReserveAsync(second));
+            var results = await Task.WhenAll(
+                firstCoordinatorStore.ReserveAsync(first),
+                secondCoordinatorStore.ReserveAsync(second));
             Assert.Single(results, result => result.Status == MarketTradeReservationStatusV1.Reserved);
             Assert.Single(results, result => result.Status == MarketTradeReservationStatusV1.MarketRevisionMismatch);
+
+            var snapshotRequest = new MarketSnapshotReadRequestV1
+            {
+                CorrelationId = Guid.NewGuid(),
+                SystemId = "test_system"
+            };
+            var replicaReads = await Task.WhenAll(
+                new MySqlMarketSnapshotStore(connectionString).ReadAsync(snapshotRequest),
+                new MySqlMarketSnapshotStore(connectionString).ReadAsync(snapshotRequest));
+            Assert.All(replicaReads, snapshot => Assert.True(snapshot.IsValidFor(snapshotRequest)));
+            Assert.Equal(replicaReads[0].SystemRevision, replicaReads[1].SystemRevision);
+            Assert.Equal(replicaReads[0].Goods, replicaReads[1].Goods);
+            Assert.Equal(8, Assert.Single(replicaReads[0].Goods).AvailableStock);
+            Assert.Equal(8, Assert.Single(replicaReads[1].Goods).AvailableStock);
 
             var competingTrade = new MarketTradeEventV1
             {
