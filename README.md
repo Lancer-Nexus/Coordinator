@@ -111,9 +111,11 @@ the versioned Protocol request and returns a keyset-paged system snapshot pinned
 to its system revision. The revision table is provisioned by the catalog seed
 importer. Unknown systems
 and unavailable storage return HTTP 503; a changed pinned revision returns HTTP
-409. The market is still staged: the public Gateway read facade and internal
-Coordinator read/write/reservation paths exist, but live stock initialization,
-LLServer/Agent event production, reputation-aware quotes and Gateway booking
+409. The market is still staged: the public Gateway catalog/system read facade,
+reputation-aware quote preview, and internal Coordinator read/write/reservation
+paths exist. The preview uses Gateway's revision-bound faction reputation and
+does not authorize or reserve a trade. Live stock initialization,
+LLServer/Agent durable event production, and Gateway credit/inventory booking
 are not connected end to end. The `dynamic_market_v1` capability remains off.
 
 Generate and validate an import report from the local Freelancer installation:
