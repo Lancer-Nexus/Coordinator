@@ -133,7 +133,10 @@ empty page after import; a stock initialization policy and live writer are still
 required before the offers appear as market state.
 
 Migration `008_market_trade_events.sql` adds the idempotency journal and the
-Coordinator's transactional market trade store. On a negotiated
+Coordinator's transactional market trade store. Migration
+`009_market_trade_reservations.sql` adds durable Gateway trade reservations and
+reserved buy-stock accounting. Apply migrations 008 and 009 after 006/007
+before enabling their consumers. On a negotiated
 `dynamic_market_v1` QUIC session, the handler verifies that the mTLS Agent owns
 the event's live instance, then commits event identity, stock delta, V1 price,
 and market/system revisions atomically. Buy events reduce stock; sell events
@@ -143,6 +146,16 @@ producer sequence conflict. The service does not advertise `dynamic_market_v1`
 yet: LLServer/Agent durable event production, initial live-stock seeding and
 the Gateway credit/inventory booking boundary remain required before runtime
 enablement.
+
+The internal `POST /internal/v1/market/trades/reserve` and
+`POST /internal/v1/market/trades/resolve` routes implement the reservation half
+of the planned Gateway saga. Configure a distinct
+`Coordinator:MarketGatewayApiKey` for them; the general internal key is not
+accepted on these routes. Repeated `tradeId` plus identical reservation fields
+returns its stored state; changed fields conflict. Buy reservations reduce
+snapshot-visible stock until an explicit commit or abort. Reservations do not
+expire on timeout because Gateway's durable decision may be unknown. The
+Gateway Trade-Ledger/outbox and its caller are not implemented yet.
 
 Registry and placement timeouts can be overridden with `Coordinator__Registry__AgentHeartbeatTimeoutSeconds`, `Coordinator__Registry__InstanceHeartbeatTimeoutSeconds`, `Coordinator__Placement__MaximumHeartbeatAgeSeconds`, `Coordinator__Placement__ReservationLifetimeSeconds` and `Coordinator__Placement__GroupAffinityLifetimeSeconds`. All must be positive; defaults are 15, 15, 15, 15 and 30 seconds respectively.
 

@@ -52,7 +52,7 @@ public sealed class MySqlMarketSnapshotStore(string? connectionString)
                 command.CommandText = request.AfterMarketId is null
                     ? """
                       SELECT market_id, system_id, good_id, base_unit_price, current_unit_price,
-                             available_stock, target_stock, buy_enabled, sell_enabled, market_revision
+                             available_stock - reserved_buy_stock, target_stock, buy_enabled, sell_enabled, market_revision
                       FROM market_good_state
                       WHERE system_id = @system
                       ORDER BY market_id, good_id
@@ -60,7 +60,7 @@ public sealed class MySqlMarketSnapshotStore(string? connectionString)
                       """
                     : """
                       SELECT market_id, system_id, good_id, base_unit_price, current_unit_price,
-                             available_stock, target_stock, buy_enabled, sell_enabled, market_revision
+                             available_stock - reserved_buy_stock, target_stock, buy_enabled, sell_enabled, market_revision
                       FROM market_good_state
                       WHERE system_id = @system
                         AND (market_id > @afterMarket OR (market_id = @afterMarket AND good_id > @afterGood))

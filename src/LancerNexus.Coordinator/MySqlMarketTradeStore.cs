@@ -1,6 +1,5 @@
 using System.Data;
 using System.Security.Cryptography;
-using System.Numerics;
 using LancerNexus.Protocol;
 using MessagePack;
 using MySqlConnector;
@@ -51,6 +50,7 @@ public sealed class MySqlMarketTradeStore(string? connectionString)
 
             long basePrice;
             long stock;
+            long reservedBuyStock;
             long targetStock;
             long marketRevision;
             bool enabled;
@@ -58,7 +58,7 @@ public sealed class MySqlMarketTradeStore(string? connectionString)
             {
                 command.Transaction = transaction;
                 command.CommandText = """
-                    SELECT base_unit_price, available_stock, target_stock, market_revision,
+                    SELECT base_unit_price, available_stock, reserved_buy_stock, target_stock, market_revision,
                            CASE WHEN @side = 1 THEN buy_enabled ELSE sell_enabled END
                     FROM market_good_state
                     WHERE market_id = @market AND good_id = @good AND system_id = @system
@@ -73,13 +73,14 @@ public sealed class MySqlMarketTradeStore(string? connectionString)
                     return Acknowledgement(trade, MarketTradeIngestStatusV1.Rejected);
                 basePrice = reader.GetInt64(0);
                 stock = reader.GetInt64(1);
-                targetStock = reader.GetInt64(2);
-                marketRevision = reader.GetInt64(3);
-                enabled = reader.GetBoolean(4);
+                reservedBuyStock = reader.GetInt64(2);
+                targetStock = reader.GetInt64(3);
+                marketRevision = reader.GetInt64(4);
+                enabled = reader.GetBoolean(5);
             }
 
             if (!enabled || targetStock <= 0 ||
-                (trade.Side == MarketTradeSideV1.Buy && stock < trade.Quantity) ||
+                (trade.Side == MarketTradeSideV1.Buy && stock - reservedBuyStock < trade.Quantity) ||
                 marketRevision == long.MaxValue)
                 return Acknowledgement(trade, MarketTradeIngestStatusV1.Rejected);
 
@@ -119,7 +120,7 @@ public sealed class MySqlMarketTradeStore(string? connectionString)
                 ? stock - trade.Quantity
                 : trade.Quantity > long.MaxValue - stock ? long.MaxValue : stock + trade.Quantity;
             var newMarketRevision = marketRevision + 1;
-            var newPrice = CalculatePrice(basePrice, targetStock, newStock);
+            var newPrice = MarketPriceCalculator.Calculate(basePrice, targetStock, newStock - reservedBuyStock);
             await using (var command = connection.CreateCommand())
             {
                 command.Transaction = transaction;
@@ -161,17 +162,6 @@ public sealed class MySqlMarketTradeStore(string? connectionString)
         {
             return Acknowledgement(trade, MarketTradeIngestStatusV1.Unavailable);
         }
-    }
-
-    private static long CalculatePrice(long basePrice, long targetStock, long availableStock)
-    {
-        if (basePrice == 0)
-            return 0;
-        var floorStock = Math.Max(1, targetStock / 4 + (targetStock % 4 == 0 ? 0 : 1));
-        var denominator = Math.Max(availableStock, floorStock);
-        var factor = Math.Clamp((decimal)targetStock / denominator, 0.25m, 4m);
-        var price = decimal.Round(basePrice * factor, 0, MidpointRounding.AwayFromZero);
-        return (long)BigInteger.Min((BigInteger)long.MaxValue, new BigInteger(price));
     }
 
     private static async Task<(bool Found, byte[]? Digest, long MarketRevision)> ReadPriorEventAsync(

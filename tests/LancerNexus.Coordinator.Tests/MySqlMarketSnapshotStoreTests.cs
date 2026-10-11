@@ -107,16 +107,25 @@ public sealed class MySqlMarketSnapshotStoreTests
 
     private static async Task ApplySchemaAsync(string connectionString)
     {
-        var path = Path.Combine(AppContext.BaseDirectory, "db", "migrations", "006_dynamic_market_projection.sql");
-        var statements = (await File.ReadAllTextAsync(path))
-            .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        await using var connection = new MySqlConnection(connectionString);
-        await connection.OpenAsync();
-        foreach (var statement in statements)
+        foreach (var filename in new[]
+                 {
+                     "006_dynamic_market_projection.sql",
+                     "007_market_catalog_seed.sql",
+                     "008_market_trade_events.sql",
+                     "009_market_trade_reservations.sql"
+                 })
         {
-            await using var command = connection.CreateCommand();
-            command.CommandText = statement;
-            await command.ExecuteNonQueryAsync();
+            var path = Path.Combine(AppContext.BaseDirectory, "db", "migrations", filename);
+            var statements = (await File.ReadAllTextAsync(path))
+                .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            await using var connection = new MySqlConnection(connectionString);
+            await connection.OpenAsync();
+            foreach (var statement in statements)
+            {
+                await using var command = connection.CreateCommand();
+                command.CommandText = statement;
+                await command.ExecuteNonQueryAsync();
+            }
         }
     }
 

@@ -163,7 +163,8 @@ public sealed class MySqlMarketTradeStoreTests
                  {
                      "006_dynamic_market_projection.sql",
                      "007_market_catalog_seed.sql",
-                     "008_market_trade_events.sql"
+                     "008_market_trade_events.sql",
+                     "009_market_trade_reservations.sql"
                  })
         {
             var path = Path.Combine(AppContext.BaseDirectory, "db", "migrations", filename);

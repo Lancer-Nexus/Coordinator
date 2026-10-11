@@ -29,6 +29,7 @@ if (string.IsNullOrWhiteSpace(marketConnectionString))
 var flHookEventStore = new MySqlFlHookEventStore(flHookEventsConnectionString);
 var marketSnapshotStore = new MySqlMarketSnapshotStore(marketConnectionString);
 var marketTradeStore = new MySqlMarketTradeStore(marketConnectionString);
+var marketTradeReservationStore = new MySqlMarketTradeReservationStore(marketConnectionString);
 if (quicSettings is not null && flHookEventStore.IsEnabled)
     quicSettings = quicSettings with
     {
@@ -53,6 +54,7 @@ builder.Services.AddSingleton(new MySqlNpcOwnershipStore(npcOwnershipConnectionS
 builder.Services.AddSingleton<IFlHookEventStore>(flHookEventStore);
 builder.Services.AddSingleton(marketSnapshotStore);
 builder.Services.AddSingleton(marketTradeStore);
+builder.Services.AddSingleton(marketTradeReservationStore);
 builder.Services.AddSingleton<CoordinatorMarketTradeReceiver>();
 builder.Services.AddSingleton<CoordinatorFlHookEventReceiver>();
 builder.Services.AddHttpClient<INpcMissionAuthorityClient, NpcMissionAuthorityClient>(http =>
@@ -71,6 +73,7 @@ if (quicSettings is not null)
 
 var app = builder.Build();
 var internalApiKey = app.Configuration["Coordinator:InternalApiKey"];
+var marketGatewayApiKey = app.Configuration["Coordinator:MarketGatewayApiKey"];
 var startupLogger = app.Logger;
 var startupRegistry = app.Services.GetRequiredService<CoordinatorRegistry>();
 var initialRegistry = startupRegistry.Snapshot(DateTimeOffset.UtcNow);
@@ -96,7 +99,10 @@ app.Use(async (context, next) =>
         return;
     }
 
-    if (string.IsNullOrWhiteSpace(internalApiKey) || Encoding.UTF8.GetByteCount(internalApiKey) < 32)
+    var requiredApiKey = context.Request.Path.StartsWithSegments("/internal/v1/market/trades")
+        ? marketGatewayApiKey
+        : internalApiKey;
+    if (string.IsNullOrWhiteSpace(requiredApiKey) || Encoding.UTF8.GetByteCount(requiredApiKey) < 32)
     {
         context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
         await context.Response.WriteAsJsonAsync(new { error = "internal_auth_not_configured" });
@@ -108,7 +114,7 @@ app.Use(async (context, next) =>
     var token = authorization.StartsWith(bearerPrefix, StringComparison.OrdinalIgnoreCase)
         ? authorization[bearerPrefix.Length..]
         : "";
-    var expectedHash = SHA256.HashData(Encoding.UTF8.GetBytes(internalApiKey));
+    var expectedHash = SHA256.HashData(Encoding.UTF8.GetBytes(requiredApiKey));
     var suppliedHash = SHA256.HashData(Encoding.UTF8.GetBytes(token));
     if (!CryptographicOperations.FixedTimeEquals(expectedHash, suppliedHash))
     {
@@ -148,6 +154,42 @@ app.MapPost("/internal/v1/market/snapshots/read", async (
     {
         MarketSnapshotReadStatusV1.Ok => Results.Ok(response),
         MarketSnapshotReadStatusV1.RevisionExpired => Results.Conflict(response),
+        _ => Results.StatusCode(StatusCodes.Status503ServiceUnavailable)
+    };
+});
+
+app.MapPost("/internal/v1/market/trades/reserve", async (
+    MarketTradeReservationRequestV1 request,
+    MySqlMarketTradeReservationStore reservationStore,
+    CancellationToken cancellationToken) =>
+{
+    if (!request.IsValid())
+        return Results.BadRequest(new { error = "invalid_market_trade_reservation" });
+    var response = await reservationStore.ReserveAsync(request, cancellationToken);
+    return response.Status switch
+    {
+        MarketTradeReservationStatusV1.Reserved or MarketTradeReservationStatusV1.Committed or
+            MarketTradeReservationStatusV1.Aborted => Results.Ok(response),
+        MarketTradeReservationStatusV1.Conflict => Results.Conflict(response),
+        MarketTradeReservationStatusV1.Rejected => Results.BadRequest(response),
+        _ => Results.StatusCode(StatusCodes.Status503ServiceUnavailable)
+    };
+});
+
+app.MapPost("/internal/v1/market/trades/resolve", async (
+    MarketTradeResolutionRequestV1 request,
+    MySqlMarketTradeReservationStore reservationStore,
+    CancellationToken cancellationToken) =>
+{
+    if (!request.IsValid())
+        return Results.BadRequest(new { error = "invalid_market_trade_resolution" });
+    var response = await reservationStore.ResolveAsync(request, cancellationToken);
+    return response.Status switch
+    {
+        MarketTradeReservationStatusV1.Reserved or MarketTradeReservationStatusV1.Committed or
+            MarketTradeReservationStatusV1.Aborted => Results.Ok(response),
+        MarketTradeReservationStatusV1.Conflict => Results.Conflict(response),
+        MarketTradeReservationStatusV1.Rejected => Results.BadRequest(response),
         _ => Results.StatusCode(StatusCodes.Status503ServiceUnavailable)
     };
 });
