@@ -1,0 +1,3566 @@
+{
+  "schemaVersion": 1,
+  "reviewDocumentSha256": "61c80a3a853b970d16b2869825c5535f9373208e51c193ebf94190c9067b0b36",
+  "sourceDataSha256": "1e1f97f045c487d92e7fd7d791eb950f8915fc37d75959dbbc1d3e1d67751bb3",
+  "sourceTextFileCount": 2758,
+  "referenceScope": "exact whole-goodId references outside EQUIPMENT definitions in INI/THN/LUA/TXT files; reference evidence is not market authorization",
+  "totals": {
+    "goods": 420,
+    "withExternalReferences": 291,
+    "withoutExternalReferences": 129
+  },
+  "goods": [
+    {
+      "goodId": "be_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "bf_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "bfr_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "bhe2_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "bhe_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "bhf_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "br_battleship_flak_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 10,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 10
+      }
+    },
+    {
+      "goodId": "br_battleship_missile_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "br_battleship_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 15,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 15
+      }
+    },
+    {
+      "goodId": "br_battleship_turret02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 20,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 20
+      }
+    },
+    {
+      "goodId": "br_battleship_turret03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "br_battleship_turret04",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 15,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 15
+      }
+    },
+    {
+      "goodId": "br_destroyer_missile_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "br_destroyer_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 2
+      }
+    },
+    {
+      "goodId": "br_destroyer_turret02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 4,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 4
+      }
+    },
+    {
+      "goodId": "br_destroyer_turret03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 4,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 4
+      }
+    },
+    {
+      "goodId": "br_destroyer_turret04",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 4,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 4
+      }
+    },
+    {
+      "goodId": "br_gunboat_forward_gun01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 6,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 6
+      }
+    },
+    {
+      "goodId": "br_gunboat_missile_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "br_gunboat_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 3,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 3
+      }
+    },
+    {
+      "goodId": "br_gunboat_turret02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 9,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 9
+      }
+    },
+    {
+      "goodId": "br_large_station_turret01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "br_large_station_turret01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 12,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 12
+      }
+    },
+    {
+      "goodId": "br_large_station_turret01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "br_prison_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "br_small_station_turret01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 8,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 8
+      }
+    },
+    {
+      "goodId": "br_small_station_turret01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 55,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 55
+      }
+    },
+    {
+      "goodId": "br_small_station_turret01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 39,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 39
+      }
+    },
+    {
+      "goodId": "br_wp_turret01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "br_wp_turret01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "br_wp_turret01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 6,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 6
+      }
+    },
+    {
+      "goodId": "br_wp_turret02_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "br_wp_turret02_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "br_wp_turret02_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 6,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 6
+      }
+    },
+    {
+      "goodId": "br_wps_gun01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 8,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 8
+      }
+    },
+    {
+      "goodId": "br_wps_gun01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 8,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 8
+      }
+    },
+    {
+      "goodId": "br_wps_gun01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "br_wps_mlauncher01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "br_wps_mlauncher01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "br_wps_mlauncher01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "bwe2_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "bwe_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "bwf_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "bwfr_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "co_large_station_turret01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 7,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 7
+      }
+    },
+    {
+      "goodId": "co_large_station_turret01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 13,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 13
+      }
+    },
+    {
+      "goodId": "co_large_station_turret01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 21,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 21
+      }
+    },
+    {
+      "goodId": "co_lifter_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 5,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 5
+      }
+    },
+    {
+      "goodId": "co_liner_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 11,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 11
+      }
+    },
+    {
+      "goodId": "co_miner_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 32,
+      "externalReferenceFileCount": 2,
+      "assetGroupCounts": {
+        "ships": 8,
+        "solar": 24
+      }
+    },
+    {
+      "goodId": "co_miner_turret02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 32,
+      "externalReferenceFileCount": 2,
+      "assetGroupCounts": {
+        "ships": 8,
+        "solar": 24
+      }
+    },
+    {
+      "goodId": "co_miner_turret03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 16,
+      "externalReferenceFileCount": 2,
+      "assetGroupCounts": {
+        "ships": 4,
+        "solar": 12
+      }
+    },
+    {
+      "goodId": "co_repair_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "co_small_station_turret01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 42,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 42
+      }
+    },
+    {
+      "goodId": "co_small_station_turret01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 122,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 122
+      }
+    },
+    {
+      "goodId": "co_small_station_turret01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 191,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 191
+      }
+    },
+    {
+      "goodId": "co_train_turret01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 36,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 36
+      }
+    },
+    {
+      "goodId": "co_train_turret01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "co_train_turret01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "co_train_turret02_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "co_train_turret02_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "co_train_turret02_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "co_train_turret03_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "co_train_turret03_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "co_train_turret03_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "co_transport_turret01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 100,
+      "externalReferenceFileCount": 4,
+      "assetGroupCounts": {
+        "ships": 98,
+        "universe": 2
+      }
+    },
+    {
+      "goodId": "co_transport_turret01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 4,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 4
+      }
+    },
+    {
+      "goodId": "co_transport_turret01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "co_transport_turret02_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 20,
+      "externalReferenceFileCount": 3,
+      "assetGroupCounts": {
+        "ships": 19,
+        "universe": 1
+      }
+    },
+    {
+      "goodId": "co_transport_turret02_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 1
+      }
+    },
+    {
+      "goodId": "co_transport_turret02_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "co_wp_turret01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "co_wp_turret01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "co_wp_turret01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 6,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 6
+      }
+    },
+    {
+      "goodId": "co_wp_turret02_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "co_wp_turret02_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "co_wp_turret02_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 6,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 6
+      }
+    },
+    {
+      "goodId": "co_wps_gun01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 8,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 8
+      }
+    },
+    {
+      "goodId": "co_wps_gun01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 12,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 12
+      }
+    },
+    {
+      "goodId": "co_wps_gun01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 12,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 12
+      }
+    },
+    {
+      "goodId": "co_wps_mlauncher01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "co_wps_mlauncher01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 3,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 3
+      }
+    },
+    {
+      "goodId": "co_wps_mlauncher01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 3,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 3
+      }
+    },
+    {
+      "goodId": "coe2_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "coe_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "cof_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "commodity_prisoners",
+      "reviewClass": "unlisted_commodity",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "commodity_vips",
+      "reviewClass": "unlisted_commodity",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "escape_lifeboat",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "escape_pod",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "missions": 1
+      }
+    },
+    {
+      "goodId": "fc_or_gun01_mark01_m1",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 4,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 4
+      }
+    },
+    {
+      "goodId": "fc_or_gun01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "fc_or_gun02_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "fc_or_turret01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "fc_or_turret02_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_gm_train_turret01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 16,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 16
+      }
+    },
+    {
+      "goodId": "gd_gm_train_turret01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_gm_train_turret01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_gm_train_turret02_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_gm_train_turret02_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_gm_train_turret02_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_gm_train_turret03_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 1
+      }
+    },
+    {
+      "goodId": "gd_gm_train_turret03_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_gm_train_turret03_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_gm_transport_turret01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_gm_transport_turret01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_gm_transport_turret01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_gm_transport_turret02_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_gm_transport_turret02_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_gm_transport_turret02_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_im_miner_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_im_miner_turret02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_im_miner_turret03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_im_train_turret01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 20,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 20
+      }
+    },
+    {
+      "goodId": "gd_im_train_turret01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_im_train_turret01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_im_train_turret02_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_im_train_turret02_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_im_train_turret02_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_im_train_turret03_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 2
+      }
+    },
+    {
+      "goodId": "gd_im_train_turret03_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_im_train_turret03_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_im_transport_turret01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_im_transport_turret01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_im_transport_turret01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_im_transport_turret02_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_im_transport_turret02_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gd_im_transport_turret02_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "ge_wps_gun_01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 8,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 8
+      }
+    },
+    {
+      "goodId": "ge_wps_mlauncher_01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "gf1_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gf1_hull_m01a",
+      "reviewClass": "unreferenced_ship_hull",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gf2_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gf4_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gf5_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "gf6_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "ke_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "kf_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "kfr_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "ku_battleship_flak_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 8,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 8
+      }
+    },
+    {
+      "goodId": "ku_battleship_missile_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 2
+      }
+    },
+    {
+      "goodId": "ku_battleship_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 32,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 32
+      }
+    },
+    {
+      "goodId": "ku_battleship_turret02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "ku_battleship_turret03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 32,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 32
+      }
+    },
+    {
+      "goodId": "ku_battleship_turret04",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "ku_destroyer_missile_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "ku_destroyer_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 4,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 4
+      }
+    },
+    {
+      "goodId": "ku_destroyer_turret02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 10,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 10
+      }
+    },
+    {
+      "goodId": "ku_destroyer_turret03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 12,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 12
+      }
+    },
+    {
+      "goodId": "ku_gunboat_forward_gun01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 3,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 3
+      }
+    },
+    {
+      "goodId": "ku_gunboat_missile_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "ku_gunboat_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 9,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 9
+      }
+    },
+    {
+      "goodId": "ku_large_station_turret01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 11,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 11
+      }
+    },
+    {
+      "goodId": "ku_large_station_turret01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 6,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 6
+      }
+    },
+    {
+      "goodId": "ku_large_station_turret01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 6,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 6
+      }
+    },
+    {
+      "goodId": "ku_prison_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "ku_small_station_turret01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 8,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 8
+      }
+    },
+    {
+      "goodId": "ku_small_station_turret01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 51,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 51
+      }
+    },
+    {
+      "goodId": "ku_small_station_turret01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 53,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 53
+      }
+    },
+    {
+      "goodId": "ku_wp_turret01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "ku_wp_turret01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "ku_wp_turret01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 8,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 8
+      }
+    },
+    {
+      "goodId": "ku_wp_turret02_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "ku_wp_turret02_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "ku_wp_turret02_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 8,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 8
+      }
+    },
+    {
+      "goodId": "ku_wps_gun01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 8,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 8
+      }
+    },
+    {
+      "goodId": "ku_wps_gun01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 8,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 8
+      }
+    },
+    {
+      "goodId": "ku_wps_gun01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 8,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 8
+      }
+    },
+    {
+      "goodId": "ku_wps_mlauncher01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "ku_wps_mlauncher01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "ku_wps_mlauncher01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "lair_power_cell",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 3,
+      "externalReferenceFileCount": 3,
+      "assetGroupCounts": {
+        "missions": 1,
+        "scripts": 1,
+        "solar": 1
+      }
+    },
+    {
+      "goodId": "lair_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 1
+      }
+    },
+    {
+      "goodId": "lair_turret02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 1
+      }
+    },
+    {
+      "goodId": "large_station_turret",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 33,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 33
+      }
+    },
+    {
+      "goodId": "le_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "lf_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "lfr_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "li_battleship_flak_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 16,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 16
+      }
+    },
+    {
+      "goodId": "li_battleship_missile_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "li_battleship_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 17,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 17
+      }
+    },
+    {
+      "goodId": "li_battleship_turret02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 7,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 7
+      }
+    },
+    {
+      "goodId": "li_battleship_turret03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 16,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 16
+      }
+    },
+    {
+      "goodId": "li_battleship_turret04",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 56,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 56
+      }
+    },
+    {
+      "goodId": "li_cruiser_forward_gun01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 9,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 9
+      }
+    },
+    {
+      "goodId": "li_cruiser_missile_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 18,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 18
+      }
+    },
+    {
+      "goodId": "li_cruiser_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 45,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 45
+      }
+    },
+    {
+      "goodId": "li_gun01_mark06_m11",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "li_large_station_turret01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 30,
+      "externalReferenceFileCount": 2,
+      "assetGroupCounts": {
+        "solar": 29,
+        "universe": 1
+      }
+    },
+    {
+      "goodId": "li_large_station_turret01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "li_large_station_turret01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "li_prison_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 5,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 5
+      }
+    },
+    {
+      "goodId": "li_small_station_turret01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 64,
+      "externalReferenceFileCount": 2,
+      "assetGroupCounts": {
+        "solar": 63,
+        "universe": 1
+      }
+    },
+    {
+      "goodId": "li_small_station_turret01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 36,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 36
+      }
+    },
+    {
+      "goodId": "li_small_station_turret01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 39,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 39
+      }
+    },
+    {
+      "goodId": "li_wp_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 6,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 6
+      }
+    },
+    {
+      "goodId": "li_wp_turret01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "li_wp_turret01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "li_wp_turret01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 6,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 6
+      }
+    },
+    {
+      "goodId": "li_wp_turret01_mark04",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "li_wp_turret02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "li_wp_turret02_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "li_wp_turret02_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "li_wp_turret02_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 6,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 6
+      }
+    },
+    {
+      "goodId": "li_wp_turret02_mark04",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "li_wps_gun01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 8,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 8
+      }
+    },
+    {
+      "goodId": "li_wps_gun01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 8,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 8
+      }
+    },
+    {
+      "goodId": "li_wps_gun01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "li_wps_mlauncher01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "li_wps_mlauncher01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "li_wps_mlauncher01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "loot_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "missions": 1
+      }
+    },
+    {
+      "goodId": "mine02_mark05",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 5,
+      "externalReferenceFileCount": 2,
+      "assetGroupCounts": {
+        "missions": 1,
+        "ships": 4
+      }
+    },
+    {
+      "goodId": "missile01_mark01_rtc",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 2
+      }
+    },
+    {
+      "goodId": "missile01_mark01_rtc_ammo",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 1
+      }
+    },
+    {
+      "goodId": "missile03_mark04",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 13,
+      "externalReferenceFileCount": 2,
+      "assetGroupCounts": {
+        "missions": 1,
+        "ships": 12
+      }
+    },
+    {
+      "goodId": "no_thruster",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 12,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 12
+      }
+    },
+    {
+      "goodId": "nomad_cruise_disruptor01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 5,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 5
+      }
+    },
+    {
+      "goodId": "nomad_dyson_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 8,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 8
+      }
+    },
+    {
+      "goodId": "nomad_gun01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 30,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 30
+      }
+    },
+    {
+      "goodId": "nomad_gun01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 3,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 3
+      }
+    },
+    {
+      "goodId": "nomad_gun01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 3,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 3
+      }
+    },
+    {
+      "goodId": "nomad_lair_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "nomad_lair_turret02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "nomad_torpedo01_rtc",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 4,
+      "externalReferenceFileCount": 2,
+      "assetGroupCounts": {
+        "ships": 3,
+        "universe": 1
+      }
+    },
+    {
+      "goodId": "nomad_turret01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 57,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 57
+      }
+    },
+    {
+      "goodId": "npc_shield01_mark01",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 13,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 13
+      }
+    },
+    {
+      "goodId": "npc_shield01_mark02",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 18,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 18
+      }
+    },
+    {
+      "goodId": "npc_shield01_mark03",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 17,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 17
+      }
+    },
+    {
+      "goodId": "npc_shield01_mark04",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 15,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 15
+      }
+    },
+    {
+      "goodId": "npc_shield01_mark05",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 16,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 16
+      }
+    },
+    {
+      "goodId": "npc_shield01_mark06",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 24,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 24
+      }
+    },
+    {
+      "goodId": "npc_shield01_mark07",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 9,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 9
+      }
+    },
+    {
+      "goodId": "npc_shield01_mark08",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "npc_shield01_mark09",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 3,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 3
+      }
+    },
+    {
+      "goodId": "npc_shield01_mark10",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 1
+      }
+    },
+    {
+      "goodId": "npc_shield02_mark01",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 1
+      }
+    },
+    {
+      "goodId": "npc_shield02_mark02",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 20,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 20
+      }
+    },
+    {
+      "goodId": "npc_shield02_mark03",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 12,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 12
+      }
+    },
+    {
+      "goodId": "npc_shield02_mark04",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 8,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 8
+      }
+    },
+    {
+      "goodId": "npc_shield02_mark05",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 14,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 14
+      }
+    },
+    {
+      "goodId": "npc_shield02_mark06",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 18,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 18
+      }
+    },
+    {
+      "goodId": "npc_shield02_mark07",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 2
+      }
+    },
+    {
+      "goodId": "npc_shield02_mark08",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 3,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 3
+      }
+    },
+    {
+      "goodId": "npc_shield02_mark09",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "npc_shield02_mark10",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 2
+      }
+    },
+    {
+      "goodId": "npc_shield03_mark01",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "npc_shield03_mark02",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 5,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 5
+      }
+    },
+    {
+      "goodId": "npc_shield03_mark03",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 2
+      }
+    },
+    {
+      "goodId": "npc_shield03_mark04",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 5,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 5
+      }
+    },
+    {
+      "goodId": "npc_shield03_mark05",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 2
+      }
+    },
+    {
+      "goodId": "npc_shield03_mark06",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 4,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 4
+      }
+    },
+    {
+      "goodId": "npc_shield03_mark07",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 5,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 5
+      }
+    },
+    {
+      "goodId": "npc_shield03_mark08",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 2
+      }
+    },
+    {
+      "goodId": "npc_shield03_mark09",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "npc_shield03_mark10",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 2
+      }
+    },
+    {
+      "goodId": "oe_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "pe_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "pf_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "pfr_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "pi_large_station_turret01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 12,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 12
+      }
+    },
+    {
+      "goodId": "pi_large_station_turret01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 24,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 24
+      }
+    },
+    {
+      "goodId": "pi_large_station_turret01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 91,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 91
+      }
+    },
+    {
+      "goodId": "pi_small_station_turret01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 16,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 16
+      }
+    },
+    {
+      "goodId": "pi_small_station_turret01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 39,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 39
+      }
+    },
+    {
+      "goodId": "pi_small_station_turret01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 62,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 62
+      }
+    },
+    {
+      "goodId": "pi_wp_turret01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 6,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 6
+      }
+    },
+    {
+      "goodId": "pi_wp_turret01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 5,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 5
+      }
+    },
+    {
+      "goodId": "pi_wp_turret01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 15,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 15
+      }
+    },
+    {
+      "goodId": "pi_wp_turret02_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "pi_wp_turret02_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "pi_wp_turret02_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 6,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 6
+      }
+    },
+    {
+      "goodId": "pi_wps_gun01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 8,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 8
+      }
+    },
+    {
+      "goodId": "pi_wps_gun01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 8,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 8
+      }
+    },
+    {
+      "goodId": "pi_wps_gun01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "pi_wps_mlauncher01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "pi_wps_mlauncher01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "pi_wps_mlauncher01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "re_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "rf_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "rfr_hull",
+      "reviewClass": "ship_hull_component",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "rh_battleship_flak_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 12,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 12
+      }
+    },
+    {
+      "goodId": "rh_battleship_flak_turret01_a",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "rh_battleship_missile_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "rh_battleship_missile_turret01_a",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "rh_battleship_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 24,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 24
+      }
+    },
+    {
+      "goodId": "rh_battleship_turret01_a",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "rh_battleship_turret02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 24,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 24
+      }
+    },
+    {
+      "goodId": "rh_battleship_turret02_a",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "rh_battleship_turret03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 36,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 36
+      }
+    },
+    {
+      "goodId": "rh_battleship_turret03_a",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "rh_battleship_turret04",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 30,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 30
+      }
+    },
+    {
+      "goodId": "rh_battleship_turret04_a",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "rh_cruiser_missile_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "rh_cruiser_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 5,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 5
+      }
+    },
+    {
+      "goodId": "rh_cruiser_turret01_rtc",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 1
+      }
+    },
+    {
+      "goodId": "rh_cruiser_turret02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 30,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 30
+      }
+    },
+    {
+      "goodId": "rh_cruiser_turret02_rtc",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 6,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 6
+      }
+    },
+    {
+      "goodId": "rh_cruiser_turret03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 10,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 10
+      }
+    },
+    {
+      "goodId": "rh_cruiser_turret03_rtc",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 2
+      }
+    },
+    {
+      "goodId": "rh_cruiser_turret04",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 30,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 30
+      }
+    },
+    {
+      "goodId": "rh_cruiser_turret04_rtc",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 6,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 6
+      }
+    },
+    {
+      "goodId": "rh_gun01_mark01_m1",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 3,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 3
+      }
+    },
+    {
+      "goodId": "rh_gun01_mark01_m3",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 26,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 26
+      }
+    },
+    {
+      "goodId": "rh_gunboat_forward_gun01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 12,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 12
+      }
+    },
+    {
+      "goodId": "rh_gunboat_missile_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 24,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 24
+      }
+    },
+    {
+      "goodId": "rh_gunboat_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 12,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 12
+      }
+    },
+    {
+      "goodId": "rh_gunboat_turret02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 36,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 36
+      }
+    },
+    {
+      "goodId": "rh_large_station_turret01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "rh_large_station_turret01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "rh_large_station_turret01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 12,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 12
+      }
+    },
+    {
+      "goodId": "rh_prison_turret01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "rh_small_station_turret01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 8,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 8
+      }
+    },
+    {
+      "goodId": "rh_small_station_turret01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 24,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 24
+      }
+    },
+    {
+      "goodId": "rh_small_station_turret01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 55,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 55
+      }
+    },
+    {
+      "goodId": "rh_wp_turret01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "rh_wp_turret01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "rh_wp_turret01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 6,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 6
+      }
+    },
+    {
+      "goodId": "rh_wp_turret02_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 0,
+      "externalReferenceFileCount": 0,
+      "assetGroupCounts": {}
+    },
+    {
+      "goodId": "rh_wp_turret02_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "rh_wp_turret02_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 6,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 6
+      }
+    },
+    {
+      "goodId": "rh_wps_gun01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 8,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 8
+      }
+    },
+    {
+      "goodId": "rh_wps_gun01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 8,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 8
+      }
+    },
+    {
+      "goodId": "rh_wps_gun01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 8,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 8
+      }
+    },
+    {
+      "goodId": "rh_wps_mlauncher01_mark01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "rh_wps_mlauncher01_mark02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "rh_wps_mlauncher01_mark03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 2
+      }
+    },
+    {
+      "goodId": "rm_alias_list",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_anti-personnel_weapons",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_antimatter_bomb_components",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_biohazardous_material",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_biotoxic_nanobots",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_biowarfare_ampules",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_blistering_agents",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_carnivorous_insectoids",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_chemical_waste",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_classified_alien_research_",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_classified_artifact_reports",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_classified_artifact_research",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_classified_base_plans",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_classified_battleship_specs",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_classified_defense_plans",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_classified_military_research",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_commodity_exchange_access_codes",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_dangerous_alien_artifacts",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_escape_pod",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_experimental_cloning_materials",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_experimental_ship_research",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_experimental_troop_enhancement_research",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_experimental_weapon_research",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_fusion_weapon_components",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_genetically_enhanced_bacteria",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_genetically_enhanced_phage",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_government_agents_list",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_government_research_on_jump_holes",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_harvested_human_organs",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_hazardous_single_cell_innoculin",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_heavy_water",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_hidden_base_map",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_holoviral_counterfeiting_technology",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_holstein_sea_serpent_venom",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_human_bomb_implants",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_hunter-killer_robots",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_incendiary_planet_bombs",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_infectious_waste",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_list_of_civilians_under_surveillance",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_list_of_defense_network_backdoors",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_list_of_double_agents",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_military_arms_data",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_military_defensive_weakness_profiles",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_military_scramble_codes",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_military_threat_assessments",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_military_troop_assignments",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_mutagens",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_neophage_weapons",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_nerve_toxin",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_old_fashioned_nuclear_devices",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_poisonous_plants",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_quantum_bomb_components",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_secret_files_on_government_officials",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_secret_industrial_research",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_secret_military_codes",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_smuggled_military_secrets",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_station_blueprints",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_stolen_financial_codes",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_stolen_industrial_secrets",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_unstable_isotopes",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_viroids",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "rm_water_poisoning_supplies",
+      "reviewClass": "other_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "randommissions": 1
+      }
+    },
+    {
+      "goodId": "shield01_mark08_fr",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "missions": 1
+      }
+    },
+    {
+      "goodId": "shield01_mark08_hf",
+      "reviewClass": "ship_package_addon",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "missions": 1
+      }
+    },
+    {
+      "goodId": "shield01_mark08_lf",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "missions": 1
+      }
+    },
+    {
+      "goodId": "shield01_mark09_fr",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "missions": 1
+      }
+    },
+    {
+      "goodId": "shield01_mark09_hf",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 2,
+      "externalReferenceFileCount": 2,
+      "assetGroupCounts": {
+        "missions": 1,
+        "scripts": 1
+      }
+    },
+    {
+      "goodId": "shield01_mark09_lf",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "missions": 1
+      }
+    },
+    {
+      "goodId": "shield01_mark10_fr",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "missions": 1
+      }
+    },
+    {
+      "goodId": "shield01_mark10_hf",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "missions": 1
+      }
+    },
+    {
+      "goodId": "shield01_mark10_lf",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "missions": 1
+      }
+    },
+    {
+      "goodId": "shield02_mark10_fr",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "missions": 1
+      }
+    },
+    {
+      "goodId": "shield02_mark10_hf",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "missions": 1
+      }
+    },
+    {
+      "goodId": "shield02_mark10_lf",
+      "reviewClass": "special_equipment",
+      "externalReferenceCount": 1,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "missions": 1
+      }
+    },
+    {
+      "goodId": "small_station_turret",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 98,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "solar": 98
+      }
+    },
+    {
+      "goodId": "special_gun01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 3,
+      "externalReferenceFileCount": 2,
+      "assetGroupCounts": {
+        "missions": 1,
+        "ships": 2
+      }
+    },
+    {
+      "goodId": "special_gun02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 3,
+      "externalReferenceFileCount": 2,
+      "assetGroupCounts": {
+        "missions": 1,
+        "ships": 2
+      }
+    },
+    {
+      "goodId": "special_gun03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 3,
+      "externalReferenceFileCount": 2,
+      "assetGroupCounts": {
+        "missions": 1,
+        "ships": 2
+      }
+    },
+    {
+      "goodId": "special_gun04",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 3,
+      "externalReferenceFileCount": 2,
+      "assetGroupCounts": {
+        "missions": 1,
+        "ships": 2
+      }
+    },
+    {
+      "goodId": "special_gun05",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 3,
+      "externalReferenceFileCount": 2,
+      "assetGroupCounts": {
+        "missions": 1,
+        "ships": 2
+      }
+    },
+    {
+      "goodId": "special_gun06",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 3,
+      "externalReferenceFileCount": 2,
+      "assetGroupCounts": {
+        "missions": 1,
+        "ships": 2
+      }
+    },
+    {
+      "goodId": "special_gun07",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 3,
+      "externalReferenceFileCount": 2,
+      "assetGroupCounts": {
+        "missions": 1,
+        "ships": 2
+      }
+    },
+    {
+      "goodId": "special_gun08",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 3,
+      "externalReferenceFileCount": 2,
+      "assetGroupCounts": {
+        "missions": 1,
+        "ships": 2
+      }
+    },
+    {
+      "goodId": "special_gun09",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 3,
+      "externalReferenceFileCount": 2,
+      "assetGroupCounts": {
+        "missions": 1,
+        "ships": 2
+      }
+    },
+    {
+      "goodId": "special_gun10",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 3,
+      "externalReferenceFileCount": 2,
+      "assetGroupCounts": {
+        "missions": 1,
+        "ships": 2
+      }
+    },
+    {
+      "goodId": "special_gun11",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 3,
+      "externalReferenceFileCount": 2,
+      "assetGroupCounts": {
+        "missions": 1,
+        "ships": 2
+      }
+    },
+    {
+      "goodId": "special_gun12",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 3,
+      "externalReferenceFileCount": 2,
+      "assetGroupCounts": {
+        "missions": 1,
+        "ships": 2
+      }
+    },
+    {
+      "goodId": "special_gun13",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 5,
+      "externalReferenceFileCount": 2,
+      "assetGroupCounts": {
+        "missions": 1,
+        "ships": 4
+      }
+    },
+    {
+      "goodId": "special_gun14",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 3,
+      "externalReferenceFileCount": 2,
+      "assetGroupCounts": {
+        "missions": 1,
+        "ships": 2
+      }
+    },
+    {
+      "goodId": "special_gun15",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 3,
+      "externalReferenceFileCount": 2,
+      "assetGroupCounts": {
+        "missions": 1,
+        "ships": 2
+      }
+    },
+    {
+      "goodId": "special_nomad_gun01",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 5,
+      "externalReferenceFileCount": 2,
+      "assetGroupCounts": {
+        "missions": 1,
+        "ships": 4
+      }
+    },
+    {
+      "goodId": "special_nomad_gun02",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 5,
+      "externalReferenceFileCount": 2,
+      "assetGroupCounts": {
+        "missions": 1,
+        "ships": 4
+      }
+    },
+    {
+      "goodId": "special_nomad_gun03",
+      "reviewClass": "unlisted_weapon",
+      "externalReferenceCount": 7,
+      "externalReferenceFileCount": 1,
+      "assetGroupCounts": {
+        "ships": 7
+      }
+    }
+  ]
+}
