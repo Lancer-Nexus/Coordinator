@@ -63,6 +63,20 @@ Der aktuelle Coordinator-Dateispeicher ist single-writer und nicht für mehrere 
 
 LLServer-Handelsereignisse werden mindestens nach `(instanceId, producerEpoch, sequenceNumber)` oder einer global eindeutigen `eventId` dedupliziert. Wiederholte identische Meldung liefert dasselbe Ergebnis; gleiche ID mit geändertem Inhalt ist ein Konflikt. Eine verlorene Bestätigung darf weder Bestand noch Credits doppelt ändern. Uhrzeit allein ist keine Reihenfolgegarantie.
 
+## Sicherer Handelsabschluss (Entwurf)
+
+Ein LLServer-Trade-Event darf erst eine verbindliche Marktänderung auslösen, wenn auch Credits und Inventar dauerhaft gebucht sind. Der derzeitige `BasesidePlayer.PurchaseGood`-/`SellGood`-Pfad ändert den `NetCharacter` und startet seine lokale DB-Aktualisierung asynchron. Gateway-SaveGames werden im Clusterpfad separat periodisch geschrieben; der Snapshot-Write ist an Lease und Revision gebunden, aber nicht an eine Markttransaktions-ID. Ein Event direkt nach dem Händler-RPC ist deshalb kein Crash-sicherer Commit-Beleg.
+
+Empfohlener Saga-Ablauf über die Diensteigenen Datenbanken:
+
+1. **Gateway erstellt `tradeId`:** authentifiziert Sitzung, Charakterzugehörigkeit und aktiven Lease; bindet Markt, Ware, Richtung, Menge, erwartete Markt-/Snapshot-Revision sowie den endgültigen Gesamtpreis. Der Client liefert weder Reputation noch verbindlichen Preis.
+2. **Coordinator reserviert Marktmenge:** prüft Quote/Revision und aktiviert eine idempotente, an `tradeId` gebundene Reservierung. Kaufreservierungen ziehen die Menge aus dem gleichzeitig verfügbaren Bestand; Verkaufsreservierungen sichern Kapazität oder wenden eine ausdrücklich begrenzte Annahmeregel an. Eine Reservierung wird nicht allein wegen Timeout freigegeben, solange Gateway-Entscheidung unbekannt ist.
+3. **Gateway bucht Charakter und Outbox atomar:** eine Gateway-Transaktion persistiert den neuen SaveGame-/Credits-/Inventarstand, den Trade-Ledger-Eintrag und einen Coordinator-Outbox-Eintrag zusammen. Derselbe `tradeId` plus identischer Payload liefert bei Wiederholung dieselbe Entscheidung; ein geänderter Payload kollidiert. Der Client meldet den Handel erst nach dieser Commit-Bestätigung als erfolgreich.
+4. **Coordinator finalisiert aus der Outbox:** Gateway/LLServer wiederholt den bestätigten Markteffekt, bis Coordinator `Applied` oder `Duplicate` bestätigt. Coordinator wendet Reservierung, Bestand, dynamischen Preis und Markt-/Systemrevision atomar an und merkt die Abschlussantwort unter `tradeId`. Erst nach durablem ACK wird der lokale Outbox-Cursor fortgeschrieben und die Reservierung freigegeben.
+5. **Recovery löst unklare Phasen auf:** vor Gateway-Commit kann Gateway eine Reservierung explizit abbrechen; nach Gateway-Commit darf sie nur durch Replay des gespeicherten Outbox-Eintrags finalisiert werden. Ein Prozessneustart liest Gateway-Ledger/Outbox und Coordinator-Reservierungen und setzt denselben Trade fort, statt einen neuen Preis oder eine neue ID zu erzeugen.
+
+Der Saga-Pfad benötigt neue versionierte Quote-/Reserve-/Finalize-/Abort-Verträge sowie Gateway Trade-Ledger und Outbox-Tabellen. Die aktuelle Coordinator-Trade-Nachricht 312 beschreibt nur einen bestätigten Bestandseffekt; sie reicht für Quote-Reservierung oder Gateway-Creditbuchung nicht aus. Diese Phase bleibt TODO und die `dynamic_market_v1`-Capability aus, bis Coordinator und Gateway-Recovery jeweils mit Prozessabbruchtests belegt sind.
+
 ## Umsetzungsschritte
 
 - [x] Kataloggenerator gegen sämtliche system-/weltbezogenen Markt- und Händlerdateien ausgeführt; der Lauf vom 2026-10-11 fand keine unbekannten Waren-IDs, Duplikate, fehlerhaften Einträge oder nicht zugeordneten Marktbasen. Details und Grenzen des Coverage-Reports stehen im Abschnitt „Bestandsaufnahme“ unten.
