@@ -111,9 +111,10 @@ the versioned Protocol request and returns a keyset-paged system snapshot pinned
 to its system revision. The revision table is provisioned by the catalog seed
 importer. Unknown systems
 and unavailable storage return HTTP 503; a changed pinned revision returns HTTP
-409. The public Gateway REST facade, write path, price calculation, trading,
-reputation lookup and the `dynamic_market_v1` capability remain disabled until
-their contracts and persistence are complete.
+409. The market is still staged: the public Gateway read facade and internal
+Coordinator read/write/reservation paths exist, but live stock initialization,
+LLServer/Agent event production, reputation-aware quotes and Gateway booking
+are not connected end to end. The `dynamic_market_v1` capability remains off.
 
 Generate and validate an import report from the local Freelancer installation:
 
@@ -166,8 +167,12 @@ of the planned Gateway saga. Configure a distinct
 accepted on these routes. Repeated `tradeId` plus identical reservation fields
 returns its stored state; changed fields conflict. Buy reservations reduce
 snapshot-visible stock until an explicit commit or abort. Reservations do not
-expire on timeout because Gateway's durable decision may be unknown. The
-Gateway Trade-Ledger/outbox and its caller are not implemented yet.
+expire on timeout because Gateway's durable decision may be unknown. The quote
+uses the dynamic marginal price for each unit in the requested quantity:
+`QuoteUnitPrice` is the first unit and `TotalPrice` sums the quantity across
+successive stock levels. The Gateway Trade-Ledger/outbox and its caller are not
+implemented yet, and this reservation price does not yet include faction
+reputation.
 
 Registry and placement timeouts can be overridden with `Coordinator__Registry__AgentHeartbeatTimeoutSeconds`, `Coordinator__Registry__InstanceHeartbeatTimeoutSeconds`, `Coordinator__Placement__MaximumHeartbeatAgeSeconds`, `Coordinator__Placement__ReservationLifetimeSeconds` and `Coordinator__Placement__GroupAffinityLifetimeSeconds`. All must be positive; defaults are 15, 15, 15, 15 and 30 seconds respectively.
 

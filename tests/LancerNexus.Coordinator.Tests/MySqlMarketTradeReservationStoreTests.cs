@@ -20,7 +20,7 @@ public sealed class MySqlMarketTradeReservationStoreTests
             var reserved = await store.ReserveAsync(request);
             Assert.Equal(MarketTradeReservationStatusV1.Reserved, reserved.Status);
             Assert.Equal(100, reserved.QuoteUnitPrice);
-            Assert.Equal(500, reserved.TotalPrice);
+            Assert.Equal(559, reserved.TotalPrice);
             Assert.Equal(2, reserved.MarketRevision);
             Assert.Equal(2, reserved.SystemRevision);
 
@@ -76,7 +76,10 @@ public sealed class MySqlMarketTradeReservationStoreTests
             await SeedMarketAsync(connectionString);
             var store = new MySqlMarketTradeReservationStore(connectionString);
             var request = Reserve(MarketTradeSideV1.Buy, quantity: 5);
-            Assert.Equal(MarketTradeReservationStatusV1.Reserved, (await store.ReserveAsync(request)).Status);
+            var reserved = await store.ReserveAsync(request);
+            Assert.Equal(MarketTradeReservationStatusV1.Reserved, reserved.Status);
+            Assert.Equal(100, reserved.QuoteUnitPrice);
+            Assert.Equal(559, reserved.TotalPrice);
 
             var abort = Resolve(request.TradeId, MarketTradeResolutionV1.Abort);
             var aborted = await store.ResolveAsync(abort);
@@ -156,7 +159,10 @@ public sealed class MySqlMarketTradeReservationStoreTests
 
             var store = new MySqlMarketTradeReservationStore(connectionString);
             var request = Reserve(MarketTradeSideV1.Sell, quantity: 5);
-            Assert.Equal(MarketTradeReservationStatusV1.Reserved, (await store.ReserveAsync(request)).Status);
+            var reserved = await store.ReserveAsync(request);
+            Assert.Equal(MarketTradeReservationStatusV1.Reserved, reserved.Status);
+            Assert.Equal(100, reserved.QuoteUnitPrice);
+            Assert.Equal(456, reserved.TotalPrice);
             await using (var connection = new MySqlConnection(connectionString))
             {
                 await connection.OpenAsync();

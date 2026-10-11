@@ -55,10 +55,10 @@ public sealed class MySqlMarketTradeReservationStore(string? connectionString)
                 (request.Side == MarketTradeSideV1.Sell && request.Quantity > long.MaxValue - market.Stock))
                 return Response(request, MarketTradeReservationStatusV1.Rejected);
 
-            var unitPrice = market.CurrentPrice;
-            if (request.Quantity != 0 && unitPrice > long.MaxValue / request.Quantity)
+            if (!MarketPriceCalculator.TryCalculateTradeTotal(market.BasePrice, market.TargetStock,
+                    market.Stock - market.ReservedBuyStock, request.Side, request.Quantity,
+                    out var unitPrice, out var totalPrice))
                 return Response(request, MarketTradeReservationStatusV1.Rejected);
-            var totalPrice = unitPrice * request.Quantity;
             var reservedBuyStock = market.ReservedBuyStock +
                 (request.Side == MarketTradeSideV1.Buy ? request.Quantity : 0);
             var nextMarketRevision = market.MarketRevision + 1;
