@@ -15,6 +15,8 @@
 
 **Live-REST-Snapshot-Abgleich (2026-10-11):** Der aktuell laufende Gateway-Endpunkt lieferte den vollständigen Katalog mit 855 eindeutigen Waren in neun Seiten sowie 53 Systeme, 191 Marktstandorte und 14.694 statische Angebotszeilen. Anschließend wurden die Systemmarkt-Snapshots für alle 53 Systeme mit gepinnter Revision abgerufen: alle Antworten waren erfolgreich, aber jeder Snapshot enthielt null dynamische Bestandszeilen bei `systemRevision = 1`. Das bestätigt den globalen Katalog-/Übersichts-Leseweg und zugleich, dass für die Laufzeitdatenbank noch keine Live-Bestände installiert sind. Der Snapshot-Read-Smoke ist deshalb kein Beleg für sichtbare dynamische Angebote oder einen erfolgreichen Handel; vor einem Trade-Smoke müssen geprüfte Standortregeln als Market-Stock-Policy importiert und das Feature kontrolliert aktiviert werden.
 
+**Persönlicher Fraktionsruf-REST-Smoke (2026-10-11):** Mit dem installierten Client-Versionsvertrag und dem lokalen Testkonto waren Versionshandshake, Login, kontogebundener Charakter-Roster und `GET /api/v1/characters/{characterId}/faction-reputation` erfolgreich (`200`). Der N5-Testcharakter lieferte 55 Fraktionseinträge aus Snapshotrevision 26; die Antwort setzte `Cache-Control: no-store`. Zugangstoken und Rufwerte wurden nicht ausgegeben. Der Lauf bestätigt den autorisierten Leseweg für den zuletzt gespeicherten Snapshot, nicht die Sichtbarkeit ungespeicherter Live-Rufänderungen.
+
 ## Zuständigkeiten
 
 - Der Coordinator verwaltet die clusterweite Marktprojektion: Marktstandorte, Warenangebote, Bestände, Preisrevisionen und die Verteilung von Handelsereignissen. Alle Coordinator-Replikate müssen dieselbe transaktionale Datenbank verwenden; eine Replik darf keinen eigenen Marktstand führen.
