@@ -46,6 +46,9 @@ public sealed class MySqlMarketQuoteStore(string? connectionString)
             long basePrice;
             long availableStock;
             long targetStock;
+            long sellCapacity;
+            long minUnitPrice;
+            long maxUnitPrice;
             bool enabled;
             string marketFactionId;
             await using (var command = connection.CreateCommand())
@@ -55,7 +58,9 @@ public sealed class MySqlMarketQuoteStore(string? connectionString)
                     SELECT state.market_revision, state.base_unit_price,
                            state.available_stock - state.reserved_buy_stock, state.target_stock,
                            CASE WHEN @side = 1 THEN state.buy_enabled ELSE state.sell_enabled END,
-                           location.local_faction_id
+                           state.max_stock - state.available_stock - state.reserved_sell_stock,
+                           state.min_unit_price, state.max_unit_price,
+                           COALESCE(state.market_faction_override_id, location.local_faction_id)
                     FROM market_good_state AS state
                     INNER JOIN market_locations AS location
                       ON location.market_id = state.market_id AND location.system_id = state.system_id
@@ -73,7 +78,10 @@ public sealed class MySqlMarketQuoteStore(string? connectionString)
                 availableStock = reader.GetInt64(2);
                 targetStock = reader.GetInt64(3);
                 enabled = reader.GetBoolean(4);
-                marketFactionId = reader.GetString(5);
+                sellCapacity = reader.GetInt64(5);
+                minUnitPrice = reader.GetInt64(6);
+                maxUnitPrice = reader.GetInt64(7);
+                marketFactionId = reader.GetString(8);
             }
 
             if (request.ExpectedMarketRevision is long expected && expected != marketRevision)
@@ -87,7 +95,8 @@ public sealed class MySqlMarketQuoteStore(string? connectionString)
             if (!MarketReputationPricePolicy.TryGetFactor(request.Side, appliedReputation,
                     out var priceFactor, out var factorPartsPerMillion) ||
                 !MarketPriceCalculator.TryCalculateTradeTotal(basePrice, targetStock, availableStock,
-                    request.Side, request.Quantity, out var unitPrice, out var totalPrice, priceFactor))
+                    request.Side, request.Quantity, out var unitPrice, out var totalPrice, priceFactor,
+                    minUnitPrice, maxUnitPrice, sellCapacity))
                 return Response(request, MarketQuoteStatusV1.Rejected);
 
             return new MarketQuoteResponseV1

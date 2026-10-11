@@ -28,7 +28,7 @@ public sealed class MarketStockPolicyDocumentTests
             Assert.Equal(1, entry.PricingPolicyVersion);
             Assert.Equal("li_grp", entry.MarketFactionOverrideId);
             Assert.Equal(32, policy.PolicySha256.Length);
-            Assert.Equal(seed.SourceSha256, policy.CatalogSeedSha256);
+            Assert.Equal(seed.SourceSha256, policy.CatalogSeedSha256.ToArray());
         });
     }
 

@@ -153,7 +153,7 @@ public sealed class MySqlMarketTradeReservationStoreTests
             {
                 await connection.OpenAsync();
                 await using var command = connection.CreateCommand();
-                command.CommandText = "UPDATE market_good_state SET sell_enabled = TRUE WHERE market_id='test_base'";
+                command.CommandText = "UPDATE market_good_state SET sell_enabled = TRUE, max_stock = 25 WHERE market_id='test_base'";
                 await command.ExecuteNonQueryAsync();
             }
 
@@ -163,12 +163,20 @@ public sealed class MySqlMarketTradeReservationStoreTests
             Assert.Equal(MarketTradeReservationStatusV1.Reserved, reserved.Status);
             Assert.Equal(100, reserved.QuoteUnitPrice);
             Assert.Equal(456, reserved.TotalPrice);
+            var overCapacity = await store.ReserveAsync(Reserve(MarketTradeSideV1.Sell, quantity: 1) with
+            {
+                ExpectedMarketRevision = reserved.MarketRevision
+            });
+            Assert.Equal(MarketTradeReservationStatusV1.Rejected, overCapacity.Status);
             await using (var connection = new MySqlConnection(connectionString))
             {
                 await connection.OpenAsync();
                 await using var command = connection.CreateCommand();
-                command.CommandText = "SELECT available_stock FROM market_good_state WHERE market_id='test_base'";
-                Assert.Equal(20L, Convert.ToInt64(await command.ExecuteScalarAsync()));
+                command.CommandText = "SELECT available_stock, reserved_sell_stock FROM market_good_state WHERE market_id='test_base'";
+                await using var stateReader = await command.ExecuteReaderAsync();
+                Assert.True(await stateReader.ReadAsync());
+                Assert.Equal(20, stateReader.GetInt64(0));
+                Assert.Equal(5, stateReader.GetInt64(1));
             }
 
             Assert.Equal(MarketTradeReservationStatusV1.Committed,
@@ -176,11 +184,12 @@ public sealed class MySqlMarketTradeReservationStoreTests
             await using var verify = new MySqlConnection(connectionString);
             await verify.OpenAsync();
             await using var query = verify.CreateCommand();
-            query.CommandText = "SELECT available_stock, current_unit_price FROM market_good_state WHERE market_id='test_base'";
+            query.CommandText = "SELECT available_stock, reserved_sell_stock, current_unit_price FROM market_good_state WHERE market_id='test_base'";
             await using var reader = await query.ExecuteReaderAsync();
             Assert.True(await reader.ReadAsync());
             Assert.Equal(25, reader.GetInt64(0));
-            Assert.Equal(80, reader.GetInt64(1));
+            Assert.Equal(0, reader.GetInt64(1));
+            Assert.Equal(80, reader.GetInt64(2));
         });
     }
 
@@ -222,7 +231,7 @@ public sealed class MySqlMarketTradeReservationStoreTests
             Assert.Equal(0.5f, quote.AppliedReputation);
             Assert.Equal(950_000, quote.ReputationFactorPartsPerMillion);
             Assert.Equal(95, quote.QuoteUnitPrice);
-            Assert.Equal(431, quote.TotalPrice);
+            Assert.Equal(531, quote.TotalPrice);
             Assert.Equal(1, quote.MarketRevision);
             Assert.Equal(3, quote.ReputationRevision);
             Assert.Equal(now.AddSeconds(15), quote.ExpiresUtc);
@@ -300,7 +309,8 @@ public sealed class MySqlMarketTradeReservationStoreTests
                      "006_dynamic_market_projection.sql",
                      "007_market_catalog_seed.sql",
                      "008_market_trade_events.sql",
-                     "009_market_trade_reservations.sql"
+                     "009_market_trade_reservations.sql",
+                     "010_market_stock_policy.sql"
                  })
         {
             var path = Path.Combine(AppContext.BaseDirectory, "db", "migrations", filename);

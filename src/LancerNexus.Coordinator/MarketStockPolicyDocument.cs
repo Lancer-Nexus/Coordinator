@@ -20,13 +20,24 @@ public sealed record MarketStockPolicyEntry(
     string? ReviewReason);
 
 /// <summary>A fail-closed, report-pinned allowlist for later live-market initialization.</summary>
-public sealed record MarketStockPolicyDocument(
-    byte[] PolicySha256,
-    byte[] CatalogSeedSha256,
-    long PolicyRevision,
-    string PolicyVersion,
-    MarketStockPolicyEntry[] Entries)
+public sealed class MarketStockPolicyDocument
 {
+    public ReadOnlyMemory<byte> PolicySha256 { get; }
+    public ReadOnlyMemory<byte> CatalogSeedSha256 { get; }
+    public long PolicyRevision { get; }
+    public string PolicyVersion { get; }
+    public IReadOnlyList<MarketStockPolicyEntry> Entries { get; }
+
+    private MarketStockPolicyDocument(byte[] policySha256, byte[] catalogSeedSha256,
+        long policyRevision, string policyVersion, MarketStockPolicyEntry[] entries)
+    {
+        PolicySha256 = policySha256;
+        CatalogSeedSha256 = catalogSeedSha256;
+        PolicyRevision = policyRevision;
+        PolicyVersion = policyVersion;
+        Entries = Array.AsReadOnly(entries);
+    }
+
     public static async Task<MarketStockPolicyDocument> LoadAsync(string path,
         MarketCatalogSeedDocument seed, CancellationToken cancellationToken = default)
     {

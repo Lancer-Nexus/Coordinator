@@ -51,14 +51,19 @@ public sealed class MySqlMarketTradeStore(string? connectionString)
             long basePrice;
             long stock;
             long reservedBuyStock;
+            long reservedSellStock;
             long targetStock;
+            long maxStock;
+            long minUnitPrice;
+            long maxUnitPrice;
             long marketRevision;
             bool enabled;
             await using (var command = connection.CreateCommand())
             {
                 command.Transaction = transaction;
                 command.CommandText = """
-                    SELECT base_unit_price, available_stock, reserved_buy_stock, target_stock, market_revision,
+                    SELECT base_unit_price, available_stock, reserved_buy_stock, reserved_sell_stock,
+                           target_stock, max_stock, min_unit_price, max_unit_price, market_revision,
                            CASE WHEN @side = 1 THEN buy_enabled ELSE sell_enabled END
                     FROM market_good_state
                     WHERE market_id = @market AND good_id = @good AND system_id = @system
@@ -74,13 +79,19 @@ public sealed class MySqlMarketTradeStore(string? connectionString)
                 basePrice = reader.GetInt64(0);
                 stock = reader.GetInt64(1);
                 reservedBuyStock = reader.GetInt64(2);
-                targetStock = reader.GetInt64(3);
-                marketRevision = reader.GetInt64(4);
-                enabled = reader.GetBoolean(5);
+                reservedSellStock = reader.GetInt64(3);
+                targetStock = reader.GetInt64(4);
+                maxStock = reader.GetInt64(5);
+                minUnitPrice = reader.GetInt64(6);
+                maxUnitPrice = reader.GetInt64(7);
+                marketRevision = reader.GetInt64(8);
+                enabled = reader.GetBoolean(9);
             }
 
             if (!enabled || targetStock <= 0 ||
                 (trade.Side == MarketTradeSideV1.Buy && stock - reservedBuyStock < trade.Quantity) ||
+                (trade.Side == MarketTradeSideV1.Sell &&
+                 trade.Quantity > maxStock - stock - reservedSellStock) ||
                 marketRevision == long.MaxValue)
                 return Acknowledgement(trade, MarketTradeIngestStatusV1.Rejected);
 
@@ -118,9 +129,10 @@ public sealed class MySqlMarketTradeStore(string? connectionString)
 
             var newStock = trade.Side == MarketTradeSideV1.Buy
                 ? stock - trade.Quantity
-                : trade.Quantity > long.MaxValue - stock ? long.MaxValue : stock + trade.Quantity;
+                : stock + trade.Quantity;
             var newMarketRevision = marketRevision + 1;
-            var newPrice = MarketPriceCalculator.Calculate(basePrice, targetStock, newStock - reservedBuyStock);
+            var newPrice = MarketPriceCalculator.Calculate(basePrice, targetStock, newStock - reservedBuyStock,
+                minUnitPrice, maxUnitPrice);
             await using (var command = connection.CreateCommand())
             {
                 command.Transaction = transaction;

@@ -134,6 +134,37 @@ public sealed class MySqlMarketTradeStoreTests
         });
     }
 
+    [MySqlFact]
+    public async Task ConfirmedSaleCannotConsumeCapacityHeldByReservationsOrExceedMaxStock()
+    {
+        await WithDatabaseAsync(async connectionString =>
+        {
+            await ApplySchemaAsync(connectionString);
+            await SeedMarketAsync(connectionString);
+            await using (var connection = new MySqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                await using var command = connection.CreateCommand();
+                command.CommandText = "UPDATE market_good_state SET sell_enabled = TRUE, max_stock = 24, reserved_sell_stock = 2 WHERE market_id='test_base'";
+                await command.ExecuteNonQueryAsync();
+            }
+
+            var result = await new MySqlMarketTradeStore(connectionString).ApplyAsync(
+                Trade() with { Side = MarketTradeSideV1.Sell, Quantity = 3 });
+            Assert.Equal(MarketTradeIngestStatusV1.Rejected, result.Status);
+
+            await using var verify = new MySqlConnection(connectionString);
+            await verify.OpenAsync();
+            await using var query = verify.CreateCommand();
+            query.CommandText = "SELECT available_stock, reserved_sell_stock, (SELECT COUNT(*) FROM market_trade_events) FROM market_good_state WHERE market_id='test_base'";
+            await using var reader = await query.ExecuteReaderAsync();
+            Assert.True(await reader.ReadAsync());
+            Assert.Equal(20, reader.GetInt64(0));
+            Assert.Equal(2, reader.GetInt64(1));
+            Assert.Equal(0, reader.GetInt64(2));
+        });
+    }
+
     private static async Task SeedMarketAsync(string connectionString)
     {
         await using var connection = new MySqlConnection(connectionString);
@@ -164,7 +195,8 @@ public sealed class MySqlMarketTradeStoreTests
                      "006_dynamic_market_projection.sql",
                      "007_market_catalog_seed.sql",
                      "008_market_trade_events.sql",
-                     "009_market_trade_reservations.sql"
+                     "009_market_trade_reservations.sql",
+                     "010_market_stock_policy.sql"
                  })
         {
             var path = Path.Combine(AppContext.BaseDirectory, "db", "migrations", filename);

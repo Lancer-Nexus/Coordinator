@@ -26,7 +26,7 @@ The Coordinator maintains cluster membership and makes placement decisions for L
 
 The Coordinator is a control-plane service. It does not become the authoritative source for player inventory, credits or world state.
 
-The cluster-wide dynamic goods market is being implemented in stages. The Coordinator has a shared MySQL snapshot projection, authenticated internal read and reservation routes, an immutable catalog importer, and a transactional/idempotent trade-effect store with a QUIC handler. Gateway exposes public system snapshots and authenticated character reputation reads. The Coordinator can request snapshot-revision-bound reputation from Gateway over a dedicated HTTPS service credential. LLServer/Agent durable event production, initial live-stock seeding, reputation-aware price quotes and atomic trade booking remain open; the `dynamic_market_v1` feature capability stays disabled until those paths are complete. See [docs/dynamic-market-plan.md](docs/dynamic-market-plan.md).
+The cluster-wide dynamic goods market is being implemented in stages. The Coordinator has a shared MySQL snapshot projection, authenticated internal read and reservation routes, catalog and stock-policy importers, and a transactional/idempotent trade-effect store with a QUIC handler. Gateway exposes public system snapshots, authenticated character reputation reads and reputation-aware quote previews. Stock policy bootstrap, bounded prices, and buy/sell capacity reservations are implemented. LLServer/Agent durable event production and atomic Gateway credit/inventory booking remain open; the `dynamic_market_v1` feature capability stays disabled until those paths are complete. See [docs/dynamic-market-plan.md](docs/dynamic-market-plan.md).
 
 ## Shared Protocol
 
@@ -142,6 +142,22 @@ The policy validator checks the report SHA-256, each market/good reference,
 stock and price bounds, duplicate entries, and review notes for newly enabled
 or non-static offers. Validation does not import or activate those entries.
 
+After applying migrations 006 through 010 and importing the catalog seed,
+install the approved stock policy with the same report and policy files:
+
+```bash
+ConnectionStrings__Market='Server=127.0.0.1;Database=lancer_market;User ID=market_importer;Password=…' \
+  dotnet run --project tools/MarketCatalogSeeder/MarketCatalogSeeder.csproj --configuration Release -- \
+  --import-policy /tmp/market-catalog.json /path/to/market-stock-policy.json
+```
+
+The import writes the enabled market/good allowlist, initial live stock, bounded
+prices and system revisions in one transaction. A retry succeeds only for the
+exact same catalog report and policy bytes. A different policy requires an
+explicit future migration; missing pairs stay unavailable. `MarketGood.Min` and
+`MarketGood.Max` are not treated as live inventory. This bootstrap does not
+enable `dynamic_market_v1` or complete Gateway credit/inventory booking.
+
 The internal `POST /internal/v1/market/catalog/read` endpoint provides bounded keyset pages from `market_catalog_goods`, including goods without static offers. Pages are pinned to the imported seed SHA-256 so every Coordinator replica serves the same catalog revision.
 
 The internal `POST /internal/v1/market/systems/read` endpoint exposes the seeded system directory on the same catalog revision. It reports market-location and static-offer counts while retaining systems with no locations or offers; Gateway exposes this as `GET /api/v1/market/systems` with bounded pagination, ETags and the public market-read rate limit.
@@ -162,8 +178,10 @@ reviewed.
 Migration `008_market_trade_events.sql` adds the idempotency journal and the
 Coordinator's transactional market trade store. Migration
 `009_market_trade_reservations.sql` adds durable Gateway trade reservations and
-reserved buy-stock accounting. Apply migrations 008 and 009 after 006/007
-before enabling their consumers. On a negotiated
+reserved buy-stock accounting. `010_market_stock_policy.sql` adds the
+report-pinned stock policy, bounded price fields and reserved sell capacity.
+Apply migrations 008 through 010 after 006/007 before enabling their consumers.
+On a negotiated
 `dynamic_market_v1` QUIC session, the handler verifies that the mTLS Agent owns
 the event's live instance, then commits event identity, stock delta, V1 price,
 and market/system revisions atomically. Buy events reduce stock; sell events

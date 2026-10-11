@@ -52,29 +52,36 @@ public sealed class MySqlMarketTradeReservationStore(string? connectionString)
                 market.TargetStock <= 0 || !market.Enabled || market.MarketRevision == long.MaxValue ||
                 (request.Side == MarketTradeSideV1.Buy &&
                  market.Stock - market.ReservedBuyStock < request.Quantity) ||
-                (request.Side == MarketTradeSideV1.Sell && request.Quantity > long.MaxValue - market.Stock))
+                (request.Side == MarketTradeSideV1.Sell &&
+                 request.Quantity > market.MaxStock - market.Stock - market.ReservedSellStock))
                 return Response(request, MarketTradeReservationStatusV1.Rejected);
 
             if (!MarketPriceCalculator.TryCalculateTradeTotal(market.BasePrice, market.TargetStock,
                     market.Stock - market.ReservedBuyStock, request.Side, request.Quantity,
-                    out var unitPrice, out var totalPrice))
+                    out var unitPrice, out var totalPrice, minUnitPrice: market.MinUnitPrice,
+                    maxUnitPrice: market.MaxUnitPrice,
+                    sellCapacity: market.MaxStock - market.Stock - market.ReservedSellStock))
                 return Response(request, MarketTradeReservationStatusV1.Rejected);
             var reservedBuyStock = market.ReservedBuyStock +
                 (request.Side == MarketTradeSideV1.Buy ? request.Quantity : 0);
+            var reservedSellStock = market.ReservedSellStock +
+                (request.Side == MarketTradeSideV1.Sell ? request.Quantity : 0);
             var nextMarketRevision = market.MarketRevision + 1;
             var nextSystemRevision = checked(systemRevision.Value + 1);
             var newPrice = MarketPriceCalculator.Calculate(market.BasePrice, market.TargetStock,
-                market.Stock - reservedBuyStock);
+                market.Stock - reservedBuyStock, market.MinUnitPrice, market.MaxUnitPrice);
 
             await using (var command = connection.CreateCommand())
             {
                 command.Transaction = transaction;
                 command.CommandText = """
                     UPDATE market_good_state
-                    SET reserved_buy_stock = @reserved, current_unit_price = @price, market_revision = @revision
+                    SET reserved_buy_stock = @reservedBuy, reserved_sell_stock = @reservedSell,
+                        current_unit_price = @price, market_revision = @revision
                     WHERE market_id = @market AND good_id = @good AND system_id = @system
                     """;
-                command.Parameters.AddWithValue("@reserved", reservedBuyStock);
+                command.Parameters.AddWithValue("@reservedBuy", reservedBuyStock);
+                command.Parameters.AddWithValue("@reservedSell", reservedSellStock);
                 command.Parameters.AddWithValue("@price", newPrice);
                 command.Parameters.AddWithValue("@revision", nextMarketRevision);
                 command.Parameters.AddWithValue("@market", request.MarketId);
@@ -166,6 +173,7 @@ public sealed class MySqlMarketTradeReservationStore(string? connectionString)
 
             var stock = market.Stock;
             var reservedBuyStock = market.ReservedBuyStock;
+            var reservedSellStock = market.ReservedSellStock;
             if (reservation.Side == MarketTradeSideV1.Buy)
             {
                 if (reservedBuyStock < reservation.Quantity ||
@@ -175,28 +183,36 @@ public sealed class MySqlMarketTradeReservationStore(string? connectionString)
                 if (request.Resolution == MarketTradeResolutionV1.Commit)
                     stock -= reservation.Quantity;
             }
-            else if (request.Resolution == MarketTradeResolutionV1.Commit)
+            else
             {
-                if (reservation.Quantity > long.MaxValue - stock)
+                if (reservedSellStock < reservation.Quantity)
                     return Response(request, MarketTradeReservationStatusV1.Unavailable);
-                stock += reservation.Quantity;
+                reservedSellStock -= reservation.Quantity;
+                if (request.Resolution == MarketTradeResolutionV1.Commit)
+                {
+                    if (reservation.Quantity > market.MaxStock - stock - reservedSellStock)
+                        return Response(request, MarketTradeReservationStatusV1.Unavailable);
+                    stock += reservation.Quantity;
+                }
             }
 
             var nextMarketRevision = market.MarketRevision + 1;
             var nextSystemRevision = systemRevision.Value + 1;
             var newPrice = MarketPriceCalculator.Calculate(market.BasePrice, market.TargetStock,
-                stock - reservedBuyStock);
+                stock - reservedBuyStock, market.MinUnitPrice, market.MaxUnitPrice);
             await using (var command = connection.CreateCommand())
             {
                 command.Transaction = transaction;
                 command.CommandText = """
                     UPDATE market_good_state
-                    SET available_stock = @stock, reserved_buy_stock = @reserved,
+                    SET available_stock = @stock, reserved_buy_stock = @reservedBuy,
+                        reserved_sell_stock = @reservedSell,
                         current_unit_price = @price, market_revision = @revision
                     WHERE market_id = @market AND good_id = @good AND system_id = @system
                     """;
                 command.Parameters.AddWithValue("@stock", stock);
-                command.Parameters.AddWithValue("@reserved", reservedBuyStock);
+                command.Parameters.AddWithValue("@reservedBuy", reservedBuyStock);
+                command.Parameters.AddWithValue("@reservedSell", reservedSellStock);
                 command.Parameters.AddWithValue("@price", newPrice);
                 command.Parameters.AddWithValue("@revision", nextMarketRevision);
                 command.Parameters.AddWithValue("@market", reservation.MarketId);
@@ -253,7 +269,8 @@ public sealed class MySqlMarketTradeReservationStore(string? connectionString)
         command.Transaction = transaction;
         command.CommandText = """
             SELECT base_unit_price, current_unit_price, available_stock, reserved_buy_stock,
-                   target_stock, market_revision,
+                   reserved_sell_stock, target_stock, max_stock, min_unit_price, max_unit_price,
+                   market_revision,
                    CASE WHEN @side = 1 THEN buy_enabled ELSE sell_enabled END
             FROM market_good_state
             WHERE market_id = @market AND good_id = @good AND system_id = @system
@@ -267,7 +284,8 @@ public sealed class MySqlMarketTradeReservationStore(string? connectionString)
         if (!await reader.ReadAsync(cancellationToken))
             return null;
         return new MarketRow(reader.GetInt64(0), reader.GetInt64(1), reader.GetInt64(2), reader.GetInt64(3),
-            reader.GetInt64(4), reader.GetInt64(5), reader.GetBoolean(6));
+            reader.GetInt64(4), reader.GetInt64(5), reader.GetInt64(6), reader.GetInt64(7), reader.GetInt64(8),
+            reader.GetInt64(9), reader.GetBoolean(10));
     }
 
     private static async Task<StoredReservation?> ReadReservationAsync(MySqlConnection connection,
@@ -328,7 +346,8 @@ public sealed class MySqlMarketTradeReservationStore(string? connectionString)
     };
 
     private sealed record MarketRow(long BasePrice, long CurrentPrice, long Stock, long ReservedBuyStock,
-        long TargetStock, long MarketRevision, bool Enabled);
+        long ReservedSellStock, long TargetStock, long MaxStock, long MinUnitPrice, long MaxUnitPrice,
+        long MarketRevision, bool Enabled);
 
     private sealed record StoredReservation(byte[] Digest, string MarketId, string SystemId, string GoodId,
         MarketTradeSideV1 Side, long Quantity, long UnitPrice, long TotalPrice,
