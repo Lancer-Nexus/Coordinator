@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "catalogReportSha256": "e60b74ca7425a3c5d625b04431c9f17b71e9f7f6b6f0c272fd21ed98b5a8c795",
+  "summary": {
+    "marketCount": 191,
+    "marketsWithStaticMarketEntries": 187,
+    "marketsWithBuyableGoods": 185,
+    "localFactionMissingCount": 0,
+    "localFactionOutsideBaseFactionCount": 5,
+    "mismatchedMarketsWithStaticMarketEntriesCount": 2,
+    "mismatchedMarketsWithBuyableGoodsCount": 0
+  },
+  "interpretation": {
+    "marketFactionSource": "MBase.local_faction",
+    "baseFactionRole": "NPC- und Missionskontext; kein Fallback für die Marktruf-Fraktion",
+    "mismatchAuthorizesOffers": false
+  },
+  "marketsWithLocalFactionOutsideBaseFaction": [
+    {
+      "marketId": "ku07_01_base",
+      "systemIds": [
+        "ku07"
+      ],
+      "localFactionId": "li_p_grp",
+      "baseFactionIds": [],
+      "entryCount": 0,
+      "buyableGoodCount": 0,
+      "hasStaticMarketEntries": false,
+      "hasBuyableGoods": false
+    },
+    {
+      "marketId": "ku07_02_base",
+      "systemIds": [
+        "ku07"
+      ],
+      "localFactionId": "li_p_grp",
+      "baseFactionIds": [],
+      "entryCount": 0,
+      "buyableGoodCount": 0,
+      "hasStaticMarketEntries": false,
+      "hasBuyableGoods": false
+    },
+    {
+      "marketId": "li01_04_base",
+      "systemIds": [
+        "li01"
+      ],
+      "localFactionId": "li_p_grp",
+      "baseFactionIds": [],
+      "entryCount": 38,
+      "buyableGoodCount": 0,
+      "hasStaticMarketEntries": true,
+      "hasBuyableGoods": false
+    },
+    {
+      "marketId": "li01_05_base",
+      "systemIds": [
+        "li01"
+      ],
+      "localFactionId": "li_p_grp",
+      "baseFactionIds": [],
+      "entryCount": 38,
+      "buyableGoodCount": 0,
+      "hasStaticMarketEntries": true,
+      "hasBuyableGoods": false
+    },
+    {
+      "marketId": "li05_01_base",
+      "systemIds": [
+        "li05"
+      ],
+      "localFactionId": "li_n_grp",
+      "baseFactionIds": [
+        "li_p_grp"
+      ],
+      "entryCount": 0,
+      "buyableGoodCount": 0,
+      "hasStaticMarketEntries": false,
+      "hasBuyableGoods": false
+    }
+  ]
+}
