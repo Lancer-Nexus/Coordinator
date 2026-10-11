@@ -35,9 +35,9 @@ if (args.Length == 3 && args[0] == "--import-policy")
     {
         var seed = await MarketCatalogSeedDocument.LoadAsync(args[1]);
         var policy = await MarketStockPolicyDocument.LoadAsync(args[2], seed);
-        var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__Market") ??
-                               Environment.GetEnvironmentVariable("Coordinator__MarketConnectionString");
-        var result = await new MarketStockPolicyImporter(connectionString).ImportAsync(seed, policy);
+        var policyConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings__Market") ??
+                                     Environment.GetEnvironmentVariable("Coordinator__MarketConnectionString");
+        var result = await new MarketStockPolicyImporter(policyConnectionString).ImportAsync(seed, policy);
         Console.WriteLine($"Market stock policy {result}: revision {policy.PolicyRevision}, " +
                           $"{policy.Entries.Count} market/good entries.");
         return 0;
