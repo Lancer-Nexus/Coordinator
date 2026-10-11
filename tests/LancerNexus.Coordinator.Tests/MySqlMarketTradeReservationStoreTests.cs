@@ -184,6 +184,76 @@ public sealed class MySqlMarketTradeReservationStoreTests
         });
     }
 
+    [MySqlFact]
+    public async Task PersonalQuoteAppliesMarketFactionReputationWithoutReservingStock()
+    {
+        await WithDatabaseAsync(async connectionString =>
+        {
+            await ApplySchemaAsync(connectionString);
+            await SeedMarketAsync(connectionString);
+            var now = DateTimeOffset.UtcNow;
+            var request = new MarketQuoteRequestV1
+            {
+                CorrelationId = Guid.NewGuid(), CharacterId = 77, SystemId = "test_system",
+                MarketId = "test_base", GoodId = "commodity_food", Side = MarketTradeSideV1.Buy,
+                Quantity = 5, ExpectedMarketRevision = 1, ExpectedReputationRevision = 3
+            };
+            var reputationRequest = new MarketFactionReputationReadRequestV1
+            {
+                CorrelationId = request.CorrelationId,
+                CharacterId = request.CharacterId,
+                ExpectedReputationRevision = request.ExpectedReputationRevision
+            };
+            var reputation = new MarketFactionReputationReadResponseV1
+            {
+                CorrelationId = request.CorrelationId,
+                CharacterId = request.CharacterId,
+                Status = MarketFactionReputationStatusV1.Found,
+                ReputationRevision = 3,
+                Factions = [new MarketFactionReputationV1 { FactionId = "test_faction", Value = 0.5f }]
+            };
+            Assert.True(reputation.IsValidFor(reputationRequest));
+
+            var store = new MySqlMarketQuoteStore(connectionString);
+            var quote = await store.ReadAsync(request, reputation, now);
+            Assert.True(quote.IsValidFor(request));
+            Assert.Equal(MarketQuoteStatusV1.Quoted, quote.Status);
+            Assert.Equal("test_faction", quote.MarketFactionId);
+            Assert.Equal(0.5f, quote.AppliedReputation);
+            Assert.Equal(950_000, quote.ReputationFactorPartsPerMillion);
+            Assert.Equal(95, quote.QuoteUnitPrice);
+            Assert.Equal(431, quote.TotalPrice);
+            Assert.Equal(1, quote.MarketRevision);
+            Assert.Equal(3, quote.ReputationRevision);
+            Assert.Equal(now.AddSeconds(15), quote.ExpiresUtc);
+
+            var staleMarketRequest = request with { ExpectedMarketRevision = 2 };
+            var staleMarket = await store.ReadAsync(staleMarketRequest, reputation, now);
+            Assert.Equal(MarketQuoteStatusV1.MarketRevisionMismatch, staleMarket.Status);
+            Assert.True(staleMarket.IsValidFor(staleMarketRequest));
+
+            var staleReputation = reputation with
+            {
+                Status = MarketFactionReputationStatusV1.RevisionMismatch,
+                ReputationRevision = 4,
+                Factions = []
+            };
+            var staleReputationQuote = await store.ReadAsync(request, staleReputation, now);
+            Assert.Equal(MarketQuoteStatusV1.ReputationRevisionMismatch, staleReputationQuote.Status);
+            Assert.True(staleReputationQuote.IsValidFor(request));
+
+            await using var connection = new MySqlConnection(connectionString);
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText = "SELECT available_stock, reserved_buy_stock, market_revision FROM market_good_state WHERE market_id='test_base'";
+            await using var reader = await command.ExecuteReaderAsync();
+            Assert.True(await reader.ReadAsync());
+            Assert.Equal(20, reader.GetInt64(0));
+            Assert.Equal(0, reader.GetInt64(1));
+            Assert.Equal(1, reader.GetInt64(2));
+        });
+    }
+
     private static MarketTradeReservationRequestV1 Reserve(MarketTradeSideV1 side, long quantity) => new()
     {
         CorrelationId = Guid.NewGuid(),

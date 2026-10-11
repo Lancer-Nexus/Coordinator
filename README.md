@@ -157,8 +157,12 @@ Coordinator can relay revision-bound character reputation through
 `Gateway:CoordinatorMarketApiKey`; this key is distinct from both the outbound
 trade-reservation credential and other Gateway service keys. The call times out
 after five seconds by default and fails closed if Gateway is unavailable or the
-expected SaveGame snapshot revision has changed. This read relay does not yet
-calculate or authorize a personal market quote.
+expected SaveGame snapshot revision has changed. The internal
+`POST /internal/v1/market/quotes/read` uses this relay and the shared market row
+to return a reputation-aware, revision-bound preview; it does not reserve stock
+or authorize a trade. V1 applies a 10% price adjustment per full reputation
+point (buy discount, sell premium), bounded to 0.90–1.10, after each market
+marginal price is calculated.
 
 The internal `POST /internal/v1/market/trades/reserve` and
 `POST /internal/v1/market/trades/resolve` routes implement the reservation half

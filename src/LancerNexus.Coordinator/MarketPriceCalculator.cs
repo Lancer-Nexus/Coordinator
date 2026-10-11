@@ -6,12 +6,14 @@ namespace LancerNexus.Coordinator;
 internal static class MarketPriceCalculator
 {
     public static bool TryCalculateTradeTotal(long basePrice, long targetStock, long availableStock,
-        MarketTradeSideV1 side, long quantity, out long firstUnitPrice, out long totalPrice)
+        MarketTradeSideV1 side, long quantity, out long firstUnitPrice, out long totalPrice,
+        decimal personalPriceFactor = 1m)
     {
         firstUnitPrice = 0;
         totalPrice = 0;
         if (basePrice < 0 || targetStock <= 0 || availableStock < 0 ||
             quantity is <= 0 or > MarketTradeEventV1.MaximumQuantity || !Enum.IsDefined(side) ||
+            personalPriceFactor is < 0.75m or > 1.25m ||
             side == MarketTradeSideV1.Buy && quantity > availableStock ||
             side == MarketTradeSideV1.Sell && quantity > long.MaxValue - availableStock)
             return false;
@@ -19,7 +21,12 @@ internal static class MarketPriceCalculator
         var projectedStock = availableStock;
         for (long unit = 0; unit < quantity; unit++)
         {
-            var unitPrice = Calculate(basePrice, targetStock, projectedStock);
+            var marketUnitPrice = Calculate(basePrice, targetStock, projectedStock);
+            var adjustedPrice = decimal.Round(marketUnitPrice * personalPriceFactor, 0,
+                MidpointRounding.AwayFromZero);
+            if (adjustedPrice > long.MaxValue)
+                return false;
+            var unitPrice = (long)adjustedPrice;
             if (unit == 0)
                 firstUnitPrice = unitPrice;
             if (totalPrice > long.MaxValue - unitPrice)

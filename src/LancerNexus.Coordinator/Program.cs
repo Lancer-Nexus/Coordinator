@@ -29,6 +29,7 @@ if (string.IsNullOrWhiteSpace(marketConnectionString))
 var flHookEventStore = new MySqlFlHookEventStore(flHookEventsConnectionString);
 var marketSnapshotStore = new MySqlMarketSnapshotStore(marketConnectionString);
 var marketCatalogReadStore = new MySqlMarketCatalogReadStore(marketConnectionString);
+var marketQuoteStore = new MySqlMarketQuoteStore(marketConnectionString);
 var marketTradeStore = new MySqlMarketTradeStore(marketConnectionString);
 var marketTradeReservationStore = new MySqlMarketTradeReservationStore(marketConnectionString);
 if (quicSettings is not null && flHookEventStore.IsEnabled)
@@ -55,6 +56,7 @@ builder.Services.AddSingleton(new MySqlNpcOwnershipStore(npcOwnershipConnectionS
 builder.Services.AddSingleton<IFlHookEventStore>(flHookEventStore);
 builder.Services.AddSingleton(marketSnapshotStore);
 builder.Services.AddSingleton(marketCatalogReadStore);
+builder.Services.AddSingleton(marketQuoteStore);
 builder.Services.AddSingleton(marketTradeStore);
 builder.Services.AddSingleton(marketTradeReservationStore);
 builder.Services.AddSingleton<CoordinatorMarketTradeReceiver>();
@@ -175,6 +177,38 @@ app.MapPost("/internal/v1/market/catalog/read", async (
     {
         MarketCatalogReadStatusV1.Ok => Results.Ok(response),
         MarketCatalogReadStatusV1.RevisionExpired => Results.Conflict(response),
+        _ => Results.StatusCode(StatusCodes.Status503ServiceUnavailable)
+    };
+});
+
+app.MapPost("/internal/v1/market/quotes/read", async (
+    MarketQuoteRequestV1 request,
+    IGatewayMarketReputationClient reputationClient,
+    MySqlMarketQuoteStore quoteStore,
+    HttpContext context,
+    TimeProvider timeProvider,
+    CancellationToken cancellationToken) =>
+{
+    context.Response.Headers.CacheControl = "no-store";
+    if (!request.IsValid())
+        return Results.BadRequest(new { error = "invalid_market_quote_request" });
+    var reputationRequest = new MarketFactionReputationReadRequestV1
+    {
+        CorrelationId = request.CorrelationId,
+        CharacterId = request.CharacterId,
+        ExpectedReputationRevision = request.ExpectedReputationRevision
+    };
+    var reputation = await reputationClient.ReadAsync(reputationRequest, cancellationToken);
+    var quote = await quoteStore.ReadAsync(request, reputation, timeProvider.GetUtcNow(), cancellationToken);
+    if (!quote.IsValidFor(request))
+        return Results.StatusCode(StatusCodes.Status502BadGateway);
+    return quote.Status switch
+    {
+        MarketQuoteStatusV1.Quoted => Results.Ok(quote),
+        MarketQuoteStatusV1.MarketRevisionMismatch or MarketQuoteStatusV1.ReputationRevisionMismatch =>
+            Results.Conflict(quote),
+        MarketQuoteStatusV1.NotFound => Results.NotFound(quote),
+        MarketQuoteStatusV1.Rejected => Results.BadRequest(quote),
         _ => Results.StatusCode(StatusCodes.Status503ServiceUnavailable)
     };
 });
