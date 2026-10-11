@@ -26,6 +26,8 @@ The Coordinator maintains cluster membership and makes placement decisions for L
 
 The Coordinator is a control-plane service. It does not become the authoritative source for player inventory, credits or world state.
 
+The proposed cluster-wide dynamic goods market, reputation-aware quotes and REST TODO are documented in [docs/dynamic-market-plan.md](docs/dynamic-market-plan.md). This is a plan only; the market, reputation integration and routes are not implemented. Shared transactional market storage and an idempotent trade-booking boundary are prerequisites for enabling it across Coordinator replicas.
+
 ## Shared Protocol
 
 The shared contracts are checked out in the `Protocol` submodule. Update it before local builds with:

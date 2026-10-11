@@ -1,0 +1,102 @@
+# Dynamischer clusterweiter Warenmarkt (Plan / TODO)
+
+**Status:** Architekturentwurf; nicht implementiert.
+**Ziel:** Der Markt umfasst den vollständigen Katalog aller kauf- und verkaufbaren Waren und ist von jedem Spielserver über alle Welten und Instanzen erreichbar. Preise und Bestand entwickeln sich anhand bestätigter Handelsereignisse. Der Charakterruf bei Fraktionen kann Preise und Handelszugang beeinflussen. Lesende REST-Endpunkte sind vorgesehen.
+
+## Zuständigkeiten
+
+- Der Coordinator verwaltet die clusterweite Marktprojektion: Marktstandorte, Warenangebote, Bestände, Preisrevisionen und die Verteilung von Handelsereignissen. Alle Coordinator-Replikate müssen dieselbe transaktionale Datenbank verwenden; eine Replik darf keinen eigenen Marktstand führen.
+- LLServer bleibt für die lokale Simulation und die Ausführung des Handels im Spiel zuständig. Es meldet bestätigte Handelsereignisse mit stabiler Ereignis-ID und liest Markt-Snapshots.
+- Gateway bleibt zuständig für Charakteridentität, Charakterbesitz, Credits, Inventar und den autoritativen Fraktionsruf. Rufwerte dürfen nicht vom Client oder einem beliebigen REST-Aufrufer geliefert werden.
+- Redis darf Benachrichtigungen/Cache-Invalidierungen verteilen, ist aber keine autoritative Markt- oder Ruf-Datenbank.
+
+Der Coordinator speichert keine Charakterguthaben oder Inventare. Ein Marktpreis-Snapshot allein autorisiert keinen Kauf. Vor einer produktiven Handelsbuchung müssen Spielserver und Gateway eine idempotente Buchungsgrenze mit ausreichender Transaktionssicherheit bereitstellen.
+
+## Marktmodell
+
+1. **Warenkatalog:** stabile, normalisierte `goodId`s für sämtliche handelbaren Waren aus der Spielökonomie. Vor Aktivierung wird der Katalog aus den Freelancer-Daten generiert und gegen alle Warenangebote, Händlerdefinitionen und serverseitigen Handelswege abgeglichen. Abdeckungsbericht und Ausnahmen müssen alle Welten/Systeme einschließen. Der Katalog umfasst Verbrauchsgüter, Rohstoffe, Komponenten, Waffen und sonstige kauf-/verkaufbare Güter. Missions-/Questgüter werden nur mit explizitem Ausschlussgrund ausgenommen. Unbekannte IDs werden abgelehnt oder in einem getrennten Diagnosekanal gesammelt; sie erzeugen nicht automatisch handelbare Waren.
+2. **Welt- und Instanzumfang:** Katalog und API sind clusterweit. Preis und Bestand gelten je Händler/Marktstandort, identifiziert durch die normalisierte Basis-ID (`marketId`) plus `goodId`; `systemId` gruppiert diese Standorte für globale Abfragen. Die Instanz-ID ist nie ein Marktschlüssel. Mehrere Instanzen, die dasselbe System simulieren, lesen und ändern dieselbe Markt-Revision. Damit bleiben die vorhandenen Preisunterschiede zwischen Basen erhalten, und NPC-Handelsrouten können konkrete Quell- und Zielmärkte vergleichen. Transfers ändern den Marktstandort nicht.
+3. **Basispreis:** vorhandene Freelancer-Basispreise bilden den Startpreis. Als shopbezogener Startwert dient zunächst `Good.Price × MarketGood.Multiplier`; die bestehende `MarketGood.Rep`-Schwelle wird als Zugangsvoraussetzung behandelt, bis eine neue Regel sie ausdrücklich ersetzt. Eine versionierte Konfiguration enthält je Händler und Ware Mindest-/Höchstpreis, Zielbestand, Preisempfindlichkeit und erlaubte Handelsregeln. Die vorhandenen `MarketGood.Min`/`Max`-Felder werden im Client zwar gelesen, aber nicht als laufender Bestand geführt (`Max > 0` steuert `ForSale`); sie sind daher kein verlässlicher Marktbestand. Fehlende oder ungültige Konfiguration fällt sicher auf den Basispreis zurück und wird protokolliert.
+4. **Dynamische Preisbildung:** abgeschlossene Käufe und Verkäufe verändern den Bestand und damit den Preis. Als deterministischer Startvorschlag gilt `floorStock = max(1, ceil(Zielbestand / 4))`, `Faktor = clamp(Zielbestand / max(Bestand, floorStock), minFaktor, maxFaktor)` und `Marktpreis = Basispreis × Faktor`, mit expliziter Festkomma-/Ganzzahlrundung und konfigurierten Grenzen. Ein Kauf berechnet seine Summe über die sinkenden Bestandsstufen, ein Verkauf über die steigenden; dadurch kann eine große Menge nicht zum Preis eines einzelnen Stücks gebucht werden. Fraktionsruf wirkt anschließend nur als begrenzter persönlicher Preisfaktor und ändert nicht den gemeinsamen Bestandspreis. Kurve, Spread, Grenzwerte und Rundung sind vor Implementierung festzulegen und deterministisch zu testen.
+5. **Nachschub und Verbrauch:** NPC-Händler, Missionen und serverseitige Marktzyklen können versionierte Angebots-/Nachfrageereignisse erzeugen. NPC-Routenwahl oder generierter NPC-Frachtraum ändern den Bestand nicht; erst ein bestätigter Kauf/Verkauf an einer Basis erzeugt ein Handelsereignis. Der Client-NPC-Handelspfad muss dafür Coordinator-Marktpreise und Zielbestände statt nur statische `Base.SoldGoods`-Preise lesen. Ein Zyklus darf Bestände nicht über Grenzen hinweg unbegrenzt auffüllen. Alle Ereignisse tragen Quelle, Zeit, ID und Konfigurationsrevision.
+6. **Fraktionsruf:** effektiver Preis wird aus Marktpreis und Ruf der für den Standort relevanten Fraktion abgeleitet. Der Ruf beeinflusst nur einen begrenzten Rabatt/Aufschlag und ggf. explizite Zugangsschwellen. Regeln sind serverseitig konfiguriert, klammern den Endpreis und legen offen, welche Fraktion angewendet wurde. Ist Ruf nicht verfügbar, gilt der neutrale Ruf und die Antwort markiert diesen Zustand. Der Coordinator vertraut ausschließlich auf eine interne Gateway-Antwort mit Charakter- und Rufrevision; der Client darf keine Rufwerte für die Preisberechnung vorgeben.
+
+## API-Entwurf (TODO)
+
+Die Endpunkte sind Vorschläge und werden erst nach Abstimmung mit den Gateway-/Protocol-Verträgen implementiert. REST-Antworten sind versioniert und standardisiert. Die `/api/v1/market/*`-Routen sind die öffentliche Gateway-Fassade; Gateway liest über einen privaten, dienst-authentisierten Coordinator-Endpunkt. Coordinator-Service-Schlüssel werden weder Browsern noch Spielclients gegeben. Administration kann separat begrenzte, auditierte Markt- und Charakterabfragen bereitstellen.
+
+- `GET /api/v1/market/systems/{systemId}/goods` – paginierte Marktansicht aller Händler im System; jeder Eintrag nennt `marketId`, `goodId`, Preis, Bestand, Verfügbarkeit und Markt-Revision.
+- `GET /api/v1/market/markets/{marketId}/goods/{goodId}` – einzelner Wareneintrag an einem Händler.
+- `GET /api/v1/market/markets/{marketId}/quote?goodId=…&side=buy&quantity=…` – optionale authentifizierte Preisvorschau für eine Menge. Liefert Ablaufzeit, Preisrevision und angewendete Rufregel; ist keine Kaufreservierung.
+- `GET /api/v1/characters/{characterId}/faction-reputation` – **Gateway-TODO**: Konto-ID stammt aus der gültigen Sitzung; Gateway prüft, dass der Charakter diesem Konto gehört, und liefert Rufrevision sowie Rufwerte je Fraktion. Eine Charakter-ID im Pfad ist ein Selektor und niemals ein Berechtigungsnachweis. Adminzugriff auf andere Konten ist separat autorisiert und auditiert.
+- **Coordinator-zu-Gateway-TODO:** interne authentisierte Rufabfrage für eine Quote, gebunden an CharacterId und erwartete Charakter-/Rufrevision. Alternativ kann Gateway einen signierten, kurzlebigen Quote-Kontext ausstellen. Endkunden rufen diesen internen Endpunkt nicht auf.
+- `GET /api/v1/market/catalog/goods` – clusterweiter, paginierter Warenkatalog mit Katalogrevision und allen marktfähigen `goodId`s.
+
+Öffentliche Marktpreise können mit `ETag`/`If-None-Match` und `marketRevision` effizient gelesen werden. Spielerbezogene Quotes und der Charakter-Ruf-Endpunkt benötigen Authentisierung und Autorisierung, begrenzte Mengen, Eingabevalidierung und Rate Limits. Allgemeine Marktantworten enthalten keine Charakterkennung oder privaten Rufwerte. Eine Quote darf nur die angewandte Fraktion, eine grobe Rufstufe und `reputationApplied` ausgeben, nicht die komplette Fraktionsliste.
+
+Beispielantwort für eine Quote:
+
+```json
+{
+  "systemId": "li01",
+  "marketId": "li01_01_base",
+  "goodId": "commodity_food",
+  "side": "buy",
+  "quantity": 10,
+  "averageUnitPrice": 125,
+  "totalPrice": 1250,
+  "currency": "credits",
+  "marketRevision": 4812,
+  "reputation": { "factionId": "li_n_grp", "tier": "friendly", "applied": true, "revision": 18 },
+  "validUntil": "2026-10-11T12:00:10Z"
+}
+```
+
+Die Beispielwerte und Fraktions-ID sind illustrativ, kein bestehender API-Vertrag.
+Bei mengenabhängigen Quotes ist `averageUnitPrice` nur eine Anzeigehilfe; `totalPrice` ist der verbindliche Gesamtbetrag für die angefragte Menge und die zurückgegebene `marketRevision`.
+
+## Persistenz und Clusterkonsistenz
+
+Der aktuelle Coordinator-Dateispeicher ist single-writer und nicht für mehrere Replikate geeignet. Ein clusterweiter Markt darf darauf nicht als gemeinsame Wahrheit aufgebaut werden. Vor Aktivierung ist ein transaktionaler gemeinsamer Speicher mit eindeutigen Ereignis-IDs, atomaren Bestands-/Preisrevisionen und Fencing für konkurrierende Coordinator-Prozesse erforderlich. Tabellen/Modelle müssen mindestens Warenkatalogrevision, `marketId`/`goodId`-Bestand, `systemId`-Zuordnung, Marktpreise oder reproduzierbare Preisbasis, angewendete Handelsereignisse und Idempotenzschlüssel abbilden. Der eindeutige Bestandsschlüssel ist `marketId + goodId`, nie `instanceId`.
+
+LLServer-Handelsereignisse werden mindestens nach `(instanceId, producerEpoch, sequenceNumber)` oder einer global eindeutigen `eventId` dedupliziert. Wiederholte identische Meldung liefert dasselbe Ergebnis; gleiche ID mit geändertem Inhalt ist ein Konflikt. Eine verlorene Bestätigung darf weder Bestand noch Credits doppelt ändern. Uhrzeit allein ist keine Reihenfolgegarantie.
+
+## Umsetzungsschritte
+
+- [ ] Kataloggenerator gegen sämtliche system-/weltbezogenen Markt- und Händlerdateien ausführen; Coverage prüfen: jede angebotene Ware hat eine bekannte ID und jede Ausnahme ist begründet.
+- [ ] Pro Händler die bisherigen Basispreise, Fraktionszuordnung und Warenverfügbarkeit bestimmen. Der Bericht muss alle 53 kanonischen System-IDs der Nexus-Basiskonfiguration enthalten, auch solche ohne initiale Angebote.
+- [ ] Gateway-REST-API `GET /api/v1/characters/{characterId}/faction-reputation` und Character-Persistence-Verträge für Ruf lesen, Charakterzugriff prüfen und Fraktionsrevision liefern ergänzen. Adminzugriffe getrennt autorisieren und auditieren.
+- [ ] Interne Coordinator-Gateway-Vertrauensgrenze für Rufabfragen festlegen: Dienstidentität, Timeout, Revisionsbindung, Cache-Lebensdauer und Verhalten bei Gateway-Ausfall.
+- [ ] Versionierte Protocol-Verträge für Markt-Snapshot, Handelsereignis, Markt-Revision und ggf. Quote abstimmen; Protocol zuerst implementieren und Kompatibilitätstests ergänzen.
+- [ ] Gemeinsame transaktionale Coordinator-Marktpersistenz samt Migration, Idempotenz und Fencing entwerfen; nicht den JSON-Registry-Snapshot erweitern. Eindeutiger Schlüssel: normalisierte Händler-/Basis-ID plus Good-ID; System-ID dient der Abfragegruppierung, Instanz-ID nie als Marktidentität verwenden.
+- [ ] Deterministische Preisfunktion, Grenzwerte, Mengenregeln, Rundung, Neutralverhalten bei Gateway-Ausfall und Versionsmigration spezifizieren.
+- [ ] Coordinator-Schreibpfad für bestätigte LLServer-Ereignisse und lesenden Snapshot-API-Pfad implementieren.
+- [ ] Ruf-abhängige, private Quote über Gateway-Identität anbinden; Cache kurz halten und an Charakter-/Rufrevision binden.
+- [ ] Handel als idempotente Buchung über zuständige Eigentümer umsetzen. Marktreservierung/Bestand und Gateway-Credits/Inventar benötigen definierten Commit-/Recovery-Ablauf, bevor der Client einen Kauf als erfolgreich anzeigen darf.
+- [ ] Tests für Katalogabdeckung über alle Welten, konkurrierende Käufe, Replay, Prozessabsturz, mehrere Instanzen desselben Systems, weltübergreifende Reads, mehrere Coordinator-Replikate, ungültige Waren, Preisgrenzen, Rufänderung, fremde Charakterabfrage und Gateway-Ausfall hinzufügen.
+- [ ] Erst danach Feature-Capability in Coordinator/LLServer aktivieren und ein kontrolliertes Mehrwelt-Smoke-Test-Szenario durchführen.
+
+## Offene Entscheidungen
+
+- Sollen mehrere Basen mit derselben Besitzerfraktion später eine gemeinsame Marktregion teilen? Der Startentwurf hält Bestand und Preis je Basis getrennt, um die vorhandenen Händlerpreise und lokalen NPC-Handelsrouten abzubilden.
+- Ändert Handel den Marktbestand pro einzelner Transaktion oder in gebündelten Zeitschritten?
+- Soll ein Kaufpreis beim Öffnen des Händlerfensters oder erst während einer kurzlebigen Quote feststehen?
+- Welche Vertrauensstufen des Rufsystems existieren und welche Fraktion gilt je Markt: Basisbesitzer, Händlerbetreiber oder Systemfraktion, insbesondere bei neutralen/umkämpften Standorten?
+- Wer ist Buchungskoordinator für den atomaren Abschluss zwischen Warenbestand, Credits und Inventar? Das ist mit den vorhandenen Eigentumsgrenzen noch nicht festgelegt.
+- Welche Waren sollen dynamisch sein, falls einzelne Missions-/Questwaren ausdrücklich ausgenommen werden müssen?
+
+## Verifizierter Ist-Stand
+
+Bei der Planerstellung wurden Coordinator-, Gateway- und Protocol-Quellen nach Markt-, Ökonomie- und Rufdiensten durchsucht. Es gibt dort derzeit keine entsprechende Marktimplementierung oder REST-Route. Im Coordinator ist der dateibasierte Registry-Speicher weiterhin single-writer. Der vorhandene Client-NPC-Handel bzw. lokale Basispreis ist daher kein clusterweiter dynamischer Markt.
+
+Eine vorläufige, read-only Bestandsaufnahme der lokalen Freelancer-Daten unter `~/Dokumente/FL/DATA` ergab am 2026-10-11:
+
+- 855 eindeutige `[Good]`-Definitionen in `EQUIPMENT/*.ini`.
+- Die drei `market_*.ini`-Dateien enthalten 14.694 `MarketGood`-Einträge und 435 eindeutige referenzierte IDs; davon haben 434 mindestens einen Eintrag mit `Max > 0`. Alle 435 ließen sich einer `[Good]`-Definition zuordnen.
+- 420 definierte Waren tauchen in keinem dieser drei statischen Shop-Kataloge auf. Sie müssen als nicht handelbar, missions-/NPC-intern oder gezielt neu anzubieten klassifiziert werden; ihre bloße Existenz in `goods.ini` darf sie nicht automatisch kaufbar machen.
+- Die Quelldateien enthalten 191 eindeutige BaseGood-Standorte, davon 187 mit mindestens einem Eintrag und 185 mit mindestens einem Eintrag `Max > 0`. Über die expliziten `[Base].system`-Zuordnungen bzw. die aufgelösten Basis-Assetpfade sind 45 der 53 kanonischen Systeme einem Händler mit Angeboten zugeordnet; acht Systeme haben derzeit keine Angebote und müssen im dynamischen API-/Seedmodell trotzdem explizit vorkommen.
+- `commodities_per_faction.ini` wurde nicht als Spielershop gezählt: seine `MarketGood`-Zeilen sind einer separaten Faktions-/NPC-Warenquelle zuzuordnen und müssen vor einer Nutzung für Nachschub oder Handel eigens klassifiziert werden.
+
+Der reproduzierbare Reportgenerator [analyze-market-catalog.py](../../Scripts/bin/analyze-market-catalog.py) liest die in `EXE/Freelancer.ini` tatsächlich konfigurierten Goods-/Markets-Dateien und löst Marktbasen über `[Base].system` bzw. den registrierten Welt-Assetpfad auf. `dock_with` und `MissionCreatedSolar` werden zusätzlich als Zugänglichkeitsbelege ausgegeben. Der Lauf vom 2026-10-11 fand 855 eindeutige `Good`-IDs, 435 referenzierte Markt-IDs (434 mit mindestens einem `Max > 0`), keine unbekannten Markt-Waren-IDs, keine doppelten Goods-IDs, keine fehlerhaften Einträge und keine unzugeordneten Marktbasen. 187 Marktbasen mit Einträgen sind den 53 Systemen zugeordnet; davon liegen 15 Basisdateien im `miners` Assetverzeichnis, haben aber eine explizite Weltzuordnung und sind keine zusätzlichen Welten. 45 Systeme haben Shopangebote, acht nicht. Der Coverage-Lauf endete mit Status 0. Das aktuelle JSON liegt als flüchtiges Diagnoseartefakt in `/tmp/lancer-nexus-market-report-v3.json`, nicht im Repository. Der Report ersetzt keine Freigabe der Waren- und Marktregeln.
+
+Die standardmäßigen Kaufpreise werden im Client aus `Good.Price` und dem jeweiligen `MarketGood.Multiplier` zusammengesetzt; diese händlerspezifische Staffelung muss beim Initialisieren des Coordinator-Markts erhalten bleiben. `BasesidePlayer.SellGood` erlaubt Verkäufe auch für nicht gelistete Güter über `Base.GetUnitPrice` (Fallback auf den Warenpreis); Ausrüstung wird mit dem bestehenden Faktor 0,5 vergütet, Waren der Commodity-Kategorie zum vollen Stückpreis. Deshalb umfasst der globale Warenkatalog alle definierten IDs, während jede Basis separat `buyEnabled`, `sellEnabled`, Rufschwelle und Anfangsbestand erhält. Die Angebotsregeln aus `MarketGood` bleiben erhalten; nicht gelistete Güter werden nicht automatisch kaufbar. Schiffe und Schiffspakete brauchen wegen des separaten Kauf-/Tauschpfads eigene Buchungsregeln, bleiben aber im gemeinsamen Katalog.
