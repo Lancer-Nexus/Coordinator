@@ -131,6 +131,17 @@ python3 ../Scripts/bin/analyze-market-catalog.py --game "$FREELANCER_ROOT" --out
 dotnet run --project tools/MarketCatalogSeeder/MarketCatalogSeeder.csproj --configuration Release -- --validate /tmp/market-catalog.json
 ```
 
+After preparing a report-pinned policy file, validate its allowlist without
+contacting MySQL or changing market state:
+
+```bash
+dotnet run --project tools/MarketCatalogSeeder/MarketCatalogSeeder.csproj --configuration Release -- --validate-policy /tmp/market-catalog.json /path/to/market-stock-policy.json
+```
+
+The policy validator checks the report SHA-256, each market/good reference,
+stock and price bounds, duplicate entries, and review notes for newly enabled
+or non-static offers. Validation does not import or activate those entries.
+
 The internal `POST /internal/v1/market/catalog/read` endpoint provides bounded keyset pages from `market_catalog_goods`, including goods without static offers. Pages are pinned to the imported seed SHA-256 so every Coordinator replica serves the same catalog revision.
 
 The internal `POST /internal/v1/market/systems/read` endpoint exposes the seeded system directory on the same catalog revision. It reports market-location and static-offer counts while retaining systems with no locations or offers; Gateway exposes this as `GET /api/v1/market/systems` with bounded pagination, ETags and the public market-read rate limit.

@@ -1,13 +1,39 @@
 using LancerNexus.Coordinator;
 using System.Text.Json;
 
-if (args.Length == 1 && args[0] is "--help" or "-h" || args.Length is < 1 or > 2)
+if (args.Length == 1 && args[0] is "--help" or "-h" || args.Length is < 1 or > 3)
 {
     Console.Error.WriteLine("Usage: MarketCatalogSeeder [--validate] <analyze-market-catalog.json>");
+    Console.Error.WriteLine("       MarketCatalogSeeder --validate-policy <analyze-market-catalog.json> <market-stock-policy.json>");
     return args.Length == 1 ? 0 : 2;
 }
 
+if (args.Length == 3 && args[0] == "--validate-policy")
+{
+    try
+    {
+        var seed = await MarketCatalogSeedDocument.LoadAsync(args[1]);
+        var policy = await MarketStockPolicyDocument.LoadAsync(args[2], seed);
+        Console.WriteLine($"Market stock policy valid: revision {policy.PolicyRevision}, " +
+                          $"{policy.Entries.Length} enabled market/good entries, " +
+                          $"catalog {Convert.ToHexString(policy.CatalogSeedSha256)}.");
+        Console.WriteLine("Validation only; no database rows were changed.");
+        return 0;
+    }
+    catch (Exception exception) when (exception is IOException or InvalidDataException or JsonException or
+                                       KeyNotFoundException or FormatException or OverflowException or InvalidOperationException)
+    {
+        Console.Error.WriteLine($"Market stock policy failed: {exception.Message}");
+        return 1;
+    }
+}
+
 var validateOnly = args.Length == 2 && args[0] == "--validate";
+if (!validateOnly && args.Length != 1)
+{
+    Console.Error.WriteLine("Unsupported MarketCatalogSeeder arguments. Use --help for usage.");
+    return 2;
+}
 var reportPath = validateOnly ? args[1] : args[^1];
 var connectionString = validateOnly ? null : Environment.GetEnvironmentVariable("ConnectionStrings__Market") ??
                                              Environment.GetEnvironmentVariable("Coordinator__MarketConnectionString");
