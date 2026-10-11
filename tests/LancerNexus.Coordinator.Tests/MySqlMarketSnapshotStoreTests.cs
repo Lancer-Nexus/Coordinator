@@ -29,6 +29,70 @@ public sealed class MySqlMarketSnapshotStoreTests
         Assert.True(response.IsValidFor(request));
     }
 
+    [Fact]
+    public async Task MarketSystemsReadWithoutConfigurationIsUnavailable()
+    {
+        var request = new MarketSystemsReadRequestV1 { CorrelationId = Guid.NewGuid() };
+        var response = await new MySqlMarketSystemsReadStore(null).ReadAsync(request);
+        Assert.Equal(MarketCatalogReadStatusV1.Unavailable, response.Status);
+        Assert.True(response.IsValidFor(request));
+    }
+
+    [MySqlFact]
+    public async Task MarketSystemsReadPagesSeededWorldsIncludingSystemsWithNoOffers()
+    {
+        await WithDatabaseAsync(async connectionString =>
+        {
+            await ApplySchemaAsync(connectionString);
+            await using (var connection = new MySqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                await using var command = connection.CreateCommand();
+                command.CommandText = "UPDATE market_catalog_seed SET seed_sha256 = UNHEX(REPEAT('a', 64)), imported_utc = UTC_TIMESTAMP(6) WHERE seed_slot = 1";
+                await command.ExecuteNonQueryAsync();
+                command.CommandText = "INSERT INTO market_system_revisions (system_id, system_revision) VALUES ('br-01', 1), ('bw-01', 1)";
+                await command.ExecuteNonQueryAsync();
+                command.CommandText = "INSERT INTO market_catalog_goods (good_id, category, base_unit_price) VALUES ('commodity_food', 'commodity', 100)";
+                await command.ExecuteNonQueryAsync();
+                command.CommandText = "INSERT INTO market_locations (market_id, system_id, local_faction_id) VALUES ('br01_base', 'br-01', 'br_grp')";
+                await command.ExecuteNonQueryAsync();
+                command.CommandText = "INSERT INTO market_static_offers (market_id, good_id, baseline_unit_price, buy_enabled, rank_requirement, min_amount, max_amount, reputation_threshold, source_file) VALUES ('br01_base', 'commodity_food', 100, TRUE, 0, 0, 10, 0, 'market.ini')";
+                await command.ExecuteNonQueryAsync();
+            }
+
+            var store = new MySqlMarketSystemsReadStore(connectionString);
+            var firstRequest = new MarketSystemsReadRequestV1 { CorrelationId = Guid.NewGuid(), PageSize = 1 };
+            var first = await store.ReadAsync(firstRequest);
+            Assert.True(first.IsValidFor(firstRequest));
+            Assert.Equal(MarketCatalogReadStatusV1.Ok, first.Status);
+            Assert.Equal(new string('a', 64), first.CatalogRevision);
+            Assert.Equal("br-01", first.Systems[0].SystemId);
+            Assert.Equal(1, first.Systems[0].MarketCount);
+            Assert.Equal(1, first.Systems[0].OfferingMarketCount);
+            Assert.Equal(1, first.Systems[0].StaticOfferCount);
+            Assert.Equal("br-01", first.NextSystemId);
+
+            var nextRequest = firstRequest with
+            {
+                CorrelationId = Guid.NewGuid(),
+                AfterSystemId = first.NextSystemId,
+                ExpectedCatalogRevision = first.CatalogRevision
+            };
+            var next = await store.ReadAsync(nextRequest);
+            Assert.True(next.IsValidFor(nextRequest));
+            Assert.Null(next.NextSystemId);
+            Assert.Equal("bw-01", Assert.Single(next.Systems).SystemId);
+            Assert.Equal(0, next.Systems[0].MarketCount);
+            Assert.Equal(0, next.Systems[0].OfferingMarketCount);
+            Assert.Equal(0, next.Systems[0].StaticOfferCount);
+
+            var staleRequest = nextRequest with { CorrelationId = Guid.NewGuid(), ExpectedCatalogRevision = new string('b', 64) };
+            var stale = await store.ReadAsync(staleRequest);
+            Assert.Equal(MarketCatalogReadStatusV1.RevisionExpired, stale.Status);
+            Assert.True(stale.IsValidFor(staleRequest));
+        });
+    }
+
     [MySqlFact]
     public async Task MarketGoodReadReturnsExactRowAndReportsRevisionChanges()
     {

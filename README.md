@@ -133,6 +133,8 @@ dotnet run --project tools/MarketCatalogSeeder/MarketCatalogSeeder.csproj --conf
 
 The internal `POST /internal/v1/market/catalog/read` endpoint provides bounded keyset pages from `market_catalog_goods`, including goods without static offers. Pages are pinned to the imported seed SHA-256 so every Coordinator replica serves the same catalog revision.
 
+The internal `POST /internal/v1/market/systems/read` endpoint exposes the seeded system directory on the same catalog revision. It reports market-location and static-offer counts while retaining systems with no locations or offers; Gateway exposes this as `GET /api/v1/market/systems` with bounded pagination, ETags and the public market-read rate limit.
+
 Apply migrations 006 and 007 to the shared market database, configure
 `ConnectionStrings__Market`, and run the same tool without `--validate` to
 import. The import is one transaction, verifies complete catalog coverage, and

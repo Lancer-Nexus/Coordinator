@@ -30,6 +30,7 @@ var flHookEventStore = new MySqlFlHookEventStore(flHookEventsConnectionString);
 var marketSnapshotStore = new MySqlMarketSnapshotStore(marketConnectionString);
 var marketGoodReadStore = new MySqlMarketGoodReadStore(marketConnectionString);
 var marketCatalogReadStore = new MySqlMarketCatalogReadStore(marketConnectionString);
+var marketSystemsReadStore = new MySqlMarketSystemsReadStore(marketConnectionString);
 var marketQuoteStore = new MySqlMarketQuoteStore(marketConnectionString);
 var marketTradeStore = new MySqlMarketTradeStore(marketConnectionString);
 var marketTradeReservationStore = new MySqlMarketTradeReservationStore(marketConnectionString);
@@ -58,6 +59,7 @@ builder.Services.AddSingleton<IFlHookEventStore>(flHookEventStore);
 builder.Services.AddSingleton(marketSnapshotStore);
 builder.Services.AddSingleton(marketGoodReadStore);
 builder.Services.AddSingleton(marketCatalogReadStore);
+builder.Services.AddSingleton(marketSystemsReadStore);
 builder.Services.AddSingleton(marketQuoteStore);
 builder.Services.AddSingleton(marketTradeStore);
 builder.Services.AddSingleton(marketTradeReservationStore);
@@ -192,6 +194,22 @@ app.MapPost("/internal/v1/market/catalog/read", async (
     if (!request.IsValid())
         return Results.BadRequest(new { error = "invalid_market_catalog_request" });
     var response = await marketCatalogStore.ReadAsync(request, cancellationToken);
+    return response.Status switch
+    {
+        MarketCatalogReadStatusV1.Ok => Results.Ok(response),
+        MarketCatalogReadStatusV1.RevisionExpired => Results.Conflict(response),
+        _ => Results.StatusCode(StatusCodes.Status503ServiceUnavailable)
+    };
+});
+
+app.MapPost("/internal/v1/market/systems/read", async (
+    MarketSystemsReadRequestV1 request,
+    MySqlMarketSystemsReadStore marketSystemsReadStore,
+    CancellationToken cancellationToken) =>
+{
+    if (!request.IsValid())
+        return Results.BadRequest(new { error = "invalid_market_systems_request" });
+    var response = await marketSystemsReadStore.ReadAsync(request, cancellationToken);
     return response.Status switch
     {
         MarketCatalogReadStatusV1.Ok => Results.Ok(response),
