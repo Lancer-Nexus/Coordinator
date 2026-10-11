@@ -26,7 +26,7 @@ The Coordinator maintains cluster membership and makes placement decisions for L
 
 The Coordinator is a control-plane service. It does not become the authoritative source for player inventory, credits or world state.
 
-The proposed cluster-wide dynamic goods market, reputation-aware quotes and REST TODO are documented in [docs/dynamic-market-plan.md](docs/dynamic-market-plan.md). This is a plan only; the market, reputation integration and routes are not implemented. Shared transactional market storage and an idempotent trade-booking boundary are prerequisites for enabling it across Coordinator replicas.
+The cluster-wide dynamic goods market is being implemented in stages. The Coordinator now has a shared MySQL snapshot projection, an authenticated internal read route, and an immutable importer for the full static goods and offer catalog. Live inventory/pricing updates, public Gateway REST routes, reputation-aware quotes and atomic trade booking remain open; the feature capability stays disabled until those paths are complete. See [docs/dynamic-market-plan.md](docs/dynamic-market-plan.md).
 
 ## Shared Protocol
 
@@ -108,12 +108,29 @@ The shared MySQL market read projection is introduced by
 unset, the Coordinator reuses the FLHook event database connection. The
 authenticated internal route `POST /internal/v1/market/snapshots/read` accepts
 the versioned Protocol request and returns a keyset-paged system snapshot pinned
-to its system revision. The revision table must be provisioned and populated by
-the upcoming catalog/seed writer before a system returns data. Unknown systems
+to its system revision. The revision table is provisioned by the catalog seed
+importer. Unknown systems
 and unavailable storage return HTTP 503; a changed pinned revision returns HTTP
 409. The public Gateway REST facade, write path, price calculation, trading,
 reputation lookup and the `dynamic_market_v1` capability remain disabled until
 their contracts and persistence are complete.
+
+Generate and validate an import report from the local Freelancer installation:
+
+```bash
+python3 ../Scripts/bin/analyze-market-catalog.py --game "$FREELANCER_ROOT" --output /tmp/market-catalog.json
+dotnet run --project tools/MarketCatalogSeeder/MarketCatalogSeeder.csproj --configuration Release -- --validate /tmp/market-catalog.json
+```
+
+Apply migrations 006 and 007 to the shared market database, configure
+`ConnectionStrings__Market`, and run the same tool without `--validate` to
+import. The import is one transaction, verifies complete catalog coverage, and
+is idempotent for the exact report bytes. A different report is rejected until
+an explicit catalog migration is provided. It loads all goods, all mapped
+systems and market locations, and static offer rules. It does not treat INI
+`Max` as live inventory. Consequently the snapshot route can return a valid
+empty page after import; a stock initialization policy and live writer are still
+required before the offers appear as market state.
 
 Registry and placement timeouts can be overridden with `Coordinator__Registry__AgentHeartbeatTimeoutSeconds`, `Coordinator__Registry__InstanceHeartbeatTimeoutSeconds`, `Coordinator__Placement__MaximumHeartbeatAgeSeconds`, `Coordinator__Placement__ReservationLifetimeSeconds` and `Coordinator__Placement__GroupAffinityLifetimeSeconds`. All must be positive; defaults are 15, 15, 15, 15 and 30 seconds respectively.
 
