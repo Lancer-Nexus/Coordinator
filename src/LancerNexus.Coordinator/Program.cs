@@ -21,7 +21,13 @@ var flHookEventsConnectionString = builder.Configuration.GetConnectionString("Fl
                                   npcOwnershipConnectionString;
 if (string.IsNullOrWhiteSpace(flHookEventsConnectionString))
     flHookEventsConnectionString = null;
+var marketConnectionString = builder.Configuration.GetConnectionString("Market") ??
+                             builder.Configuration["Coordinator:MarketConnectionString"] ??
+                             flHookEventsConnectionString;
+if (string.IsNullOrWhiteSpace(marketConnectionString))
+    marketConnectionString = null;
 var flHookEventStore = new MySqlFlHookEventStore(flHookEventsConnectionString);
+var marketSnapshotStore = new MySqlMarketSnapshotStore(marketConnectionString);
 if (quicSettings is not null && flHookEventStore.IsEnabled)
     quicSettings = quicSettings with
     {
@@ -44,6 +50,7 @@ builder.Services.AddSingleton<ICoordinatorRegistryStore>(_ => new FileCoordinato
 builder.Services.AddSingleton<CoordinatorRegistry>();
 builder.Services.AddSingleton(new MySqlNpcOwnershipStore(npcOwnershipConnectionString));
 builder.Services.AddSingleton<IFlHookEventStore>(flHookEventStore);
+builder.Services.AddSingleton(marketSnapshotStore);
 builder.Services.AddSingleton<CoordinatorFlHookEventReceiver>();
 builder.Services.AddHttpClient<INpcMissionAuthorityClient, NpcMissionAuthorityClient>(http =>
     http.Timeout = TimeSpan.FromSeconds(8)).ConfigurePrimaryHttpMessageHandler(() =>
@@ -125,6 +132,22 @@ app.MapGet("/api/v1/capabilities", () => Results.Ok(new
         .Concat(npcOwnershipConnectionString is null ? [] : [ClusterCapabilities.NpcOwnershipV1, ClusterCapabilities.NpcTransferV1, ClusterCapabilities.NpcRetirementV1])
         .Concat(quicSettings is null ? [] : ["quic_mtls_handshake_v1", "quic_agent_heartbeat_v1", "quic_instance_heartbeat_v1"])
 }));
+
+app.MapPost("/internal/v1/market/snapshots/read", async (
+    MarketSnapshotReadRequestV1 request,
+    MySqlMarketSnapshotStore marketStore,
+    CancellationToken cancellationToken) =>
+{
+    if (!request.IsValid())
+        return Results.BadRequest(new { error = "invalid_market_snapshot_request" });
+    var response = await marketStore.ReadAsync(request, cancellationToken);
+    return response.Status switch
+    {
+        MarketSnapshotReadStatusV1.Ok => Results.Ok(response),
+        MarketSnapshotReadStatusV1.RevisionExpired => Results.Conflict(response),
+        _ => Results.StatusCode(StatusCodes.Status503ServiceUnavailable)
+    };
+});
 
 app.MapPost("/internal/v1/agents/heartbeat", (
     AgentHeartbeat heartbeat,

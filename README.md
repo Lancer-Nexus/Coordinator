@@ -100,6 +100,21 @@ and character lifecycle events through sequence 38. This local check used
 short-lived test certificates and is not a production deployment result.
 Downstream event consumers and cross-system transfer remain outstanding.
 
+## Dynamic market snapshot projection
+
+The shared MySQL market read projection is introduced by
+`db/migrations/006_dynamic_market_projection.sql`. Configure
+`ConnectionStrings__Market` or `Coordinator__MarketConnectionString`; when
+unset, the Coordinator reuses the FLHook event database connection. The
+authenticated internal route `POST /internal/v1/market/snapshots/read` accepts
+the versioned Protocol request and returns a keyset-paged system snapshot pinned
+to its system revision. The revision table must be provisioned and populated by
+the upcoming catalog/seed writer before a system returns data. Unknown systems
+and unavailable storage return HTTP 503; a changed pinned revision returns HTTP
+409. The public Gateway REST facade, write path, price calculation, trading,
+reputation lookup and the `dynamic_market_v1` capability remain disabled until
+their contracts and persistence are complete.
+
 Registry and placement timeouts can be overridden with `Coordinator__Registry__AgentHeartbeatTimeoutSeconds`, `Coordinator__Registry__InstanceHeartbeatTimeoutSeconds`, `Coordinator__Placement__MaximumHeartbeatAgeSeconds`, `Coordinator__Placement__ReservationLifetimeSeconds` and `Coordinator__Placement__GroupAffinityLifetimeSeconds`. All must be positive; defaults are 15, 15, 15, 15 and 30 seconds respectively.
 
 ## Development
