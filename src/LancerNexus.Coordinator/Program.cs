@@ -28,6 +28,7 @@ if (string.IsNullOrWhiteSpace(marketConnectionString))
     marketConnectionString = null;
 var flHookEventStore = new MySqlFlHookEventStore(flHookEventsConnectionString);
 var marketSnapshotStore = new MySqlMarketSnapshotStore(marketConnectionString);
+var marketTradeStore = new MySqlMarketTradeStore(marketConnectionString);
 if (quicSettings is not null && flHookEventStore.IsEnabled)
     quicSettings = quicSettings with
     {
@@ -51,6 +52,8 @@ builder.Services.AddSingleton<CoordinatorRegistry>();
 builder.Services.AddSingleton(new MySqlNpcOwnershipStore(npcOwnershipConnectionString));
 builder.Services.AddSingleton<IFlHookEventStore>(flHookEventStore);
 builder.Services.AddSingleton(marketSnapshotStore);
+builder.Services.AddSingleton(marketTradeStore);
+builder.Services.AddSingleton<CoordinatorMarketTradeReceiver>();
 builder.Services.AddSingleton<CoordinatorFlHookEventReceiver>();
 builder.Services.AddHttpClient<INpcMissionAuthorityClient, NpcMissionAuthorityClient>(http =>
     http.Timeout = TimeSpan.FromSeconds(8)).ConfigurePrimaryHttpMessageHandler(() =>

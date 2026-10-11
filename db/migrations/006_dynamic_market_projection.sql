@@ -1,5 +1,5 @@
 -- Shared read projection for location-specific dynamic market state.
--- market_id + good_id is authoritative; system_id only groups market locations.
+-- market_id + good_id is authoritative and system_id only groups market locations.
 CREATE TABLE market_system_revisions (
     system_id VARCHAR(96) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
     system_revision BIGINT NOT NULL,

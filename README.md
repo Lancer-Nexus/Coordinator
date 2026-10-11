@@ -26,7 +26,7 @@ The Coordinator maintains cluster membership and makes placement decisions for L
 
 The Coordinator is a control-plane service. It does not become the authoritative source for player inventory, credits or world state.
 
-The cluster-wide dynamic goods market is being implemented in stages. The Coordinator now has a shared MySQL snapshot projection, an authenticated internal read route, and an immutable importer for the full static goods and offer catalog. Live inventory/pricing updates, public Gateway REST routes, reputation-aware quotes and atomic trade booking remain open; the feature capability stays disabled until those paths are complete. See [docs/dynamic-market-plan.md](docs/dynamic-market-plan.md).
+The cluster-wide dynamic goods market is being implemented in stages. The Coordinator now has a shared MySQL snapshot projection, an authenticated internal read route, an immutable catalog importer, and a transactional/idempotent trade-effect store with a QUIC handler. LLServer/Agent durable event production, initial live-stock seeding, public Gateway REST routes, reputation-aware quotes and atomic trade booking remain open; the feature capability stays disabled until those paths are complete. See [docs/dynamic-market-plan.md](docs/dynamic-market-plan.md).
 
 ## Shared Protocol
 
@@ -131,6 +131,18 @@ systems and market locations, and static offer rules. It does not treat INI
 `Max` as live inventory. Consequently the snapshot route can return a valid
 empty page after import; a stock initialization policy and live writer are still
 required before the offers appear as market state.
+
+Migration `008_market_trade_events.sql` adds the idempotency journal and the
+Coordinator's transactional market trade store. On a negotiated
+`dynamic_market_v1` QUIC session, the handler verifies that the mTLS Agent owns
+the event's live instance, then commits event identity, stock delta, V1 price,
+and market/system revisions atomically. Buy events reduce stock; sell events
+add stock. The target market row must exist and permit that side. Retries return
+the recorded market revision, while changed payloads under either event ID or
+producer sequence conflict. The service does not advertise `dynamic_market_v1`
+yet: LLServer/Agent durable event production, initial live-stock seeding and
+the Gateway credit/inventory booking boundary remain required before runtime
+enablement.
 
 Registry and placement timeouts can be overridden with `Coordinator__Registry__AgentHeartbeatTimeoutSeconds`, `Coordinator__Registry__InstanceHeartbeatTimeoutSeconds`, `Coordinator__Placement__MaximumHeartbeatAgeSeconds`, `Coordinator__Placement__ReservationLifetimeSeconds` and `Coordinator__Placement__GroupAffinityLifetimeSeconds`. All must be positive; defaults are 15, 15, 15, 15 and 30 seconds respectively.
 

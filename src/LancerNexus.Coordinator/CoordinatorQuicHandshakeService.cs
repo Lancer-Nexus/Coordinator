@@ -24,6 +24,7 @@ public sealed class CoordinatorQuicHandshakeService : BackgroundService
     private readonly ILogger<CoordinatorQuicHandshakeService> logger;
     private readonly CoordinatorRegistry registry;
     private readonly CoordinatorFlHookEventReceiver flHookEventReceiver;
+    private readonly CoordinatorMarketTradeReceiver marketTradeReceiver;
     private readonly TimeProvider timeProvider;
     private readonly X509Certificate2 serverCertificate;
     private readonly X509Certificate2 clientCaCertificate;
@@ -35,12 +36,14 @@ public sealed class CoordinatorQuicHandshakeService : BackgroundService
         ILogger<CoordinatorQuicHandshakeService> logger,
         CoordinatorRegistry registry,
         CoordinatorFlHookEventReceiver flHookEventReceiver,
+        CoordinatorMarketTradeReceiver marketTradeReceiver,
         TimeProvider timeProvider)
     {
         this.settings = settings;
         this.logger = logger;
         this.registry = registry;
         this.flHookEventReceiver = flHookEventReceiver;
+        this.marketTradeReceiver = marketTradeReceiver;
         this.timeProvider = timeProvider;
 
         serverCertificate = X509CertificateLoader.LoadPkcs12FromFile(
@@ -314,6 +317,18 @@ public sealed class CoordinatorQuicHandshakeService : BackgroundService
             var result = await flHookEventReceiver.ReplayAsync(request.CorrelationId, request.Sequence,
                 certificateNodeId, replayRequest, cancellationToken);
             response = CreateControlResponse(request, ClusterMessageType.FlHookEventReplayResult, result, accepted: true);
+        }
+        else if (request.MessageType == (ushort)ClusterMessageType.MarketTradeEvent)
+        {
+            if (!negotiatedCapabilities.Contains(ClusterCapabilities.DynamicMarketV1, StringComparer.Ordinal))
+                throw new ProtocolViolationException("Dynamic market events were not negotiated for this connection.");
+            var trade = MessagePackSerializer.Deserialize<MarketTradeEventV1>(request.Payload, UntrustedMessagePack);
+            var result = await marketTradeReceiver.ApplyAsync(request.Sequence, certificateNodeId, trade, cancellationToken);
+            response = CreateControlResponse(request, ClusterMessageType.MarketTradeEventAcknowledgement,
+                result, result.IsDurablyAccepted);
+            if (result.Status is MarketTradeIngestStatusV1.Rejected or MarketTradeIngestStatusV1.Conflict)
+                logger.LogWarning("Coordinator rejected market event {InstanceId}/{ProducerEpoch}/{Sequence}: {Status}",
+                    result.InstanceId, result.ProducerEpoch, result.Sequence, result.Status);
         }
         else
         {
