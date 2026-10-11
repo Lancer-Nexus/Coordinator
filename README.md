@@ -118,6 +118,12 @@ does not authorize or reserve a trade. Live stock initialization,
 LLServer/Agent durable event production, and Gateway credit/inventory booking
 are not connected end to end. The `dynamic_market_v1` capability remains off.
 
+The authenticated internal `POST /internal/v1/market/goods/read` route reads one
+exact `(systemId, marketId, goodId)` row from the shared projection. Optional
+expected system and market revisions detect stale detail views; the public
+Gateway facade returns `409` for a mismatch and `404` when the market has no
+offer for that good. This read is informational and cannot authorize a trade.
+
 Generate and validate an import report from the local Freelancer installation:
 
 ```bash

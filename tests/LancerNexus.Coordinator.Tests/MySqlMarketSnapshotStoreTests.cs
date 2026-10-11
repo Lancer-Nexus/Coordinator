@@ -16,6 +16,64 @@ public sealed class MySqlMarketSnapshotStoreTests
         Assert.True((await new MySqlMarketSnapshotStore(null).ReadAsync(request)).IsValidFor(request));
     }
 
+    [Fact]
+    public async Task MarketGoodReadWithoutConfigurationIsUnavailable()
+    {
+        var request = new MarketGoodReadRequestV1
+        {
+            CorrelationId = Guid.NewGuid(), SystemId = "li-01", MarketId = "li01_base",
+            GoodId = "commodity_food"
+        };
+        var response = await new MySqlMarketGoodReadStore(null).ReadAsync(request);
+        Assert.Equal(MarketGoodReadStatusV1.Unavailable, response.Status);
+        Assert.True(response.IsValidFor(request));
+    }
+
+    [MySqlFact]
+    public async Task MarketGoodReadReturnsExactRowAndReportsRevisionChanges()
+    {
+        await WithDatabaseAsync(async connectionString =>
+        {
+            await ApplySchemaAsync(connectionString);
+            await using (var connection = new MySqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                await using var command = connection.CreateCommand();
+                command.CommandText = "INSERT INTO market_system_revisions (system_id, system_revision) VALUES ('li-01', 7)";
+                await command.ExecuteNonQueryAsync();
+                command.CommandText = """
+                    INSERT INTO market_good_state (market_id, good_id, system_id, base_unit_price,
+                        current_unit_price, available_stock, target_stock, buy_enabled, sell_enabled, market_revision)
+                    VALUES ('li01_base', 'commodity_food', 'li-01', 100, 110, 6, 10, TRUE, FALSE, 3)
+                    """;
+                await command.ExecuteNonQueryAsync();
+            }
+
+            var store = new MySqlMarketGoodReadStore(connectionString);
+            var request = new MarketGoodReadRequestV1
+            {
+                CorrelationId = Guid.NewGuid(), SystemId = "li-01", MarketId = "li01_base",
+                GoodId = "commodity_food", ExpectedSystemRevision = 7, ExpectedMarketRevision = 3
+            };
+            var found = await store.ReadAsync(request);
+            Assert.True(found.IsValidFor(request));
+            Assert.Equal(MarketGoodReadStatusV1.Found, found.Status);
+            Assert.Equal(6, found.Good!.AvailableStock);
+            Assert.False(found.Good.SellEnabled);
+
+            var stale = request with { CorrelationId = Guid.NewGuid(), ExpectedMarketRevision = 4 };
+            var mismatch = await store.ReadAsync(stale);
+            Assert.True(mismatch.IsValidFor(stale));
+            Assert.Equal(MarketGoodReadStatusV1.RevisionMismatch, mismatch.Status);
+            Assert.Equal(3, mismatch.MarketRevision);
+
+            var missing = request with { CorrelationId = Guid.NewGuid(), GoodId = "commodity_missing" };
+            var notFound = await store.ReadAsync(missing);
+            Assert.True(notFound.IsValidFor(missing));
+            Assert.Equal(MarketGoodReadStatusV1.NotFound, notFound.Status);
+        });
+    }
+
     [MySqlFact]
     public async Task ReadsStableKeysetPagesAndExpiresOldSystemRevision()
     {
