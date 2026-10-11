@@ -26,7 +26,7 @@ The Coordinator maintains cluster membership and makes placement decisions for L
 
 The Coordinator is a control-plane service. It does not become the authoritative source for player inventory, credits or world state.
 
-The cluster-wide dynamic goods market is being implemented in stages. The Coordinator now has a shared MySQL snapshot projection, an authenticated internal read route, an immutable catalog importer, and a transactional/idempotent trade-effect store with a QUIC handler. LLServer/Agent durable event production, initial live-stock seeding, public Gateway REST routes, reputation-aware quotes and atomic trade booking remain open; the feature capability stays disabled until those paths are complete. See [docs/dynamic-market-plan.md](docs/dynamic-market-plan.md).
+The cluster-wide dynamic goods market is being implemented in stages. The Coordinator has a shared MySQL snapshot projection, authenticated internal read and reservation routes, an immutable catalog importer, and a transactional/idempotent trade-effect store with a QUIC handler. Gateway exposes public system snapshots and authenticated character reputation reads. The Coordinator can request snapshot-revision-bound reputation from Gateway over a dedicated HTTPS service credential. LLServer/Agent durable event production, initial live-stock seeding, reputation-aware price quotes and atomic trade booking remain open; the `dynamic_market_v1` feature capability stays disabled until those paths are complete. See [docs/dynamic-market-plan.md](docs/dynamic-market-plan.md).
 
 ## Shared Protocol
 
@@ -146,6 +146,16 @@ producer sequence conflict. The service does not advertise `dynamic_market_v1`
 yet: LLServer/Agent durable event production, initial live-stock seeding and
 the Gateway credit/inventory booking boundary remain required before runtime
 enablement.
+
+Coordinator can relay revision-bound character reputation through
+`POST /internal/v1/market/reputation/read`. Configure
+`Coordinator:GatewayMarketBaseUrl` with the private Gateway HTTPS origin and
+`Coordinator:GatewayMarketApiKey` with the dedicated credential configured as
+`Gateway:CoordinatorMarketApiKey`; this key is distinct from both the outbound
+trade-reservation credential and other Gateway service keys. The call times out
+after five seconds by default and fails closed if Gateway is unavailable or the
+expected SaveGame snapshot revision has changed. This read relay does not yet
+calculate or authorize a personal market quote.
 
 The internal `POST /internal/v1/market/trades/reserve` and
 `POST /internal/v1/market/trades/resolve` routes implement the reservation half

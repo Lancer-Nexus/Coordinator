@@ -60,6 +60,9 @@ builder.Services.AddSingleton<CoordinatorFlHookEventReceiver>();
 builder.Services.AddHttpClient<INpcMissionAuthorityClient, NpcMissionAuthorityClient>(http =>
     http.Timeout = TimeSpan.FromSeconds(8)).ConfigurePrimaryHttpMessageHandler(() =>
     new HttpClientHandler { AllowAutoRedirect = false });
+builder.Services.AddHttpClient<IGatewayMarketReputationClient, GatewayMarketReputationClient>(http =>
+    http.Timeout = Timeout.InfiniteTimeSpan).ConfigurePrimaryHttpMessageHandler(() =>
+    new HttpClientHandler { AllowAutoRedirect = false });
 builder.Services.AddSingleton(services => new MySqlNpcTransferStore(npcOwnershipConnectionString,
     services.GetRequiredService<INpcMissionAuthorityClient>()));
 builder.Services.AddSingleton(TimeProvider.System);
@@ -154,6 +157,25 @@ app.MapPost("/internal/v1/market/snapshots/read", async (
     {
         MarketSnapshotReadStatusV1.Ok => Results.Ok(response),
         MarketSnapshotReadStatusV1.RevisionExpired => Results.Conflict(response),
+        _ => Results.StatusCode(StatusCodes.Status503ServiceUnavailable)
+    };
+});
+
+app.MapPost("/internal/v1/market/reputation/read", async (
+    MarketFactionReputationReadRequestV1 request,
+    IGatewayMarketReputationClient reputationClient,
+    CancellationToken cancellationToken) =>
+{
+    if (!request.IsValid())
+        return Results.BadRequest(new { error = "invalid_market_reputation_request" });
+    var response = await reputationClient.ReadAsync(request, cancellationToken);
+    if (!response.IsValidFor(request))
+        return Results.StatusCode(StatusCodes.Status502BadGateway);
+    return response.Status switch
+    {
+        MarketFactionReputationStatusV1.Found => Results.Ok(response),
+        MarketFactionReputationStatusV1.RevisionMismatch => Results.Conflict(response),
+        MarketFactionReputationStatusV1.NotFound => Results.NotFound(response),
         _ => Results.StatusCode(StatusCodes.Status503ServiceUnavailable)
     };
 });
