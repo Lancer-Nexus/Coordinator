@@ -11,6 +11,8 @@
 
 **Shared-DB concurrency check (2026-10-11):** Zwei unabhängige `MySqlMarketTradeReservationStore`-Instanzen versuchen gleichzeitig, denselben Bestand unter derselben Revision zu reservieren. Genau eine Reservierung wird angenommen; beide anschließenden Snapshot-Leser sehen dieselbe Systemrevision und denselben verfügbaren Bestand. Das prüft konkurrierende Stores auf einer gemeinsamen MariaDB in einem Prozess, aber keinen Mehrprozess-Failover zweier Coordinator-Replikate.
 
+**Multi-process read smoke (2026-10-11):** Ein zweiter Coordinator-Prozess mit eigener Registry-Datei, eigenem HTTPS-Port und deaktiviertem QUIC-Listener wurde parallel zum bestehenden Coordinator gestartet; beide nutzten dieselbe isolierte E2E-MariaDB. Die authentisierten internen Markt-Reads der zweiten Instanz und die Gateway-REST-Reads der ersten lieferten dieselbe Katalogrevision `e60b74ca…`, identische 855 Goods über je neun Seiten und dieselben 53 Systeme/191 Standorte. Der zweite Prozess wurde nach dem Read-Test sauber beendet. Das belegt gemeinsame, konsistente Read-Projektion über zwei Coordinator-Prozesse; Mehrinstanz-Schreibkonkurrenz, QUIC-Agent-Failover und Prozessabbruch-Recovery bleiben offen.
+
 ## Zuständigkeiten
 
 - Der Coordinator verwaltet die clusterweite Marktprojektion: Marktstandorte, Warenangebote, Bestände, Preisrevisionen und die Verteilung von Handelsereignissen. Alle Coordinator-Replikate müssen dieselbe transaktionale Datenbank verwenden; eine Replik darf keinen eigenen Marktstand führen.
