@@ -28,6 +28,7 @@ internal static class MarketPriceCalculator
             var marketUnitPrice = Calculate(basePrice, targetStock, projectedStock, minUnitPrice, maxUnitPrice);
             var adjustedPrice = decimal.Round(marketUnitPrice * personalPriceFactor, 0,
                 MidpointRounding.AwayFromZero);
+            adjustedPrice = Math.Clamp(adjustedPrice, (decimal)minUnitPrice, (decimal)maxUnitPrice);
             if (adjustedPrice > long.MaxValue)
                 return false;
             var unitPrice = (long)adjustedPrice;

@@ -180,7 +180,16 @@ Coordinator's transactional market trade store. Migration
 `009_market_trade_reservations.sql` adds durable Gateway trade reservations and
 reserved buy-stock accounting. `010_market_stock_policy.sql` adds the
 report-pinned stock policy, bounded price fields and reserved sell capacity.
-Apply migrations 008 through 010 after 006/007 before enabling their consumers.
+`011_market_quote_bound_reservations.sql` stores reputation revision and price
+factor for quote-bound reservations. The internal
+`POST /internal/v1/market/trades/reserve-quote` recomputes the quoted unit and
+total prices while holding the market row lock, and rejects mismatched prices
+before reserving stock. Its idempotency digest binds the market and reputation
+revisions, price factor and expected prices. Only the dedicated
+`Coordinator:MarketGatewayApiKey` is accepted. Gateway must obtain current
+character reputation before submitting this request; Coordinator does not
+independently attest the reputation revision. Apply migrations 008 through 011
+after 006/007 before enabling their consumers.
 On a negotiated
 `dynamic_market_v1` QUIC session, the handler verifies that the mTLS Agent owns
 the event's live instance, then commits event identity, stock delta, V1 price,

@@ -22,6 +22,7 @@ internal static class MarketReputationPricePolicy
         factor = Math.Clamp(factor, 0.9m, 1.1m);
         factorPartsPerMillion = checked((int)decimal.Round(factor * 1_000_000m, 0,
             MidpointRounding.AwayFromZero));
+        factor = factorPartsPerMillion / 1_000_000m;
         return true;
     }
 }

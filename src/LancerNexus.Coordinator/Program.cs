@@ -287,6 +287,24 @@ app.MapPost("/internal/v1/market/trades/reserve", async (
     };
 });
 
+app.MapPost("/internal/v1/market/trades/reserve-quote", async (
+    MarketTradeQuoteReservationRequestV1 request,
+    MySqlMarketTradeReservationStore reservationStore,
+    CancellationToken cancellationToken) =>
+{
+    if (!request.IsValid())
+        return Results.BadRequest(new { error = "invalid_market_trade_quote_reservation" });
+    var response = await reservationStore.ReserveQuoteAsync(request, cancellationToken);
+    return response.Status switch
+    {
+        MarketTradeReservationStatusV1.Reserved or MarketTradeReservationStatusV1.Committed or
+            MarketTradeReservationStatusV1.Aborted => Results.Ok(response),
+        MarketTradeReservationStatusV1.Conflict => Results.Conflict(response),
+        MarketTradeReservationStatusV1.Rejected => Results.BadRequest(response),
+        _ => Results.StatusCode(StatusCodes.Status503ServiceUnavailable)
+    };
+});
+
 app.MapPost("/internal/v1/market/trades/resolve", async (
     MarketTradeResolutionRequestV1 request,
     MySqlMarketTradeReservationStore reservationStore,

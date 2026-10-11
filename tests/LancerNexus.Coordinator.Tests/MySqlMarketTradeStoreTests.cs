@@ -196,7 +196,8 @@ public sealed class MySqlMarketTradeStoreTests
                      "007_market_catalog_seed.sql",
                      "008_market_trade_events.sql",
                      "009_market_trade_reservations.sql",
-                     "010_market_stock_policy.sql"
+                     "010_market_stock_policy.sql",
+                     "011_market_quote_bound_reservations.sql"
                  })
         {
             var path = Path.Combine(AppContext.BaseDirectory, "db", "migrations", filename);

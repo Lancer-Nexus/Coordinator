@@ -40,4 +40,27 @@ public sealed class MarketReputationPricePolicyTests
         Assert.Equal(95, firstPrice);
         Assert.Equal(300, total);
     }
+
+    [Fact]
+    public void ReturnedPartsPerMillionAreTheFactorUsedForPricing()
+    {
+        Assert.True(MarketReputationPricePolicy.TryGetFactor(MarketTradeSideV1.Buy, 0.3333333f,
+            out var factor, out var partsPerMillion));
+        Assert.Equal(partsPerMillion / 1_000_000m, factor);
+        Assert.True(MarketTradeQuoteReservationRequestV1.MinimumPriceFactorPartsPerMillion <= partsPerMillion);
+        Assert.True(partsPerMillion <= MarketTradeQuoteReservationRequestV1.MaximumPriceFactorPartsPerMillion);
+    }
+
+    [Fact]
+    public void ReputationAdjustedQuoteRemainsWithinConfiguredPriceBounds()
+    {
+        Assert.True(MarketPriceCalculator.TryCalculateTradeTotal(100, 100, 100,
+            MarketTradeSideV1.Buy, 1, out var buyPrice, out _, 0.9m,
+            minUnitPrice: 95, maxUnitPrice: 105));
+        Assert.True(MarketPriceCalculator.TryCalculateTradeTotal(100, 100, 100,
+            MarketTradeSideV1.Sell, 1, out var sellPrice, out _, 1.1m,
+            minUnitPrice: 95, maxUnitPrice: 105));
+        Assert.Equal(95, buyPrice);
+        Assert.Equal(105, sellPrice);
+    }
 }
