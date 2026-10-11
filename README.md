@@ -26,7 +26,7 @@ The Coordinator maintains cluster membership and makes placement decisions for L
 
 The Coordinator is a control-plane service. It does not become the authoritative source for player inventory, credits or world state.
 
-The cluster-wide dynamic goods market is being implemented in stages. The Coordinator has a shared MySQL snapshot projection, authenticated internal read and reservation routes, catalog and stock-policy importers, and a transactional/idempotent trade-effect store with a QUIC handler. Gateway exposes public system snapshots, authenticated character reputation reads and reputation-aware quote previews. Stock policy bootstrap, bounded prices, and buy/sell capacity reservations are implemented. LLServer/Agent durable event production and atomic Gateway credit/inventory booking remain open; the `dynamic_market_v1` feature capability stays disabled until those paths are complete. See [docs/dynamic-market-plan.md](docs/dynamic-market-plan.md).
+The cluster-wide dynamic goods market is being implemented in stages. The Coordinator has a shared MySQL snapshot projection, authenticated internal read and reservation routes, catalog and stock-policy importers, and a transactional/idempotent trade-effect store with a QUIC handler. Gateway exposes public system snapshots, authenticated character reputation reads and reputation-aware quote previews; its game-instance trade endpoint atomically commits the character snapshot, ledger and Coordinator outbox. Client patch 2165 connects ordinary base-market buy/sell to the Gateway quote and commit flow and rejects the legacy ship-package purchase path while dynamic pricing is enabled. The `dynamic_market_v1` capability stays disabled pending full catalog-policy review, package booking, and multi-instance crash/replay runtime proof. The separate LLServer/Agent market-event producer remains open. See [docs/dynamic-market-plan.md](docs/dynamic-market-plan.md).
 
 ## Shared Protocol
 
@@ -113,10 +113,13 @@ importer. Unknown systems
 and unavailable storage return HTTP 503; a changed pinned revision returns HTTP
 409. The market is still staged: the public Gateway catalog/system read facade,
 reputation-aware quote preview, and internal Coordinator read/write/reservation
-paths exist. The preview uses Gateway's revision-bound faction reputation and
-does not authorize or reserve a trade. Live stock initialization,
-LLServer/Agent durable event production, and Gateway credit/inventory booking
-are not connected end to end. The `dynamic_market_v1` capability remains off.
+paths exist. Client patch 2165 connects ordinary base-market purchases and sales
+to lease-bound Gateway quote and commit calls. Gateway commits the character
+snapshot, trade ledger and Coordinator outbox atomically; the preview itself
+does not authorize or reserve a trade. Live stock-policy review for all goods,
+ship-package booking, the separate LLServer/Agent market-event producer, and
+multi-instance crash/replay runtime proof remain open. The
+`dynamic_market_v1` capability remains off.
 
 The authenticated internal `POST /internal/v1/market/goods/read` route reads one
 exact `(systemId, marketId, goodId)` row from the shared projection. Optional
@@ -156,7 +159,7 @@ prices and system revisions in one transaction. A retry succeeds only for the
 exact same catalog report and policy bytes. A different policy requires an
 explicit future migration; missing pairs stay unavailable. `MarketGood.Min` and
 `MarketGood.Max` are not treated as live inventory. This bootstrap does not
-enable `dynamic_market_v1` or complete Gateway credit/inventory booking.
+enable `dynamic_market_v1` or prove the client and multi-instance runtime path.
 
 The internal `POST /internal/v1/market/catalog/read` endpoint provides bounded keyset pages from `market_catalog_goods`, including goods without static offers. Pages are pinned to the imported seed SHA-256 so every Coordinator replica serves the same catalog revision.
 
