@@ -122,6 +122,8 @@ python3 ../Scripts/bin/analyze-market-catalog.py --game "$FREELANCER_ROOT" --out
 dotnet run --project tools/MarketCatalogSeeder/MarketCatalogSeeder.csproj --configuration Release -- --validate /tmp/market-catalog.json
 ```
 
+The internal `POST /internal/v1/market/catalog/read` endpoint provides bounded keyset pages from `market_catalog_goods`, including goods without static offers. Pages are pinned to the imported seed SHA-256 so every Coordinator replica serves the same catalog revision.
+
 Apply migrations 006 and 007 to the shared market database, configure
 `ConnectionStrings__Market`, and run the same tool without `--validate` to
 import. The import is one transaction, verifies complete catalog coverage, and

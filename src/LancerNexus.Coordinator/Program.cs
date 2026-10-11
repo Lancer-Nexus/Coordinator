@@ -28,6 +28,7 @@ if (string.IsNullOrWhiteSpace(marketConnectionString))
     marketConnectionString = null;
 var flHookEventStore = new MySqlFlHookEventStore(flHookEventsConnectionString);
 var marketSnapshotStore = new MySqlMarketSnapshotStore(marketConnectionString);
+var marketCatalogReadStore = new MySqlMarketCatalogReadStore(marketConnectionString);
 var marketTradeStore = new MySqlMarketTradeStore(marketConnectionString);
 var marketTradeReservationStore = new MySqlMarketTradeReservationStore(marketConnectionString);
 if (quicSettings is not null && flHookEventStore.IsEnabled)
@@ -53,6 +54,7 @@ builder.Services.AddSingleton<CoordinatorRegistry>();
 builder.Services.AddSingleton(new MySqlNpcOwnershipStore(npcOwnershipConnectionString));
 builder.Services.AddSingleton<IFlHookEventStore>(flHookEventStore);
 builder.Services.AddSingleton(marketSnapshotStore);
+builder.Services.AddSingleton(marketCatalogReadStore);
 builder.Services.AddSingleton(marketTradeStore);
 builder.Services.AddSingleton(marketTradeReservationStore);
 builder.Services.AddSingleton<CoordinatorMarketTradeReceiver>();
@@ -157,6 +159,22 @@ app.MapPost("/internal/v1/market/snapshots/read", async (
     {
         MarketSnapshotReadStatusV1.Ok => Results.Ok(response),
         MarketSnapshotReadStatusV1.RevisionExpired => Results.Conflict(response),
+        _ => Results.StatusCode(StatusCodes.Status503ServiceUnavailable)
+    };
+});
+
+app.MapPost("/internal/v1/market/catalog/read", async (
+    MarketCatalogReadRequestV1 request,
+    MySqlMarketCatalogReadStore marketCatalogStore,
+    CancellationToken cancellationToken) =>
+{
+    if (!request.IsValid())
+        return Results.BadRequest(new { error = "invalid_market_catalog_request" });
+    var response = await marketCatalogStore.ReadAsync(request, cancellationToken);
+    return response.Status switch
+    {
+        MarketCatalogReadStatusV1.Ok => Results.Ok(response),
+        MarketCatalogReadStatusV1.RevisionExpired => Results.Conflict(response),
         _ => Results.StatusCode(StatusCodes.Status503ServiceUnavailable)
     };
 });

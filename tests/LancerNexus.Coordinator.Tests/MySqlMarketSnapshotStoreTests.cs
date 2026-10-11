@@ -74,6 +74,65 @@ public sealed class MySqlMarketSnapshotStoreTests
         });
     }
 
+    [MySqlFact]
+    public async Task ReadsCompleteCatalogIncludingGoodsWithoutOffersAndPinsSeedRevision()
+    {
+        await WithDatabaseAsync(async connectionString =>
+        {
+            await ApplySchemaAsync(connectionString);
+            var seedHash = Enumerable.Range(0, 32).Select(value => (byte)value).ToArray();
+            await using (var connection = new MySqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                await using var command = connection.CreateCommand();
+                command.CommandText = "UPDATE market_catalog_seed SET seed_sha256 = @hash, good_count = 3 WHERE seed_slot = 1";
+                command.Parameters.AddWithValue("@hash", seedHash);
+                await command.ExecuteNonQueryAsync();
+                command.CommandText = "INSERT INTO market_catalog_goods (good_id, category, base_unit_price) VALUES ('commodity_a', 'commodity', 10), ('commodity_b', 'commodity', NULL), ('ship_fighter', 'ship', 1000)";
+                await command.ExecuteNonQueryAsync();
+                // Only one good has an offer; the public catalog must still return all three goods.
+                command.CommandText = "INSERT INTO market_system_revisions (system_id, system_revision) VALUES ('li-01', 1)";
+                await command.ExecuteNonQueryAsync();
+                command.CommandText = "INSERT INTO market_locations (market_id, system_id, local_faction_id) VALUES ('li01_base', 'li-01', 'li_grp')";
+                await command.ExecuteNonQueryAsync();
+                command.CommandText = "INSERT INTO market_static_offers (market_id, good_id, baseline_unit_price, buy_enabled, rank_requirement, min_amount, max_amount, reputation_threshold, source_file) VALUES ('li01_base', 'commodity_a', 10, TRUE, 0, 0, 100, 0, 'market.ini')";
+                await command.ExecuteNonQueryAsync();
+            }
+
+            var store = new MySqlMarketCatalogReadStore(connectionString);
+            var firstRequest = new MarketCatalogReadRequestV1 { CorrelationId = Guid.NewGuid(), PageSize = 2 };
+            var first = await store.ReadAsync(firstRequest);
+            Assert.True(first.IsValidFor(firstRequest));
+            Assert.Equal(Convert.ToHexString(seedHash).ToLowerInvariant(), first.CatalogRevision);
+            Assert.Equal(["commodity_a", "commodity_b"], first.Goods.Select(good => good.GoodId));
+            Assert.Null(first.Goods[1].BaseUnitPrice);
+            Assert.Equal("commodity_b", first.NextGoodId);
+
+            var nextRequest = firstRequest with
+            {
+                CorrelationId = Guid.NewGuid(),
+                AfterGoodId = first.NextGoodId,
+                ExpectedCatalogRevision = first.CatalogRevision
+            };
+            var next = await store.ReadAsync(nextRequest);
+            Assert.True(next.IsValidFor(nextRequest));
+            Assert.Equal("ship_fighter", Assert.Single(next.Goods).GoodId);
+            Assert.Null(next.NextGoodId);
+
+            await using (var connection = new MySqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                await using var command = connection.CreateCommand();
+                command.CommandText = "UPDATE market_catalog_seed SET seed_sha256 = @hash WHERE seed_slot = 1";
+                command.Parameters.AddWithValue("@hash", Enumerable.Repeat((byte)255, 32).ToArray());
+                await command.ExecuteNonQueryAsync();
+            }
+            var expired = await store.ReadAsync(nextRequest);
+            Assert.Equal(MarketCatalogReadStatusV1.RevisionExpired, expired.Status);
+            Assert.True(expired.IsValidFor(nextRequest));
+        });
+    }
+
     private static MarketSnapshotReadRequestV1 Request() => new()
     {
         CorrelationId = Guid.NewGuid(),
