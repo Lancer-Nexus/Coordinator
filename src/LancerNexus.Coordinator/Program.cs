@@ -281,7 +281,9 @@ app.MapPost("/internal/v1/market/trades/reserve", async (
     {
         MarketTradeReservationStatusV1.Reserved or MarketTradeReservationStatusV1.Committed or
             MarketTradeReservationStatusV1.Aborted => Results.Ok(response),
-        MarketTradeReservationStatusV1.Conflict => Results.Conflict(response),
+        MarketTradeReservationStatusV1.Conflict or MarketTradeReservationStatusV1.MarketRevisionMismatch =>
+            Results.Conflict(response),
+        MarketTradeReservationStatusV1.NotFound => Results.NotFound(response),
         MarketTradeReservationStatusV1.Rejected => Results.BadRequest(response),
         _ => Results.StatusCode(StatusCodes.Status503ServiceUnavailable)
     };
@@ -290,18 +292,30 @@ app.MapPost("/internal/v1/market/trades/reserve", async (
 app.MapPost("/internal/v1/market/trades/reserve-quote", async (
     MarketTradeQuoteReservationRequestV1 request,
     MySqlMarketTradeReservationStore reservationStore,
+    IGatewayMarketReputationClient reputationClient,
     CancellationToken cancellationToken) =>
 {
     if (!request.IsValid())
         return Results.BadRequest(new { error = "invalid_market_trade_quote_reservation" });
-    var response = await reservationStore.ReserveQuoteAsync(request, cancellationToken);
+    var reputationRequest = new MarketFactionReputationReadRequestV1
+    {
+        CorrelationId = request.CorrelationId,
+        CharacterId = request.CharacterId,
+        ExpectedReputationRevision = request.ExpectedReputationRevision
+    };
+    var reputation = await reputationClient.ReadAsync(reputationRequest, cancellationToken);
+    if (!reputation.IsValidFor(reputationRequest))
+        return Results.StatusCode(StatusCodes.Status502BadGateway);
+    var response = await reservationStore.ReserveQuoteAsync(request, reputation, cancellationToken);
     return response.Status switch
     {
         MarketTradeReservationStatusV1.Reserved or MarketTradeReservationStatusV1.Committed or
             MarketTradeReservationStatusV1.Aborted => Results.Ok(response),
-        MarketTradeReservationStatusV1.Conflict => Results.Conflict(response),
+        MarketTradeReservationStatusV1.Conflict or MarketTradeReservationStatusV1.MarketRevisionMismatch or
+            MarketTradeReservationStatusV1.ReputationRevisionMismatch => Results.Conflict(response),
+        MarketTradeReservationStatusV1.NotFound => Results.NotFound(response),
         MarketTradeReservationStatusV1.Rejected => Results.BadRequest(response),
-        _ => Results.StatusCode(StatusCodes.Status503ServiceUnavailable)
+        _ => Results.Json(response, statusCode: StatusCodes.Status503ServiceUnavailable)
     };
 });
 

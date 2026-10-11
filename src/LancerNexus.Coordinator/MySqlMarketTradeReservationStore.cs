@@ -17,12 +17,37 @@ public sealed class MySqlMarketTradeReservationStore(string? connectionString)
         => await ReserveCoreAsync(request, null, cancellationToken);
 
     public async Task<MarketTradeQuoteReservationResponseV1> ReserveQuoteAsync(
-        MarketTradeQuoteReservationRequestV1 request, CancellationToken cancellationToken = default)
+        MarketTradeQuoteReservationRequestV1 request, MarketFactionReputationReadResponseV1 reputation,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(reputation);
+        var reputationRequest = new MarketFactionReputationReadRequestV1
+        {
+            CorrelationId = request.CorrelationId,
+            CharacterId = request.CharacterId,
+            ExpectedReputationRevision = request.ExpectedReputationRevision
+        };
+        if (!request.IsValid() || !reputation.IsValidFor(reputationRequest))
+            return QuoteResponse(request, MarketTradeReservationStatusV1.Rejected);
+        if (reputation.Status == MarketFactionReputationStatusV1.RevisionMismatch)
+            return QuoteResponse(request, MarketTradeReservationStatusV1.ReputationRevisionMismatch,
+                reputationRevision: reputation.ReputationRevision);
+        if (reputation.Status == MarketFactionReputationStatusV1.NotFound)
+            return QuoteResponse(request, MarketTradeReservationStatusV1.NotFound);
+        if (reputation.Status != MarketFactionReputationStatusV1.Found)
+            return QuoteResponse(request, MarketTradeReservationStatusV1.Unavailable);
+
+        var appliedReputation = reputation.Factions.FirstOrDefault(faction =>
+            faction.FactionId == request.MarketFactionId)?.Value ?? 0f;
+        if (!MarketReputationPricePolicy.TryGetFactor(request.Side, appliedReputation,
+                out _, out var reputationFactorPartsPerMillion) ||
+            reputationFactorPartsPerMillion != request.ReputationPriceFactorPartsPerMillion)
+            return QuoteResponse(request, MarketTradeReservationStatusV1.Rejected);
+
         var binding = new QuoteBinding(request.ExpectedReputationRevision,
-            request.ReputationPriceFactorPartsPerMillion, request.ExpectedQuoteUnitPrice,
-            request.ExpectedTotalPrice);
+            request.CharacterId, request.MarketFactionId, reputationFactorPartsPerMillion,
+            request.ExpectedQuoteUnitPrice, request.ExpectedTotalPrice);
         var reservation = new MarketTradeReservationRequestV1
         {
             CorrelationId = request.CorrelationId,
@@ -35,20 +60,14 @@ public sealed class MySqlMarketTradeReservationStore(string? connectionString)
             ExpectedMarketRevision = request.ExpectedMarketRevision
         };
         var result = await ReserveCoreAsync(reservation, binding, cancellationToken);
-        return new MarketTradeQuoteReservationResponseV1
-        {
-            CorrelationId = result.CorrelationId,
-            TradeId = result.TradeId,
-            Status = result.Status,
-            QuoteUnitPrice = result.QuoteUnitPrice,
-            TotalPrice = result.TotalPrice,
-            MarketRevision = result.MarketRevision,
-            SystemRevision = result.SystemRevision,
-            ReputationRevision = result.Status is MarketTradeReservationStatusV1.Reserved or
-                MarketTradeReservationStatusV1.Committed or MarketTradeReservationStatusV1.Aborted
-                ? binding.ReputationRevision : 0,
-            ReputationPriceFactorPartsPerMillion = binding.PriceFactorPartsPerMillion
-        };
+        if (result.Status is MarketTradeReservationStatusV1.Reserved or
+            MarketTradeReservationStatusV1.Committed or MarketTradeReservationStatusV1.Aborted)
+            return QuoteResponse(request, result.Status, result.QuoteUnitPrice, result.TotalPrice,
+                result.MarketRevision, result.SystemRevision, binding.ReputationRevision,
+                binding.PriceFactorPartsPerMillion, binding.MarketFactionId);
+        return QuoteResponse(request, result.Status,
+            marketRevision: result.Status == MarketTradeReservationStatusV1.MarketRevisionMismatch
+                ? result.MarketRevision : 0);
     }
 
     private async Task<MarketTradeReservationResponseV1> ReserveCoreAsync(
@@ -66,7 +85,8 @@ public sealed class MySqlMarketTradeReservationStore(string? connectionString)
                 request.SystemId, request.GoodId, request.Side, request.Quantity, request.ExpectedMarketRevision))
             : MessagePackSerializer.Serialize(new QuoteReservationIdentity(request.TradeId, request.MarketId,
                 request.SystemId, request.GoodId, request.Side, request.Quantity,
-                request.ExpectedMarketRevision, quoteBinding.ReputationRevision,
+                request.ExpectedMarketRevision, quoteBinding.CharacterId, quoteBinding.ReputationRevision,
+                quoteBinding.MarketFactionId,
                 quoteBinding.PriceFactorPartsPerMillion, quoteBinding.ExpectedQuoteUnitPrice,
                 quoteBinding.ExpectedTotalPrice)));
         try
@@ -93,8 +113,14 @@ public sealed class MySqlMarketTradeReservationStore(string? connectionString)
 
             var market = await LockMarketAsync(connection, transaction, request.MarketId, request.GoodId,
                 request.SystemId, request.Side, cancellationToken);
-            if (market is null || market.MarketRevision != request.ExpectedMarketRevision ||
-                market.TargetStock <= 0 || !market.Enabled || market.MarketRevision == long.MaxValue ||
+            if (market is null)
+                return Response(request, MarketTradeReservationStatusV1.NotFound);
+            if (market.MarketRevision != request.ExpectedMarketRevision)
+                return Response(request, MarketTradeReservationStatusV1.MarketRevisionMismatch,
+                    marketRevision: market.MarketRevision);
+            if (quoteBinding is { } factionBinding && market.MarketFactionId != factionBinding.MarketFactionId)
+                return Response(request, MarketTradeReservationStatusV1.Rejected);
+            if (market.TargetStock <= 0 || !market.Enabled || market.MarketRevision == long.MaxValue ||
                 (request.Side == MarketTradeSideV1.Buy &&
                  market.Stock - market.ReservedBuyStock < request.Quantity) ||
                 (request.Side == MarketTradeSideV1.Sell &&
@@ -150,9 +176,11 @@ public sealed class MySqlMarketTradeReservationStore(string? connectionString)
                     INSERT INTO market_trade_reservations
                         (trade_id, request_sha256, market_id, system_id, good_id, trade_side, quantity,
                          quote_unit_price, total_price, reputation_revision,
-                         reputation_price_factor_parts_per_million, state, market_revision, system_revision)
+                         reputation_price_factor_parts_per_million, market_faction_id,
+                         state, market_revision, system_revision)
                     VALUES (@trade, @digest, @market, @system, @good, @side, @quantity,
-                            @unit, @total, @reputationRevision, @priceFactor, @state,
+                            @unit, @total, @reputationRevision, @priceFactor, @faction,
+                            @state,
                             @marketRevision, @systemRevision)
                     """;
                 command.Parameters.AddWithValue("@trade", request.TradeId.ToByteArray());
@@ -167,6 +195,7 @@ public sealed class MySqlMarketTradeReservationStore(string? connectionString)
                 command.Parameters.AddWithValue("@reputationRevision", quoteBinding?.ReputationRevision ?? 0);
                 command.Parameters.AddWithValue("@priceFactor",
                     quoteBinding?.PriceFactorPartsPerMillion ?? 1_000_000);
+                command.Parameters.AddWithValue("@faction", (object?)quoteBinding?.MarketFactionId ?? "unbound");
                 command.Parameters.AddWithValue("@state", (byte)MarketTradeReservationStatusV1.Reserved);
                 command.Parameters.AddWithValue("@marketRevision", nextMarketRevision);
                 command.Parameters.AddWithValue("@systemRevision", nextSystemRevision);
@@ -324,12 +353,15 @@ public sealed class MySqlMarketTradeReservationStore(string? connectionString)
         await using var command = connection.CreateCommand();
         command.Transaction = transaction;
         command.CommandText = """
-            SELECT base_unit_price, current_unit_price, available_stock, reserved_buy_stock,
-                   reserved_sell_stock, target_stock, max_stock, min_unit_price, max_unit_price,
-                   market_revision,
-                   CASE WHEN @side = 1 THEN buy_enabled ELSE sell_enabled END
-            FROM market_good_state
-            WHERE market_id = @market AND good_id = @good AND system_id = @system
+            SELECT state.base_unit_price, state.current_unit_price, state.available_stock, state.reserved_buy_stock,
+                   state.reserved_sell_stock, state.target_stock, state.max_stock, state.min_unit_price,
+                   state.max_unit_price, state.market_revision,
+                   CASE WHEN @side = 1 THEN state.buy_enabled ELSE state.sell_enabled END,
+                   COALESCE(state.market_faction_override_id, location.local_faction_id)
+            FROM market_good_state AS state
+            INNER JOIN market_locations AS location
+              ON location.market_id = state.market_id AND location.system_id = state.system_id
+            WHERE state.market_id = @market AND state.good_id = @good AND state.system_id = @system
             FOR UPDATE
             """;
         command.Parameters.AddWithValue("@side", (byte)side);
@@ -341,7 +373,7 @@ public sealed class MySqlMarketTradeReservationStore(string? connectionString)
             return null;
         return new MarketRow(reader.GetInt64(0), reader.GetInt64(1), reader.GetInt64(2), reader.GetInt64(3),
             reader.GetInt64(4), reader.GetInt64(5), reader.GetInt64(6), reader.GetInt64(7), reader.GetInt64(8),
-            reader.GetInt64(9), reader.GetBoolean(10));
+            reader.GetInt64(9), reader.GetBoolean(10), reader.GetString(11));
     }
 
     private static async Task<StoredReservation?> ReadReservationAsync(MySqlConnection connection,
@@ -401,9 +433,26 @@ public sealed class MySqlMarketTradeReservationStore(string? connectionString)
         SystemRevision = systemRevision
     };
 
+    private static MarketTradeQuoteReservationResponseV1 QuoteResponse(
+        MarketTradeQuoteReservationRequestV1 request, MarketTradeReservationStatusV1 status,
+        long unitPrice = 0, long totalPrice = 0, long marketRevision = 0, long systemRevision = 0,
+        long reputationRevision = 0, long priceFactorPartsPerMillion = 0, string? marketFactionId = null) => new()
+    {
+        CorrelationId = request.CorrelationId,
+        TradeId = request.TradeId,
+        Status = status,
+        QuoteUnitPrice = unitPrice,
+        TotalPrice = totalPrice,
+        MarketRevision = marketRevision,
+        SystemRevision = systemRevision,
+        ReputationRevision = reputationRevision,
+        ReputationPriceFactorPartsPerMillion = priceFactorPartsPerMillion,
+        MarketFactionId = marketFactionId
+    };
+
     private sealed record MarketRow(long BasePrice, long CurrentPrice, long Stock, long ReservedBuyStock,
         long ReservedSellStock, long TargetStock, long MaxStock, long MinUnitPrice, long MaxUnitPrice,
-        long MarketRevision, bool Enabled);
+        long MarketRevision, bool Enabled, string MarketFactionId);
 
     private sealed record StoredReservation(byte[] Digest, string MarketId, string SystemId, string GoodId,
         MarketTradeSideV1 Side, long Quantity, long UnitPrice, long TotalPrice,
@@ -442,15 +491,18 @@ public sealed class MySqlMarketTradeReservationStore(string? connectionString)
         [property: Key(4)] MarketTradeSideV1 Side,
         [property: Key(5)] long Quantity,
         [property: Key(6)] long ExpectedMarketRevision,
-        [property: Key(7)] long ReputationRevision,
-        [property: Key(8)] long PriceFactorPartsPerMillion,
-        [property: Key(9)] long ExpectedQuoteUnitPrice,
-        [property: Key(10)] long ExpectedTotalPrice);
+        [property: Key(7)] long CharacterId,
+        [property: Key(8)] long ReputationRevision,
+        [property: Key(9)] string MarketFactionId,
+        [property: Key(10)] long PriceFactorPartsPerMillion,
+        [property: Key(11)] long ExpectedQuoteUnitPrice,
+        [property: Key(12)] long ExpectedTotalPrice);
 
-    private sealed record QuoteBinding(long ReputationRevision, long PriceFactorPartsPerMillion,
-        long ExpectedQuoteUnitPrice, long ExpectedTotalPrice)
+    private sealed record QuoteBinding(long ReputationRevision, long CharacterId, string MarketFactionId,
+        long PriceFactorPartsPerMillion, long ExpectedQuoteUnitPrice, long ExpectedTotalPrice)
     {
-        public bool IsValid => ReputationRevision > 0 && PriceFactorPartsPerMillion is >=
+        public bool IsValid => ReputationRevision > 0 && CharacterId > 0 &&
+            MarketContractValidation.ValidId(MarketFactionId) && PriceFactorPartsPerMillion is >=
             MarketTradeQuoteReservationRequestV1.MinimumPriceFactorPartsPerMillion and <=
             MarketTradeQuoteReservationRequestV1.MaximumPriceFactorPartsPerMillion &&
             ExpectedQuoteUnitPrice >= 0 && ExpectedTotalPrice >= 0;

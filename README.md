@@ -185,10 +185,12 @@ factor for quote-bound reservations. The internal
 `POST /internal/v1/market/trades/reserve-quote` recomputes the quoted unit and
 total prices while holding the market row lock, and rejects mismatched prices
 before reserving stock. Its idempotency digest binds the market and reputation
-revisions, price factor and expected prices. Only the dedicated
-`Coordinator:MarketGatewayApiKey` is accepted. Gateway must obtain current
-character reputation before submitting this request; Coordinator does not
-independently attest the reputation revision. Apply migrations 008 through 011
+revisions, price factor, market faction and expected prices. Migration
+`012_market_reservation_faction.sql` records the applied faction. Coordinator
+re-reads reputation over its authenticated Gateway service channel and derives
+the factor from the configured market faction before taking the market row
+lock. Stale reputation or market revisions return `409`. Only the dedicated
+`Coordinator:MarketGatewayApiKey` is accepted. Apply migrations 008 through 012
 after 006/007 before enabling their consumers.
 On a negotiated
 `dynamic_market_v1` QUIC session, the handler verifies that the mTLS Agent owns

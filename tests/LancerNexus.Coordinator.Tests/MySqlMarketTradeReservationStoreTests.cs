@@ -113,7 +113,7 @@ public sealed class MySqlMarketTradeReservationStoreTests
             var second = Reserve(MarketTradeSideV1.Buy, quantity: 12);
             var results = await Task.WhenAll(store.ReserveAsync(first), store.ReserveAsync(second));
             Assert.Single(results, result => result.Status == MarketTradeReservationStatusV1.Reserved);
-            Assert.Single(results, result => result.Status == MarketTradeReservationStatusV1.Rejected);
+            Assert.Single(results, result => result.Status == MarketTradeReservationStatusV1.MarketRevisionMismatch);
 
             var competingTrade = new MarketTradeEventV1
             {
@@ -299,38 +299,64 @@ public sealed class MySqlMarketTradeReservationStoreTests
                 ExpectedMarketRevision = quote.MarketRevision,
                 ExpectedReputationRevision = quote.ReputationRevision,
                 ReputationPriceFactorPartsPerMillion = quote.ReputationFactorPartsPerMillion,
-                ExpectedQuoteUnitPrice = quote.QuoteUnitPrice, ExpectedTotalPrice = quote.TotalPrice
+                ExpectedQuoteUnitPrice = quote.QuoteUnitPrice, ExpectedTotalPrice = quote.TotalPrice,
+                CharacterId = quoteRequest.CharacterId, MarketFactionId = quote.MarketFactionId!
             };
+            var reservationReputation = reputation with { CorrelationId = request.CorrelationId };
             var store = new MySqlMarketTradeReservationStore(connectionString);
             var mismatchedPrice = await store.ReserveQuoteAsync(request with
             {
                 ExpectedTotalPrice = request.ExpectedTotalPrice + 1
-            });
+            }, reservationReputation);
             Assert.Equal(MarketTradeReservationStatusV1.Rejected, mismatchedPrice.Status);
             Assert.True(mismatchedPrice.IsValid());
             Assert.True(mismatchedPrice.Matches(request with { ExpectedTotalPrice = request.ExpectedTotalPrice + 1 }));
+            var wrongFaction = await store.ReserveQuoteAsync(request with
+            {
+                MarketFactionId = "other_faction",
+                ReputationPriceFactorPartsPerMillion = 1_000_000
+            }, reservationReputation);
+            Assert.Equal(MarketTradeReservationStatusV1.Rejected, wrongFaction.Status);
 
-            var reserved = await store.ReserveQuoteAsync(request);
+            var reserved = await store.ReserveQuoteAsync(request, reservationReputation);
             Assert.Equal(MarketTradeReservationStatusV1.Reserved, reserved.Status);
             Assert.Equal(quote.QuoteUnitPrice, reserved.QuoteUnitPrice);
             Assert.Equal(quote.TotalPrice, reserved.TotalPrice);
             Assert.Equal(quote.ReputationRevision, reserved.ReputationRevision);
             Assert.Equal(quote.ReputationFactorPartsPerMillion, reserved.ReputationPriceFactorPartsPerMillion);
             Assert.True(reserved.Matches(request));
-            Assert.Equal(MarketTradeReservationStatusV1.Reserved,
-                (await store.ReserveQuoteAsync(request with { CorrelationId = Guid.NewGuid() })).Status);
             Assert.Equal(MarketTradeReservationStatusV1.Conflict,
-                (await store.ReserveQuoteAsync(request with { ExpectedReputationRevision = 9 })).Status);
+                (await store.ReserveQuoteAsync(request with
+                {
+                    ExpectedTotalPrice = request.ExpectedTotalPrice + 1
+                }, reservationReputation)).Status);
+            var retry = request with { CorrelationId = Guid.NewGuid() };
+            Assert.Equal(MarketTradeReservationStatusV1.Reserved,
+                (await store.ReserveQuoteAsync(retry,
+                    reservationReputation with { CorrelationId = retry.CorrelationId })).Status);
+            var staleRequest = request with { ExpectedReputationRevision = 9 };
+            var staleReputation = new MarketFactionReputationReadResponseV1
+            {
+                CorrelationId = staleRequest.CorrelationId,
+                CharacterId = staleRequest.CharacterId,
+                Status = MarketFactionReputationStatusV1.RevisionMismatch,
+                ReputationRevision = 10
+            };
+            var stale = await store.ReserveQuoteAsync(staleRequest, staleReputation);
+            Assert.Equal(MarketTradeReservationStatusV1.ReputationRevisionMismatch, stale.Status);
+            Assert.Equal(10, stale.ReputationRevision);
+            Assert.True(stale.Matches(staleRequest));
 
             await using var connection = new MySqlConnection(connectionString);
             await connection.OpenAsync();
             await using var command = connection.CreateCommand();
-            command.CommandText = "SELECT reputation_revision, reputation_price_factor_parts_per_million FROM market_trade_reservations WHERE trade_id=@trade";
+            command.CommandText = "SELECT reputation_revision, reputation_price_factor_parts_per_million, market_faction_id FROM market_trade_reservations WHERE trade_id=@trade";
             command.Parameters.AddWithValue("@trade", request.TradeId.ToByteArray());
             await using var reader = await command.ExecuteReaderAsync();
             Assert.True(await reader.ReadAsync());
             Assert.Equal(8, reader.GetInt64(0));
             Assert.Equal(quote.ReputationFactorPartsPerMillion, reader.GetInt64(1));
+            Assert.Equal(quote.MarketFactionId, reader.GetString(2));
         });
     }
 
@@ -382,7 +408,8 @@ public sealed class MySqlMarketTradeReservationStoreTests
                      "008_market_trade_events.sql",
                      "009_market_trade_reservations.sql",
                      "010_market_stock_policy.sql",
-                     "011_market_quote_bound_reservations.sql"
+                     "011_market_quote_bound_reservations.sql",
+                     "012_market_reservation_faction.sql"
                  })
         {
             var path = Path.Combine(AppContext.BaseDirectory, "db", "migrations", filename);
