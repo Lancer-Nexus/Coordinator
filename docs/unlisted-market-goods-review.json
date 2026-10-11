@@ -1,0 +1,4380 @@
+{
+  "schemaVersion": 1,
+  "catalogReportSha256": "e60b74ca7425a3c5d625b04431c9f17b71e9f7f6b6f0c272fd21ed98b5a8c795",
+  "catalogReportSchemaVersion": 1,
+  "unlistedGoodCount": 420,
+  "reviewClassCounts": {
+    "other_equipment": 65,
+    "ship_hull_component": 31,
+    "ship_package_addon": 1,
+    "special_equipment": 42,
+    "unlisted_commodity": 2,
+    "unlisted_weapon": 278,
+    "unreferenced_ship_hull": 1
+  },
+  "activationRule": "Every listed market/good pair stays disabled until an explicit reviewed stock policy enables it.",
+  "goods": [
+    {
+      "goodId": "be_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "31400",
+      "packageReferences": [
+        {
+          "packageId": "be_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "bf_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "22000",
+      "packageReferences": [
+        {
+          "packageId": "bf_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "bfr_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "18360",
+      "packageReferences": [
+        {
+          "packageId": "bfr_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "bhe2_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "298000",
+      "packageReferences": [
+        {
+          "packageId": "bhe2_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "bhe_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "63200",
+      "packageReferences": [
+        {
+          "packageId": "bhe_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "bhf_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "15300",
+      "packageReferences": [
+        {
+          "packageId": "bhf_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_battleship_flak_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_battleship_missile_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_battleship_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_battleship_turret02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_battleship_turret03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_battleship_turret04",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_destroyer_missile_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_destroyer_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_destroyer_turret02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_destroyer_turret03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_destroyer_turret04",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_gunboat_forward_gun01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_gunboat_missile_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_gunboat_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_gunboat_turret02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_large_station_turret01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_large_station_turret01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_large_station_turret01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_prison_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_small_station_turret01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_small_station_turret01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_small_station_turret01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_wp_turret01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_wp_turret01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_wp_turret01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_wp_turret02_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "860",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_wp_turret02_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "3710",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_wp_turret02_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "14300",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_wps_gun01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_wps_gun01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_wps_gun01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_wps_mlauncher01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "500",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_wps_mlauncher01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "860",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "br_wps_mlauncher01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1830",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "bwe2_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "505000",
+      "packageReferences": [
+        {
+          "packageId": "bwe2_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "bwe_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "127000",
+      "packageReferences": [
+        {
+          "packageId": "bwe_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "bwf_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "15300",
+      "packageReferences": [
+        {
+          "packageId": "bwf_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "bwfr_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "53400",
+      "packageReferences": [
+        {
+          "packageId": "bwfr_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_large_station_turret01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_large_station_turret01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_large_station_turret01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_lifter_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "180",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_liner_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "180",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_miner_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "180",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_miner_turret02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "180",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_miner_turret03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "180",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_repair_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "180",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_small_station_turret01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_small_station_turret01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_small_station_turret01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_train_turret01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_train_turret01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_train_turret01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "180",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_train_turret02_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_train_turret02_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_train_turret02_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "180",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_train_turret03_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_train_turret03_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_train_turret03_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "180",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_transport_turret01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_transport_turret01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_transport_turret01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "180",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_transport_turret02_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_transport_turret02_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_transport_turret02_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "180",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_wp_turret01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_wp_turret01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_wp_turret01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_wp_turret02_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "860",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_wp_turret02_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "3710",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_wp_turret02_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "14300",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_wps_gun01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_wps_gun01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_wps_gun01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_wps_mlauncher01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "500",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_wps_mlauncher01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "860",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "co_wps_mlauncher01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1830",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "coe2_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "658000",
+      "packageReferences": [
+        {
+          "packageId": "coe2_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "coe_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "388000",
+      "packageReferences": [
+        {
+          "packageId": "coe_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "cof_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "31400",
+      "packageReferences": [
+        {
+          "packageId": "cof_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "commodity_prisoners",
+      "category": "commodity",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "1200",
+      "packageReferences": [],
+      "reviewClass": "unlisted_commodity",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "commodity_vips",
+      "category": "commodity",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "1200",
+      "packageReferences": [],
+      "reviewClass": "unlisted_commodity",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "escape_lifeboat",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "1",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "escape_pod",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "1",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "fc_or_gun01_mark01_m1",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "fc_or_gun01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "250",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "fc_or_gun02_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "250",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "fc_or_turret01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "250",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "fc_or_turret02_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "250",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_gm_train_turret01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_gm_train_turret01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_gm_train_turret01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "180",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_gm_train_turret02_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_gm_train_turret02_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_gm_train_turret02_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "180",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_gm_train_turret03_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_gm_train_turret03_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_gm_train_turret03_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "180",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_gm_transport_turret01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_gm_transport_turret01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_gm_transport_turret01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "180",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_gm_transport_turret02_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_gm_transport_turret02_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_gm_transport_turret02_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "180",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_im_miner_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "180",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_im_miner_turret02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "180",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_im_miner_turret03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "180",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_im_train_turret01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_im_train_turret01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_im_train_turret01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "180",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_im_train_turret02_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_im_train_turret02_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_im_train_turret02_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "180",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_im_train_turret03_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_im_train_turret03_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_im_train_turret03_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "180",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_im_transport_turret01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_im_transport_turret01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_im_transport_turret01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "180",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_im_transport_turret02_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_im_transport_turret02_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gd_im_transport_turret02_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "180",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ge_wps_gun_01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ge_wps_mlauncher_01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "500",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gf1_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "6000",
+      "packageReferences": [
+        {
+          "packageId": "gf1_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gf1_hull_m01a",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "6000",
+      "packageReferences": [],
+      "reviewClass": "unreferenced_ship_hull",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gf2_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "15300",
+      "packageReferences": [
+        {
+          "packageId": "gf2_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gf4_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "63200",
+      "packageReferences": [
+        {
+          "packageId": "gf4_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gf5_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "227000",
+      "packageReferences": [
+        {
+          "packageId": "gf5_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "gf6_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "505000",
+      "packageReferences": [
+        {
+          "packageId": "gf6_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ke_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "63200",
+      "packageReferences": [
+        {
+          "packageId": "ke_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "kf_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "44500",
+      "packageReferences": [
+        {
+          "packageId": "kf_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "kfr_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "53400",
+      "packageReferences": [
+        {
+          "packageId": "kfr_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_battleship_flak_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_battleship_missile_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_battleship_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_battleship_turret02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_battleship_turret03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_battleship_turret04",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_destroyer_missile_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_destroyer_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_destroyer_turret02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_destroyer_turret03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_gunboat_forward_gun01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "12050",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_gunboat_missile_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_gunboat_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_large_station_turret01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_large_station_turret01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_large_station_turret01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_prison_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "180",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_small_station_turret01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_small_station_turret01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_small_station_turret01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_wp_turret01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_wp_turret01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_wp_turret01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_wp_turret02_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "860",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_wp_turret02_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "3710",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_wp_turret02_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "14300",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_wps_gun01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_wps_gun01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_wps_gun01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_wps_mlauncher01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "500",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_wps_mlauncher01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "860",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "ku_wps_mlauncher01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1830",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "lair_power_cell",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "1",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "lair_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "5480",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "lair_turret02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "5480",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "large_station_turret",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "le_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "10400",
+      "packageReferences": [
+        {
+          "packageId": "le_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "lf_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "6600",
+      "packageReferences": [
+        {
+          "packageId": "lf_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "lfr_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "7900",
+      "packageReferences": [
+        {
+          "packageId": "lfr_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_battleship_flak_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_battleship_missile_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_battleship_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_battleship_turret02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_battleship_turret03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_battleship_turret04",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_cruiser_forward_gun01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "750",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_cruiser_missile_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_cruiser_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_gun01_mark06_m11",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "54810",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_large_station_turret01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_large_station_turret01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_large_station_turret01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_prison_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_small_station_turret01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_small_station_turret01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_small_station_turret01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_wp_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_wp_turret01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_wp_turret01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_wp_turret01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_wp_turret01_mark04",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_wp_turret02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "500",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_wp_turret02_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "860",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_wp_turret02_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "3710",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_wp_turret02_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "14300",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_wp_turret02_mark04",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "14300",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_wps_gun01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_wps_gun01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_wps_gun01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_wps_mlauncher01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "500",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_wps_mlauncher01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "860",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "li_wps_mlauncher01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1830",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "loot_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1830",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "mine02_mark05",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "144580",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "missile01_mark01_rtc",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "500",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "missile01_mark01_rtc_ammo",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "25",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "missile03_mark04",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "144580",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "no_thruster",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "6000",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "nomad_cruise_disruptor01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "54810",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "nomad_dyson_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "5480",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "nomad_gun01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "2480",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "nomad_gun01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "12050",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "nomad_gun01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "14460",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "nomad_lair_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "5480",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "nomad_lair_turret02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "5480",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "nomad_torpedo01_rtc",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "nomad_turret01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "2480",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield01_mark01",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield01_mark02",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield01_mark03",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield01_mark04",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield01_mark05",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield01_mark06",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield01_mark07",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield01_mark08",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield01_mark09",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield01_mark10",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield02_mark01",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield02_mark02",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield02_mark03",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield02_mark04",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield02_mark05",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield02_mark06",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield02_mark07",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield02_mark08",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield02_mark09",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield02_mark10",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield03_mark01",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield03_mark02",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield03_mark03",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield03_mark04",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield03_mark05",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield03_mark06",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield03_mark07",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield03_mark08",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield03_mark09",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "npc_shield03_mark10",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "10",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "oe_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "1000",
+      "packageReferences": [
+        {
+          "packageId": "oe_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "pe_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "63200",
+      "packageReferences": [
+        {
+          "packageId": "pe_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "pf_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "10400",
+      "packageReferences": [
+        {
+          "packageId": "pf_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "pfr_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "18400",
+      "packageReferences": [
+        {
+          "packageId": "pfr_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "pi_large_station_turret01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "pi_large_station_turret01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "pi_large_station_turret01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "pi_small_station_turret01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "pi_small_station_turret01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "pi_small_station_turret01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "pi_wp_turret01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "pi_wp_turret01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "pi_wp_turret01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "pi_wp_turret02_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "860",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "pi_wp_turret02_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "3710",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "pi_wp_turret02_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "14300",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "pi_wps_gun01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "pi_wps_gun01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "pi_wps_gun01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "pi_wps_mlauncher01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "500",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "pi_wps_mlauncher01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "860",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "pi_wps_mlauncher01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1830",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "re_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "172000",
+      "packageReferences": [
+        {
+          "packageId": "re_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rf_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "127000",
+      "packageReferences": [
+        {
+          "packageId": "rf_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rfr_hull",
+      "category": "shiphull",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "152000",
+      "packageReferences": [
+        {
+          "packageId": "rfr_package",
+          "role": "hull"
+        }
+      ],
+      "reviewClass": "ship_hull_component",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_battleship_flak_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_battleship_flak_turret01_a",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "5480",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_battleship_missile_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "2480",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_battleship_missile_turret01_a",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "12050",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_battleship_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_battleship_turret01_a",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "5480",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_battleship_turret02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_battleship_turret02_a",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "5480",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_battleship_turret03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_battleship_turret03_a",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "5480",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_battleship_turret04",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_battleship_turret04_a",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "5480",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_cruiser_missile_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "750",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_cruiser_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_cruiser_turret01_rtc",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "500",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_cruiser_turret02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_cruiser_turret02_rtc",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "500",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_cruiser_turret03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_cruiser_turret03_rtc",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "500",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_cruiser_turret04",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_cruiser_turret04_rtc",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "500",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_gun01_mark01_m1",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "500",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_gun01_mark01_m3",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1830",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_gunboat_forward_gun01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "5480",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_gunboat_missile_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "750",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_gunboat_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_gunboat_turret02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_large_station_turret01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_large_station_turret01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_large_station_turret01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_prison_turret01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_small_station_turret01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_small_station_turret01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_small_station_turret01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_wp_turret01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_wp_turret01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_wp_turret01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_wp_turret02_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "860",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_wp_turret02_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "3710",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_wp_turret02_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "14300",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_wps_gun01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "90",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_wps_gun01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "370",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_wps_gun01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1430",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_wps_mlauncher01_mark01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "500",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_wps_mlauncher01_mark02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "860",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rh_wps_mlauncher01_mark03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "1830",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_alias_list",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_anti-personnel_weapons",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_antimatter_bomb_components",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_biohazardous_material",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_biotoxic_nanobots",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_biowarfare_ampules",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_blistering_agents",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_carnivorous_insectoids",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_chemical_waste",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_classified_alien_research_",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_classified_artifact_reports",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_classified_artifact_research",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_classified_base_plans",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_classified_battleship_specs",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_classified_defense_plans",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_classified_military_research",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_commodity_exchange_access_codes",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_dangerous_alien_artifacts",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_escape_pod",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "1",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_experimental_cloning_materials",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_experimental_ship_research",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_experimental_troop_enhancement_research",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_experimental_weapon_research",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_fusion_weapon_components",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_genetically_enhanced_bacteria",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_genetically_enhanced_phage",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_government_agents_list",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_government_research_on_jump_holes",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_harvested_human_organs",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_hazardous_single_cell_innoculin",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_heavy_water",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_hidden_base_map",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_holoviral_counterfeiting_technology",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_holstein_sea_serpent_venom",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_human_bomb_implants",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_hunter-killer_robots",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_incendiary_planet_bombs",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_infectious_waste",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_list_of_civilians_under_surveillance",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_list_of_defense_network_backdoors",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_list_of_double_agents",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_military_arms_data",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_military_defensive_weakness_profiles",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_military_scramble_codes",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_military_threat_assessments",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_military_troop_assignments",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_mutagens",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_neophage_weapons",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_nerve_toxin",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_old_fashioned_nuclear_devices",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_poisonous_plants",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_quantum_bomb_components",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_secret_files_on_government_officials",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_secret_industrial_research",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_secret_military_codes",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_smuggled_military_secrets",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_station_blueprints",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_stolen_financial_codes",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_stolen_industrial_secrets",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_unstable_isotopes",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_viroids",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "rm_water_poisoning_supplies",
+      "category": "equipment",
+      "definitionSource": "goods.ini",
+      "legacyPrice": "3000",
+      "packageReferences": [],
+      "reviewClass": "other_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "shield01_mark08_fr",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "139200",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "shield01_mark08_hf",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "118380",
+      "packageReferences": [
+        {
+          "packageId": "coe2_package",
+          "role": "addon",
+          "amount": 1,
+          "hardpoint": "HpShield01"
+        }
+      ],
+      "reviewClass": "ship_package_addon",
+      "standaloneTradePolicy": "package_component_only",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "shield01_mark08_lf",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "109610",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "shield01_mark09_fr",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "306020",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "shield01_mark09_hf",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "260240",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "shield01_mark09_lf",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "240960",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "shield01_mark10_fr",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "367220",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "shield01_mark10_hf",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "312280",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "shield01_mark10_lf",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "289150",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "shield02_mark10_fr",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "367220",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "shield02_mark10_hf",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "312280",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "shield02_mark10_lf",
+      "category": "equipment",
+      "definitionSource": "st_good.ini",
+      "legacyPrice": "289150",
+      "packageReferences": [],
+      "reviewClass": "special_equipment",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "small_station_turret",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "50",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "special_gun01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "115660",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "special_gun02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "115660",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "special_gun03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "115660",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "special_gun04",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "115660",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "special_gun05",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "115660",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "special_gun06",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "115660",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "special_gun07",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "115660",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "special_gun08",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "115660",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "special_gun09",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "115660",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "special_gun10",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "115660",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "special_gun11",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "115660",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "special_gun12",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "115660",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "special_gun13",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "115660",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "special_gun14",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "115660",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "special_gun15",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "115660",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "special_nomad_gun01",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "14460",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "special_nomad_gun02",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "14460",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    },
+    {
+      "goodId": "special_nomad_gun03",
+      "category": "equipment",
+      "definitionSource": "weapon_good.ini",
+      "legacyPrice": "2480",
+      "packageReferences": [],
+      "reviewClass": "unlisted_weapon",
+      "standaloneTradePolicy": "not_reviewed",
+      "marketPolicyStatus": "disabled_until_explicit_review"
+    }
+  ]
+}
