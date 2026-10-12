@@ -13,8 +13,14 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
       - uses: github/codeql-action/init@v3
         with:
           languages: csharp
-      - uses: github/codeql-action/autobuild@v3
+      - run: dotnet restore tests/LancerNexus.Coordinator.Tests/LancerNexus.Coordinator.Tests.csproj
+      - run: dotnet build tests/LancerNexus.Coordinator.Tests/LancerNexus.Coordinator.Tests.csproj --configuration Release --no-restore -p:UseSharedCompilation=false
       - uses: github/codeql-action/analyze@v3

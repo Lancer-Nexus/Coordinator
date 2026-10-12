@@ -220,9 +220,15 @@ public sealed class MySqlMarketTradeReservationStoreTests
             var now = DateTimeOffset.UtcNow;
             var request = new MarketQuoteRequestV1
             {
-                CorrelationId = Guid.NewGuid(), CharacterId = 77, SystemId = "test_system",
-                MarketId = "test_base", GoodId = "commodity_food", Side = MarketTradeSideV1.Buy,
-                Quantity = 5, ExpectedMarketRevision = 1, ExpectedReputationRevision = 3
+                CorrelationId = Guid.NewGuid(),
+                CharacterId = 77,
+                SystemId = "test_system",
+                MarketId = "test_base",
+                GoodId = "commodity_food",
+                Side = MarketTradeSideV1.Buy,
+                Quantity = 5,
+                ExpectedMarketRevision = 1,
+                ExpectedReputationRevision = 3
             };
             var reputationRequest = new MarketFactionReputationReadRequestV1
             {
@@ -290,18 +296,28 @@ public sealed class MySqlMarketTradeReservationStoreTests
             var correlationId = Guid.NewGuid();
             var quoteRequest = new MarketQuoteRequestV1
             {
-                CorrelationId = correlationId, CharacterId = 77, SystemId = "test_system",
-                MarketId = "test_base", GoodId = "commodity_food", Side = MarketTradeSideV1.Buy,
-                Quantity = 3, ExpectedMarketRevision = 1, ExpectedReputationRevision = 8
+                CorrelationId = correlationId,
+                CharacterId = 77,
+                SystemId = "test_system",
+                MarketId = "test_base",
+                GoodId = "commodity_food",
+                Side = MarketTradeSideV1.Buy,
+                Quantity = 3,
+                ExpectedMarketRevision = 1,
+                ExpectedReputationRevision = 8
             };
             var reputationRequest = new MarketFactionReputationReadRequestV1
             {
-                CorrelationId = correlationId, CharacterId = 77, ExpectedReputationRevision = 8
+                CorrelationId = correlationId,
+                CharacterId = 77,
+                ExpectedReputationRevision = 8
             };
             var reputation = new MarketFactionReputationReadResponseV1
             {
-                CorrelationId = correlationId, CharacterId = 77,
-                Status = MarketFactionReputationStatusV1.Found, ReputationRevision = 8,
+                CorrelationId = correlationId,
+                CharacterId = 77,
+                Status = MarketFactionReputationStatusV1.Found,
+                ReputationRevision = 8,
                 Factions = [new MarketFactionReputationV1 { FactionId = "test_faction", Value = 0.5f }]
             };
             var quote = await new MySqlMarketQuoteStore(connectionString).ReadAsync(
@@ -310,14 +326,20 @@ public sealed class MySqlMarketTradeReservationStoreTests
 
             var request = new MarketTradeQuoteReservationRequestV1
             {
-                CorrelationId = Guid.NewGuid(), TradeId = Guid.NewGuid(),
-                MarketId = quoteRequest.MarketId, SystemId = quoteRequest.SystemId,
-                GoodId = quoteRequest.GoodId, Side = quoteRequest.Side, Quantity = quoteRequest.Quantity,
+                CorrelationId = Guid.NewGuid(),
+                TradeId = Guid.NewGuid(),
+                MarketId = quoteRequest.MarketId,
+                SystemId = quoteRequest.SystemId,
+                GoodId = quoteRequest.GoodId,
+                Side = quoteRequest.Side,
+                Quantity = quoteRequest.Quantity,
                 ExpectedMarketRevision = quote.MarketRevision,
                 ExpectedReputationRevision = quote.ReputationRevision,
                 ReputationPriceFactorPartsPerMillion = quote.ReputationFactorPartsPerMillion,
-                ExpectedQuoteUnitPrice = quote.QuoteUnitPrice, ExpectedTotalPrice = quote.TotalPrice,
-                CharacterId = quoteRequest.CharacterId, MarketFactionId = quote.MarketFactionId!
+                ExpectedQuoteUnitPrice = quote.QuoteUnitPrice,
+                ExpectedTotalPrice = quote.TotalPrice,
+                CharacterId = quoteRequest.CharacterId,
+                MarketFactionId = quote.MarketFactionId!
             };
             var reservationReputation = reputation with { CorrelationId = request.CorrelationId };
             var store = new MySqlMarketTradeReservationStore(connectionString);

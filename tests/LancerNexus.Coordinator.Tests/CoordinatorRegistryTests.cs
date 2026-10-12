@@ -105,6 +105,24 @@ public sealed class CoordinatorRegistryTests
     }
 
     [Fact]
+    public void Place_RejectsOversizedIdempotencyKeyBeforeRegistryMutation()
+    {
+        var registry = CreateRegistry();
+        var request = new PlacementRequest
+        {
+            RequestId = Guid.NewGuid(),
+            SessionId = Guid.NewGuid(),
+            TargetSystem = "li01",
+            IdempotencyKey = new string('i', PlacementRequestValidator.MaximumIdempotencyKeyLength + 1)
+        };
+
+        var outcome = registry.Place(request, Now);
+
+        Assert.False(outcome.Decision.Accepted);
+        Assert.Equal("invalid_request", outcome.Decision.ReasonCode);
+    }
+
+    [Fact]
     public void Place_ConcurrentAssignmentsCannotOverbookLastSlot()
     {
         var registry = CreateRegistry();

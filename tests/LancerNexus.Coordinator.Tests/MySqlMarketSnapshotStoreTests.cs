@@ -21,7 +21,9 @@ public sealed class MySqlMarketSnapshotStoreTests
     {
         var request = new MarketGoodReadRequestV1
         {
-            CorrelationId = Guid.NewGuid(), SystemId = "li-01", MarketId = "li01_base",
+            CorrelationId = Guid.NewGuid(),
+            SystemId = "li-01",
+            MarketId = "li01_base",
             GoodId = "commodity_food"
         };
         var response = await new MySqlMarketGoodReadStore(null).ReadAsync(request);
@@ -162,8 +164,12 @@ public sealed class MySqlMarketSnapshotStoreTests
             var store = new MySqlMarketGoodReadStore(connectionString);
             var request = new MarketGoodReadRequestV1
             {
-                CorrelationId = Guid.NewGuid(), SystemId = "li-01", MarketId = "li01_base",
-                GoodId = "commodity_food", ExpectedSystemRevision = 7, ExpectedMarketRevision = 3
+                CorrelationId = Guid.NewGuid(),
+                SystemId = "li-01",
+                MarketId = "li01_base",
+                GoodId = "commodity_food",
+                ExpectedSystemRevision = 7,
+                ExpectedMarketRevision = 3
             };
             var found = await store.ReadAsync(request);
             Assert.True(found.IsValidFor(request));

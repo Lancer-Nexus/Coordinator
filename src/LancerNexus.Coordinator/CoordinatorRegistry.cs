@@ -184,11 +184,10 @@ public sealed class CoordinatorRegistry
         ArgumentNullException.ThrowIfNull(request);
         lock (sync)
         {
+            if (!request.IsValid())
+                return new(Rejected(request.RequestId, "invalid_request", nowUtc));
             if (CleanupExpired(nowUtc))
                 Persist();
-            if (request.RequestId == Guid.Empty || request.SessionId == Guid.Empty ||
-                string.IsNullOrWhiteSpace(request.TargetSystem) || string.IsNullOrWhiteSpace(request.IdempotencyKey))
-                return new(Rejected(request.RequestId, "invalid_request", nowUtc));
 
             if (reservations.TryGetValue(request.IdempotencyKey, out var sameKey))
             {

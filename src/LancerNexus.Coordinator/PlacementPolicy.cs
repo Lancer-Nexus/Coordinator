@@ -33,8 +33,7 @@ public sealed class PlacementPolicy(PlacementPolicyOptions? options = null)
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(candidates);
 
-        if (request.RequestId == Guid.Empty || request.SessionId == Guid.Empty ||
-            string.IsNullOrWhiteSpace(request.TargetSystem) || string.IsNullOrWhiteSpace(request.IdempotencyKey))
+        if (!request.IsValid())
         {
             return Rejected(request.RequestId, "invalid_request", nowUtc);
         }
